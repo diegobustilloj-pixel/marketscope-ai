@@ -52,3 +52,42 @@ con dominio Exchange v2 y direcciones CTF/NegRisk distintas.
 Verificación acumulada: 13 pruebas P0. Incluyen hashes de topic contrastados con
 el colector histórico independiente, rangos, drift de implementación, payloads
 malformados, lotes ERC-1155 y cuarentena de ABI desconocida.
+
+## Entrega 3: lotes y reconciliación
+
+`LotLedger` conserva cantidad, costo remanente, origen y consumos FIFO. Los costos
+se asignan proporcionalmente en átomos, y el último lote recibe el residuo para
+conservar la suma exacta. No se usa redondeo binario. Las marcas son cadenas
+`Decimal` en átomos de colateral por átomo de token; los resultados no se
+etiquetan como USD sin especificar activo y escala.
+
+El motor admite compra, venta, split, merge, conversión, redención, wrap/unwrap,
+transferencias y recompensas. Una transferencia explícita entre dos direcciones
+conserva lotes/basis sin inferir identidad común. Un ingreso externo conserva
+costo `NULL`; una venta posterior no inventa beneficio. Cash recuperado por una
+conversión reduce primero su costo: solo un exceso sobre todo el costo conocido
+se registra por separado como realización. Esto es una política contable,
+no una valoración económica de cada outcome ni un criterio fiscal.
+
+El normalizador onchain es más limitado que el motor: acepta transacciones
+con una causa económica inequívoca. Las transacciones mixtas, wraps con varios
+colaterales, fills sin transferencias y movimientos sin explicación quedan
+bloqueados. Se requiere ampliar sus mapeos con evidencia específica para cubrir
+toda la operativa de NegRisk; la investigación del perfil no se ha reiniciado.
+
+Reconciliación:
+
+1. Fills CLOB asentados contra fills onchain (identidad de orden, tx/log,
+   dirección de exchange, cantidad, cash y comisión).
+2. Inventario/cash del ledger contra balances `eth_call` fijados a block hash.
+3. Otro cálculo de balances que lee directamente topics/data de transferencias,
+   sin consumir eventos normalizados ni lotes.
+
+Los snapshots deben declarar el mismo corte y universo de activos. Falta de
+balance no equivale a cero. El CLOB no se presenta como una fuente autoritativa
+de saldo de outcomes; se comparan sus órdenes/fills. El gate de fuentes bloquea
+shadow ante TTL vencido, datos viejos, gap, reconexión pendiente o contrato sin
+verificar. Nunca envía cancelaciones ni órdenes reales.
+
+Verificación de esta entrega: FIFO, fees, residuo atómico, conservación de basis,
+importes grandes, costos desconocidos, transferencias y reconciliación negativa.
