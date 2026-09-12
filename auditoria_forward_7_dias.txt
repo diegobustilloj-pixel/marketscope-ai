@@ -1,0 +1,415 @@
+FASE 4.1 - SHADOW FORWARD 7 DIAS 
+Fin de ejecucion: mi‚. 05/08/2026 22:45:12,91 
+ 
+PREPARACION DE MODELOS 
+{
+  "gold_opened_read_only": true,
+  "gold_unchanged": true,
+  "historical_test_accessed": false,
+  "hypotheses": [
+    {
+      "minimum_edge": 0.06,
+      "model_name": "combined_logistic",
+      "scope": "all_markets"
+    },
+    {
+      "minimum_edge": 0.03,
+      "model_name": "combined_hist_gradient_boosting",
+      "scope": "all_markets"
+    },
+    {
+      "minimum_edge": 0.1,
+      "model_name": "strike_hist_gradient_boosting",
+      "scope": "official_strike_only"
+    }
+  ],
+  "orders_enabled": false,
+  "output_bytes": 146012,
+  "output_model": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\modelos_shadow_fase41.joblib",
+  "passed": true,
+  "phase4_opened_read_only": true,
+  "phase4_unchanged": true,
+  "training_summary": {
+    "combined_hist_gradient_boosting": {
+      "calibration_rows": 141,
+      "features": [
+        "chainlink_state",
+        "chainlink_state_run_length",
+        "markov_p_up_60s",
+        "chainlink_up_fraction_15s",
+        "chainlink_up_fraction_30s",
+        "chainlink_up_fraction_60s",
+        "chainlink_nonzero_fraction_60s",
+        "chainlink_return_5s_bps",
+        "chainlink_return_15s_bps",
+        "chainlink_return_30s_bps",
+        "chainlink_return_60s_bps",
+        "chainlink_return_120s_bps",
+        "chainlink_vol_15s_bps",
+        "chainlink_vol_30s_bps",
+        "chainlink_vol_60s_bps",
+        "chainlink_vol_120s_bps",
+        "volatility_regime_ratio",
+        "implied_up_mid_probability",
+        "up_spread",
+        "down_spread",
+        "market_mid_sum",
+        "market_ask_overround",
+        "up_order_imbalance_1c",
+        "up_order_imbalance_5c",
+        "down_order_imbalance_1c",
+        "down_order_imbalance_5c",
+        "up_last_trade_price",
+        "down_last_trade_price",
+        "polymarket_trade_count_15s",
+        "polymarket_trade_volume_15s",
+        "polymarket_trade_count_60s",
+        "polymarket_trade_volume_60s",
+        "price_change_messages_15s",
+        "price_change_messages_60s",
+        "book_messages_15s",
+        "book_messages_60s",
+        "best_bid_ask_messages_15s",
+        "best_bid_ask_messages_60s",
+        "chainlink_updates_15s",
+        "chainlink_updates_60s"
+      ],
+      "fit_rows": 567,
+      "rows": 708,
+      "scope": "all_markets"
+    },
+    "combined_logistic": {
+      "calibration_rows": 141,
+      "features": [
+        "chainlink_state",
+        "chainlink_state_run_length",
+        "markov_p_up_60s",
+        "chainlink_up_fraction_15s",
+        "chainlink_up_fraction_30s",
+        "chainlink_up_fraction_60s",
+        "chainlink_nonzero_fraction_60s",
+        "chainlink_return_5s_bps",
+        "chainlink_return_15s_bps",
+        "chainlink_return_30s_bps",
+        "chainlink_return_60s_bps",
+        "chainlink_return_120s_bps",
+        "chainlink_vol_15s_bps",
+        "chainlink_vol_30s_bps",
+        "chainlink_vol_60s_bps",
+        "chainlink_vol_120s_bps",
+        "volatility_regime_ratio",
+        "implied_up_mid_probability",
+        "up_spread",
+        "down_spread",
+        "market_mid_sum",
+        "market_ask_overround",
+        "up_order_imbalance_1c",
+        "up_order_imbalance_5c",
+        "down_order_imbalance_1c",
+        "down_order_imbalance_5c",
+        "up_last_trade_price",
+        "down_last_trade_price",
+        "polymarket_trade_count_15s",
+        "polymarket_trade_volume_15s",
+        "polymarket_trade_count_60s",
+        "polymarket_trade_volume_60s",
+        "price_change_messages_15s",
+        "price_change_messages_60s",
+        "book_messages_15s",
+        "book_messages_60s",
+        "best_bid_ask_messages_15s",
+        "best_bid_ask_messages_60s",
+        "chainlink_updates_15s",
+        "chainlink_updates_60s"
+      ],
+      "fit_rows": 567,
+      "rows": 708,
+      "scope": "all_markets"
+    },
+    "strike_hist_gradient_boosting": {
+      "calibration_rows": 93,
+      "features": [
+        "chainlink_state",
+        "chainlink_state_run_length",
+        "markov_p_up_60s",
+        "chainlink_up_fraction_15s",
+        "chainlink_up_fraction_30s",
+        "chainlink_up_fraction_60s",
+        "chainlink_nonzero_fraction_60s",
+        "chainlink_return_5s_bps",
+        "chainlink_return_15s_bps",
+        "chainlink_return_30s_bps",
+        "chainlink_return_60s_bps",
+        "chainlink_return_120s_bps",
+        "chainlink_vol_15s_bps",
+        "chainlink_vol_30s_bps",
+        "chainlink_vol_60s_bps",
+        "chainlink_vol_120s_bps",
+        "volatility_regime_ratio",
+        "implied_up_mid_probability",
+        "up_spread",
+        "down_spread",
+        "market_mid_sum",
+        "market_ask_overround",
+        "up_order_imbalance_1c",
+        "up_order_imbalance_5c",
+        "down_order_imbalance_1c",
+        "down_order_imbalance_5c",
+        "up_last_trade_price",
+        "down_last_trade_price",
+        "polymarket_trade_count_15s",
+        "polymarket_trade_volume_15s",
+        "polymarket_trade_count_60s",
+        "polymarket_trade_volume_60s",
+        "price_change_messages_15s",
+        "price_change_messages_60s",
+        "book_messages_15s",
+        "book_messages_60s",
+        "best_bid_ask_messages_15s",
+        "best_bid_ask_messages_60s",
+        "chainlink_updates_15s",
+        "chainlink_updates_60s",
+        "distance_to_strike_bps"
+      ],
+      "fit_rows": 374,
+      "rows": 467,
+      "scope": "official_strike_only"
+    }
+  },
+  "wallet_required": false
+}
+ 
+AUDITORIA FORWARD 
+{
+  "approved_models": [],
+  "database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\shadow_forward_fase41.db",
+  "database_bytes": 11317248,
+  "elapsed_hours": 175.197222,
+  "expected_markets": 2016,
+  "experiment_complete": true,
+  "feature_coverage": 0.99677419,
+  "features": 1854,
+  "first_market_start_ms": 1785353700000,
+  "forward_candidate": false,
+  "historical_test_accessed": false,
+  "historical_test_still_locked": true,
+  "kelly_used": false,
+  "last_market_start_ms": 1785941100000,
+  "market_coverage": 0.92261905,
+  "markets": 1860,
+  "meta": {
+    "artifact_created_at": "2026-07-29T19:33:19+00:00",
+    "experiment_completed_at": "2026-08-06T02:45:10+00:00",
+    "experiment_started_at": "2026-07-29T19:33:20+00:00",
+    "fee_rate": 0.07,
+    "gold_contract_sha256": "2f6b9ef6aae7613916619c206f2532069a6a776683cacf947571e1af48ad09fa",
+    "historical_test_accessed": false,
+    "hypotheses": [
+      {
+        "minimum_edge": 0.06,
+        "model_name": "combined_logistic",
+        "scope": "all_markets"
+      },
+      {
+        "minimum_edge": 0.03,
+        "model_name": "combined_hist_gradient_boosting",
+        "scope": "all_markets"
+      },
+      {
+        "minimum_edge": 0.1,
+        "model_name": "strike_hist_gradient_boosting",
+        "scope": "official_strike_only"
+      }
+    ],
+    "orders_enabled": false,
+    "phase4_contract_sha256": "daa9874d9d3c41cb0ceb3364b380c247e242b1cad9355112f1e81dff894028e7",
+    "schema_version": "1",
+    "slippage_per_share": 0.005,
+    "target_end_at": "2026-08-05T19:33:20+00:00",
+    "target_hours": 168.0,
+    "wallet_required": false
+  },
+  "model_results": [
+    {
+      "candidate": false,
+      "failures": [
+        "lcb_forward_no_positivo",
+        "brier_peor_que_mercado"
+      ],
+      "market_implied_probability": {
+        "accuracy_at_0_5": 0.85436893,
+        "brier": 0.10586641,
+        "ece_10_bins": 0.01722114,
+        "log_loss": 0.33559262,
+        "mean_probability_up": 0.48987433,
+        "roc_auc": 0.93032922,
+        "rows": 1854,
+        "up_rate": 0.48489752
+      },
+      "minimum_edge": 0.06,
+      "model_name": "combined_logistic",
+      "probability": {
+        "accuracy_at_0_5": 0.8236246,
+        "brier": 0.1328504,
+        "ece_10_bins": 0.04835335,
+        "log_loss": 0.43313926,
+        "mean_probability_up": 0.45182362,
+        "roc_auc": 0.88977747,
+        "rows": 1854,
+        "up_rate": 0.48489752
+      },
+      "resolved_predictions": 1854,
+      "scope": "all_markets",
+      "trading": {
+        "confidence_z": 2.12804523,
+        "lower_confidence_bound_mean_pnl": -0.04696821,
+        "max_drawdown": 20.77939716,
+        "mean_pnl": -0.02062934,
+        "net_pnl_per_share_sequence": -18.38074624,
+        "pnl_standard_deviation": 0.36944943,
+        "profit_factor": 0.86369339,
+        "roi_on_cost": -0.04720507,
+        "trades": 891,
+        "win_rate": 0.41638608,
+        "wins": 371
+      }
+    },
+    {
+      "candidate": false,
+      "failures": [
+        "lcb_forward_no_positivo",
+        "brier_peor_que_mercado"
+      ],
+      "market_implied_probability": {
+        "accuracy_at_0_5": 0.85436893,
+        "brier": 0.10586641,
+        "ece_10_bins": 0.01722114,
+        "log_loss": 0.33559262,
+        "mean_probability_up": 0.48987433,
+        "roc_auc": 0.93032922,
+        "rows": 1854,
+        "up_rate": 0.48489752
+      },
+      "minimum_edge": 0.03,
+      "model_name": "combined_hist_gradient_boosting",
+      "probability": {
+        "accuracy_at_0_5": 0.8360302,
+        "brier": 0.11628933,
+        "ece_10_bins": 0.03149262,
+        "log_loss": 0.38174834,
+        "mean_probability_up": 0.46870584,
+        "roc_auc": 0.91291546,
+        "rows": 1854,
+        "up_rate": 0.48489752
+      },
+      "resolved_predictions": 1854,
+      "scope": "all_markets",
+      "trading": {
+        "confidence_z": 2.12804523,
+        "lower_confidence_bound_mean_pnl": -0.0506908,
+        "max_drawdown": 30.36442721,
+        "mean_pnl": -0.02542802,
+        "net_pnl_per_share_sequence": -25.83486354,
+        "pnl_standard_deviation": 0.37839654,
+        "profit_factor": 0.83649047,
+        "roi_on_cost": -0.04581991,
+        "trades": 1016,
+        "win_rate": 0.52952756,
+        "wins": 538
+      }
+    },
+    {
+      "candidate": false,
+      "failures": [
+        "sin_predicciones_resueltas"
+      ],
+      "model_name": "strike_hist_gradient_boosting",
+      "resolved_predictions": 0,
+      "scope": "official_strike_only"
+    }
+  ],
+  "multiple_testing": {
+    "confidence_z": 2.128045234184984,
+    "family_alpha": 0.05,
+    "hypotheses": 3
+  },
+  "orders_created": false,
+  "phase4_contract_matches_frozen": true,
+  "phase4_opened_read_only": true,
+  "phase4_unchanged": true,
+  "resolution_coverage": 1.0,
+  "resolved": 1860,
+  "runs": [
+    {
+      "error": null,
+      "finished_at": null,
+      "run_id": 1,
+      "started_at": "2026-07-29T19:33:20+00:00",
+      "status": "RUNNING"
+    },
+    {
+      "error": "TimeoutError: The read operation timed out",
+      "finished_at": "2026-08-05T14:50:17+00:00",
+      "run_id": 2,
+      "started_at": "2026-08-04T19:08:18+00:00",
+      "status": "FAILED"
+    },
+    {
+      "error": null,
+      "finished_at": "2026-08-06T02:45:11+00:00",
+      "run_id": 3,
+      "started_at": "2026-08-06T02:45:10+00:00",
+      "status": "COMPLETED"
+    }
+  ],
+  "sqlite_quick_check": "ok",
+  "target_hours": 168.0,
+  "technical_passed": true,
+  "wallet_required": false
+}
+ 
+ESTADO FINAL 
+{
+  "database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\shadow_forward_fase41.db",
+  "database_bytes": 11317248,
+  "experiment_completed_at": "2026-08-06T02:45:10+00:00",
+  "experiment_started_at": "2026-07-29T19:33:20+00:00",
+  "features": 1854,
+  "latest_health": {
+    "connections": {},
+    "counters": {},
+    "database_bytes": 11342000,
+    "free_bytes": 96074305536,
+    "recorded_at": "2026-08-06T02:45:11+00:00"
+  },
+  "markets": 1860,
+  "orders_created": false,
+  "resolved": 1860,
+  "runs": [
+    {
+      "error": null,
+      "finished_at": null,
+      "run_id": 1,
+      "started_at": "2026-07-29T19:33:20+00:00",
+      "status": "RUNNING"
+    },
+    {
+      "error": "TimeoutError: The read operation timed out",
+      "finished_at": "2026-08-05T14:50:17+00:00",
+      "run_id": 2,
+      "started_at": "2026-08-04T19:08:18+00:00",
+      "status": "FAILED"
+    },
+    {
+      "error": null,
+      "finished_at": "2026-08-06T02:45:11+00:00",
+      "run_id": 3,
+      "started_at": "2026-08-06T02:45:10+00:00",
+      "status": "COMPLETED"
+    }
+  ],
+  "signals": 5562,
+  "sqlite_quick_check": "ok",
+  "target_end_at": "2026-08-05T19:33:20+00:00",
+  "wallet_required": false
+}

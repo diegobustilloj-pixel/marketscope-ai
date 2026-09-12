@@ -1,0 +1,40 @@
+VALIDACION FASE 4.2 - v0.9.1
+============================
+
+Resultado de la suite automatizada:
+- 43 tests passed
+- 3 subtests passed
+- compileall: correcto
+
+Prueba RTDS TWAP real aportada el 2026-08-07:
+- Mensajes totales JSONL: 78
+- crypto_prices_twap_thirty:update: 38
+- crypto_prices_chainlink:update: 39
+- Mensaje de suscripcion: 1
+- TWAP BTC/USD: 38 timestamps unicos, sin duplicados
+- Cadencia TWAP observada: 1000 ms exactos entre mensajes
+- window_s observado: 30 en 38/38 mensajes
+- Intervalo TWAP: 2026-08-07T21:53:45Z a 2026-08-07T21:54:22Z
+- Diferencia TWAP - spot sobre timestamps emparejados:
+  media +0.2959 USD; minimo -0.6172; maximo +1.3241
+
+Smoke test del parser/store v0.9.1 contra ese JSONL:
+- TWAP guardados: 38/38
+- SQLite quick_check: ok
+- Chainlink spot y TWAP permanecen separados
+
+Cambios principales v0.9.1:
+1. Schema shadow v3 con tabla shadow_twap_ticks.
+2. Suscripcion RTDS dual: Chainlink spot + TWAP 30s.
+3. Persistencia por segundo de timestamp, value, full_accuracy_value y window_s.
+4. Features enriquecidas con twap_30s_* solo con datos disponibles hasta el instante de decision.
+5. Diagnostico de core_incompleto ahora identifica quality_flags y campos faltantes.
+6. Modelo strike heredado deshabilitado bajo el nuevo regimen TWAP.
+7. audit-shadow fuerza forward_candidate=false mientras twap_retraining_required=true.
+8. Sin wallet, sin Kelly y sin ordenes reales.
+
+Siguiente control obligatorio:
+- Ejecutar una nueva prueba tecnica de 1 hora con base NUEVA:
+  data\shadow_tecnica_fase42_v091.db
+- Verificar twap_updates, markets_with_twap_coverage y features_with_twap_at_decision.
+- NO iniciar aun otra ventana forward de siete dias.

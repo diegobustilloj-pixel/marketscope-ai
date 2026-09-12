@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "project": "ProyectoBotV4 Polymarket Platform",
+  "discovery": "Todos los archivos JSON de esta carpeta, excepto registry.json",
+  "auto_start": false,
+  "production_enabled": false,
+  "lifecycle": [
+    "draft",
+    "research",
+    "backtest",
+    "shadow",
+    "paper",
+    "approved",
+    "live",
+    "paused",
+    "archived"
+  ],
+  "policy": [
+    "El registro documenta; nunca inicia bots automáticamente.",
+    "Todo bot nuevo nace draft y fail-closed.",
+    "Live y dinero real permanecen bloqueados hasta implementar aprobación independiente.",
+    "No se comparte data_dir entre bots salvo contrato documentado de solo lectura."
+  ]
+}

@@ -1,0 +1,72 @@
+PROTOCOLO ACELERADO v0.9.4
+=============================
+
+OBJETIVO
+--------
+Reducir el tiempo de decisión SIN fingir que datos correlacionados son
+muestras independientes y SIN usar dinero real.
+
+NO SE CAMBIA
+------------
+- Modelo: twap_transfer_strike_hgb
+- Horizonte del modelo: 60 s
+- Features ni pesos del modelo
+- Collector v0.9.3
+- Fuente TWAP oficial capturada por el collector
+- Fee/slippage del artefacto
+- Wallet: NO
+- Ordenes reales: NO
+
+ACELERACION
+-----------
+Un mismo forward puntúa retrospectivamente cinco thresholds de entrada:
+0.06, 0.08, 0.10, 0.12, 0.15.
+No son cinco forwards independientes; son cinco reglas paper sobre las
+mismas predicciones.
+
+DESCUBRIMIENTO
+--------------
+Miradas pre-registradas:
+- 144 predicciones resueltas (~12 h)
+- 288 predicciones resueltas (~24 h)
+
+A 144:
+- Si un threshold tiene >=30 trades y LCB de PnL medio >0 con corrección
+  conservadora por múltiples pruebas, se congela inmediatamente.
+- Si TODOS los thresholds con suficiente muestra tienen UCB <0, el modelo
+  puede abortarse temprano.
+- Si no, se continúa.
+
+A 288:
+- Se congela una sola vez el threshold con mayor LCB entre los que tengan
+  >=30 trades.
+- La elección queda guardada en:
+  data\seleccion_threshold_twap_v094.json
+- NO borrar ni editar ese archivo.
+
+CONFIRMACION
+------------
+Solo usa mercados POSTERIORES al cutoff de selección.
+
+Checkpoints de trades:
+50, 100, 150, 250.
+
+FAIL FAST:
+- UCB del PnL medio <0 en un checkpoint.
+
+PASS PARA ADELANTAR DESARROLLO:
+- mínimo 100 trades de confirmación;
+- LCB del PnL medio >0;
+- PnL neto >0;
+- ROI >0;
+- Brier del modelo <= Brier del mercado +0.01.
+
+El PASS permite empezar inmediatamente la siguiente fase de ingeniería
+mientras el forward continúa. NO habilita dinero real.
+
+IMPORTANTE
+----------
+No usar horizons 120/30/15 como si fueran mercados independientes.
+No borrar la selección congelada.
+No optimizar el modelo con el bloque de confirmación.
+No actualizar scikit-learn durante la prueba.

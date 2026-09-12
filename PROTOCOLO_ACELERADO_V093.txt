@@ -1,0 +1,53 @@
+PROTOCOLO ACELERADO FASE 4.2 v0.9.3
+====================================
+
+Objetivo
+--------
+Saltar la espera previa de 72 h/14 dias y pasar a una validacion forward actual
+sin dinero real.
+
+Diagnostico previo
+------------------
+- Fase 4 historica: pipeline correcto, ningun modelo aprobado.
+- Forward 7 dias Fase 4.1: Logistic y HGB combinados no fueron rentables.
+- Modelo strike no pudo evaluarse porque priceToBeat no estaba disponible en vivo.
+- v0.9.1/v0.9.2 confirmaron TWAP 30 s en vivo y fresco en decisiones 60 s.
+- Dataset historico RAW/Silver: 865 mercados; 815 con Chainlink fresco a 60 s.
+- Se intento un candidato nuevo market-anchored residual Ridge usando solo train/validation.
+  Validacion: Brier 0.09473 vs mercado 0.09706; 27 trades; PnL +2.479; ROI +26.0%.
+  Tras congelarlo se abrio el holdout historico una sola vez.
+  Holdout: Brier 0.11815 vs mercado 0.11294; 51 trades; PnL -1.467; ROI -8.91%.
+  Resultado: RECHAZADO. El holdout historico se considera consumido y no vuelve a
+  usarse para seleccion o validacion.
+
+Candidato v0.9.3
+-----------------
+Nombre: twap_transfer_strike_hgb
+Origen: strike_hist_gradient_boosting previamente congelado.
+Decision: 60 s antes del cierre.
+Threshold: edge neto >= 0.10.
+Datos predictivos historicos conservados: Chainlink spot, CLOB, spreads, volumen,
+order imbalance, etc.
+Cambio de regimen: distance_to_strike_bps se sustituye SOLO al puntuar por
+twap_distance_to_open_bps = (TWAP_30s_actual / TWAP_30s_apertura - 1) * 10000.
+TWAP actual y de apertura deben ser frescos (<=5 s).
+
+Motivo de esta transferencia
+----------------------------
+El modelo strike fue el candidato historico mas prometedor que nunca pudo recibir
+una evaluacion forward real: en validacion a 60 s y edge 0.10 registro 25 trades,
+PnL +4.186 shares-sequence y ROI +38.7%, pero el limite de confianza seguia siendo
+negativo. Por eso NO se considera rentable; se usa unicamente como hipotesis para
+una nueva muestra futura independiente.
+
+Reglas de seguridad
+-------------------
+- Sin wallet.
+- orders_enabled=false.
+- Sin Kelly.
+- Sin dinero real.
+- Base nueva schema v4.
+- El antiguo holdout historico ya NO se considera virgen.
+- Una prueba tecnica corta debe verificar TWAP apertura/actual y scoring.
+- Luego, como maximo atajo, se puede ejecutar el forward de 7 dias.
+- Incluso si el forward pasa, dinero real queda bloqueado hasta revision manual.

@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "bot_id": "sports-wallet-research",
+  "display_name": "Sports Wallet Research",
+  "domain": "sports",
+  "version": "0.1.0",
+  "lifecycle_stage": "research",
+  "enabled": false,
+  "managed_by_registry": false,
+  "execution": {"mode": "read_only", "environment": "development"},
+  "entrypoint": {"script": "sports_wallet_research_v001.py", "module": "polymarket_bot.sports_wallet_research"},
+  "data_dir": "data/sports_wallet_research_v001",
+  "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
+  "tags": ["sports", "wallet", "copy-reconstruction", "read-only"],
+  "notes": "Investigación y reconstrucción; no copiar fills ciegamente."
+}

@@ -1,0 +1,8 @@
+{
+  "environment": "paper",
+  "network_access": "public_data_only",
+  "real_money": false,
+  "automatic_orders": false,
+  "requires": ["approved_backtest", "approved_shadow", "risk_profile"],
+  "purpose": "simulación de ejecución y cartera"
+}

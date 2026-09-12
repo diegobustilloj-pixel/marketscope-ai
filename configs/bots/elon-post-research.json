@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "bot_id": "elon-post-research",
+  "display_name": "Elon Post Count Research",
+  "domain": "culture",
+  "version": "0.1.0",
+  "lifecycle_stage": "research",
+  "enabled": false,
+  "managed_by_registry": false,
+  "execution": {"mode": "read_only", "environment": "development"},
+  "entrypoint": {"script": "elon_post_count_research_v001.py", "module": "polymarket_bot.elon_post_count_research"},
+  "data_dir": "data/elon_post_count_v001",
+  "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
+  "tags": ["elon", "posts", "research", "read-only"],
+  "notes": "Modelo de conteo y comparables históricos."
+}

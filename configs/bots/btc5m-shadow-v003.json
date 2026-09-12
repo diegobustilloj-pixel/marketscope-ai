@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "bot_id": "btc5m-shadow-v003",
+  "display_name": "BTC 5m Shadow V003",
+  "domain": "crypto-btc-5m",
+  "version": "0.3.0",
+  "lifecycle_stage": "shadow",
+  "enabled": false,
+  "managed_by_registry": false,
+  "execution": {"mode": "shadow", "environment": "shadow"},
+  "entrypoint": {"script": "btc5m90_v003_shadow.py", "module": "polymarket_bot.btc_5m_90.v003_shadow"},
+  "data_dir": "data/btc5m90_v003",
+  "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
+  "tags": ["btc", "five-minute", "shadow", "paper-only"],
+  "notes": "Candidato actual de cobertura; no está aprobado para dinero real."
+}

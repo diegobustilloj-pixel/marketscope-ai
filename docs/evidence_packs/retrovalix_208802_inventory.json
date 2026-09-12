@@ -1,0 +1,222 @@
+{
+  "created_at": "2026-08-14T18:00:00Z",
+  "evidence_checks": [
+    {
+      "actual": "This guy built a trading bot and made +$126,836 on Polymarket\n\nI analyzed its trades, and it trades like a high-frequency market maker on 5-minute crypto Up/Down markets\n\nIts algorithm works like this:\n\n1. Places limit orders on Up and Down at the same time\n\n2. Uses fluctuations in the underlying asset to build complete sets at different moments\n\nThe average cost of this kind of set is around 98.43c\n\nThis means the matched positions are formed with roughly a 1.57c edge\n\n3. Leaves a directional skew on the side it sees as more likely\n\nAround 78.7% of the capital goes into paired Up+Down inventory\n\nThe other 21.3% is used as directional residual on one side\n\nStats:\n\n> Trades/active hour: 51.25\n> Average trade: $110.67\n> Win Rate: 50%\n\nHis Polymarket nickname: nagi777\n\nUsing this strategy, he captures a consistent edge. Then he repeats this thousands of times and keeps growing his capital",
+      "expected": "Places limit orders on Up and Down at the same time",
+      "field": "detailText",
+      "kind": "identity",
+      "label": "El post describe límites simultáneos UP/DOWN",
+      "operator": "contains",
+      "passed": true,
+      "source": "data/retrovalix_posts_raw.json"
+    },
+    {
+      "actual": "FAIL_DEVELOPMENT",
+      "expected": "FAIL_DEVELOPMENT",
+      "field": "verdict",
+      "kind": "failure_gate",
+      "label": "V0.16.1 terminó FAIL_DEVELOPMENT",
+      "operator": "eq",
+      "passed": true,
+      "source": "data/resultado_v0161_inventory_rotation.json"
+    },
+    {
+      "actual": null,
+      "expected": null,
+      "field": "selected_candidate",
+      "kind": "failure_gate",
+      "label": "V0.16.1 no seleccionó candidato",
+      "operator": "is_null",
+      "passed": true,
+      "source": "data/resultado_v0161_inventory_rotation.json"
+    },
+    {
+      "actual": -30.81411500000002,
+      "expected": 0,
+      "field": "development_results.CAUTIOUS_030.net_pnl",
+      "kind": "failure_gate",
+      "label": "CAUTIOUS_030 tuvo PnL neto negativo",
+      "operator": "lt",
+      "passed": true,
+      "source": "data/resultado_v0161_inventory_rotation.json"
+    },
+    {
+      "actual": "FAIL_DEVELOPMENT",
+      "expected": "FAIL_DEVELOPMENT",
+      "field": "verdict",
+      "kind": "failure_gate",
+      "label": "V0.17 también terminó FAIL_DEVELOPMENT",
+      "operator": "eq",
+      "passed": true,
+      "source": "data/resultado_v017_hedge_completion_development.json"
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "field": "sealed_validation_read",
+      "kind": "safety",
+      "label": "V0.17 no abrió la validación sellada",
+      "operator": "eq",
+      "passed": true,
+      "source": "data/resultado_v017_hedge_completion_development.json"
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "field": "forward_active_read",
+      "kind": "safety",
+      "label": "El forward activo no fue leído",
+      "operator": "eq",
+      "passed": true,
+      "source": "data/resultado_v0161_inventory_rotation.json"
+    }
+  ],
+  "frozen_sources": [
+    {
+      "relative_path": "data/retrovalix_posts_raw.json",
+      "role": "Texto del post fuente registrado desde X.",
+      "sha256": "1793412f7ef5d1fd765064c07bdaaf87df52e9996865e611ac5b91e739fd9653"
+    },
+    {
+      "relative_path": "data/prereg_v0161_inventory_rotation.json",
+      "role": "Corrección técnica congelada antes de evaluar rentabilidad.",
+      "sha256": "b7a361fcf1257c95dca82ac11dfea8238de7ccdfe9abcf9678aadd5879d75123"
+    },
+    {
+      "relative_path": "data/resultado_v0161_inventory_rotation.json",
+      "role": "Resultado sellado de la interpretación mínima.",
+      "sha256": "511b3a41fbaca558fa9eea493b111c1405f584356aeacfb2868c0a907e5d784f"
+    },
+    {
+      "relative_path": "data/prereg_v017_hedge_completion_development.json",
+      "role": "Protocolo congelado del filtro de probabilidad de completar hedge.",
+      "sha256": "8938cb9af3aa0a80ee32fce8bba9803ea5fc83a8b534eb02c6660e1956913f91"
+    },
+    {
+      "relative_path": "data/resultado_v017_hedge_completion_development.json",
+      "role": "Resultado sellado del intento de controlar la pierna incompleta.",
+      "sha256": "f25c6a56bf2bf223901db6b33786d25cf0c1571a1878da3d823ea8980f79e5e3"
+    }
+  ],
+  "interpretation_notice": "Hecho observado: texto y métricas del post. Interpretación: V0.16 modela la rotación temporal más sencilla compatible con la narrativa. No hay identidad demostrada entre V0.16 y el algoritmo del trader.",
+  "manifest_sha256": "ad2789e930e65e8de4e97fad64f41817723fe793898fe152dbb942df374d174b",
+  "missing_evidence": [
+    "Reglas exactas del algoritmo público de nagi777.",
+    "Historial completo de órdenes, cancelaciones y prioridad de cola.",
+    "Modelo de probabilidad que determina el skew direccional.",
+    "Rebates, latencia y capital operativo reales."
+  ],
+  "next_valid_test": [
+    "No rescatar V0.16/V0.17 cambiando umbrales.",
+    "Capturar como máximo 24 horas de órdenes/fills paper bajo el régimen CLOB actual.",
+    "Congelar una regla nueva de salida para la pierna incompleta antes de evaluar PnL.",
+    "Mantener el resultado separado del algoritmo de nagi777 salvo que aparezcan reglas verificables."
+  ],
+  "observed_metrics": [
+    {
+      "field": "development_results.CAUTIOUS_030.entries",
+      "format": "plain",
+      "label": "Entradas CAUTIOUS_030",
+      "source": "data/resultado_v0161_inventory_rotation.json",
+      "value": 165
+    },
+    {
+      "field": "development_results.CAUTIOUS_030.paired_rate",
+      "format": "percent",
+      "label": "Tasa pareada CAUTIOUS_030",
+      "source": "data/resultado_v0161_inventory_rotation.json",
+      "value": 0.6242424242424243
+    },
+    {
+      "field": "development_results.CAUTIOUS_030.net_pnl",
+      "format": "plain",
+      "label": "PnL neto CAUTIOUS_030",
+      "source": "data/resultado_v0161_inventory_rotation.json",
+      "value": -30.81411500000002
+    },
+    {
+      "field": "development_results.CAUTIOUS_030.roi_on_cost",
+      "format": "percent",
+      "label": "ROI CAUTIOUS_030",
+      "source": "data/resultado_v0161_inventory_rotation.json",
+      "value": -0.05494532711609803
+    },
+    {
+      "field": "model_results.logistic_c01.prediction_metrics.roc_auc",
+      "format": "plain",
+      "label": "Mejor AUC de V0.17",
+      "source": "data/resultado_v017_hedge_completion_development.json",
+      "value": 0.6392773892773892
+    },
+    {
+      "field": "model_results.logistic_c01.threshold_results.4.net_pnl",
+      "format": "plain",
+      "label": "PnL V0.17 C0.1 umbral 0,80",
+      "source": "data/resultado_v017_hedge_completion_development.json",
+      "value": 1.4150462499999987
+    },
+    {
+      "field": "model_results.logistic_c01.threshold_results.4.second_half_net_pnl",
+      "format": "plain",
+      "label": "PnL segunda mitad V0.17 C0.1 umbral 0,80",
+      "source": "data/resultado_v017_hedge_completion_development.json",
+      "value": -1.6350450000000012
+    }
+  ],
+  "pack_id": "retrovalix_208802_inventory",
+  "reasons": [
+    "Las tres configuraciones V0.16.1 tuvieron PnL y ROI negativos pese a formar pares rentables.",
+    "Las piernas sin hedge perdieron más que lo ganado por el inventario pareado.",
+    "V0.17 elevó la tasa pareada en algunos umbrales, pero ninguna combinación cumplió estabilidad temporal.",
+    "No se abrió el holdout sellado ni se rescató un umbral después del fallo."
+  ],
+  "safety": {
+    "active_forward_modified": false,
+    "active_forward_read": false,
+    "maximum_new_experiment_hours": 24,
+    "new_experiment_opened": false,
+    "orders_enabled": false,
+    "real_money": "BLOQUEADO",
+    "wallet_required": false
+  },
+  "schema": "evidence_pack_1",
+  "scope_statement": "El post no publica reglas suficientes para reconstruir el bot. QuantBot probó una interpretación mínima y congelada: comprar primero el lado barato y completar el par más tarde solo si el coste ejecutable conjunto queda en 0,97 o menos. El veredicto se limita a esa interpretación.",
+  "source_post": {
+    "claim_summary": "El post atribuye +$126.836 a un bot que coloca límites en UP y DOWN, forma inventario pareado por debajo de $1 y conserva un residual direccional.",
+    "date": "2026-08-13",
+    "id": "2088025556428501021",
+    "url": "https://x.com/RetroValix/status/2088025556428501021"
+  },
+  "strategy_spec": {
+    "decision_timing": "Entrada entre los segundos 30 y 210; búsqueda de hedge posterior hasta el segundo 285.",
+    "entry_rules": [
+      "Comprar cinco shares del lado con coste ejecutable máximo 0,30 en CAUTIOUS_030.",
+      "Exigir BBA y profundidad CLOB válidos con (quality_flags & 22) == 0.",
+      "Permitir como máximo una posición por mercado."
+    ],
+    "execution_assumptions": [
+      "Usar ask más 0,005 de slippage por share.",
+      "Aplicar comisión 0,07*p*(1-p).",
+      "Exigir profundidad mínima para cinco shares dentro de un centavo del mejor ask."
+    ],
+    "exit_rules": [
+      "Mantener el par completo hasta resolución.",
+      "Si no aparece hedge, mantener la primera pierna hasta resolución."
+    ],
+    "hedge_rules": [
+      "Comprar cinco shares del lado opuesto solo en un segundo posterior.",
+      "Aceptar el hedge únicamente cuando el coste conjunto ejecutable sea 0,97 o menor."
+    ],
+    "market_universe": "Mercados BTC UP/DOWN de cinco minutos presentes en la fuente Silver sellada.",
+    "unknowns": [
+      "Modelo direccional exacto de nagi777.",
+      "Prioridad de cola, cancelaciones y partial fills de sus órdenes límite.",
+      "Regla real de sizing y del residual direccional.",
+      "Rebates, latencia, infraestructura y pérdidas no realizadas del trader."
+    ]
+  },
+  "title": "Evidence Pack — inventario pareado y skew direccional",
+  "verdict": "FAIL",
+  "verdict_scope": "Falla la interpretación mínima comprobada por V0.16/V0.17; no se afirma que haya fallado el algoritmo exacto de nagi777 ni que su PnL público sea falso."
+}

@@ -1,0 +1,211 @@
+{
+  "created_at": "2026-08-14T19:10:00Z",
+  "evidence_checks": [
+    {
+      "actual": "This guy built a trading bot and made +$126,836 on Polymarket\n\nI analyzed its trades, and it trades like a high-frequency market maker on 5-minute crypto Up/Down markets\n\nIts algorithm works like this:\n\n1. Places limit orders on Up and Down at the same time\n\n2. Uses fluctuations in the underlying asset to build complete sets at different moments\n\nThe average cost of this kind of set is around 98.43c\n\nThis means the matched positions are formed with roughly a 1.57c edge\n\n3. Leaves a directional skew on the side it sees as more likely\n\nAround 78.7% of the capital goes into paired Up+Down inventory\n\nThe other 21.3% is used as directional residual on one side\n\nStats:\n\n> Trades/active hour: 51.25\n> Average trade: $110.67\n> Win Rate: 50%\n\nHis Polymarket nickname: nagi777\n\nUsing this strategy, he captures a consistent edge. Then he repeats this thousands of times and keeps growing his capital",
+      "expected": "nagi777",
+      "field": "detailText",
+      "kind": "identity",
+      "label": "El post identifica al trader como nagi777",
+      "operator": "contains",
+      "passed": true,
+      "source": "data/retrovalix_posts_raw.json"
+    },
+    {
+      "actual": "0xbf337426aa856996b8bb79b238345dd1a0276bf7",
+      "expected": "0xbf337426aa856996b8bb79b238345dd1a0276bf7",
+      "field": "identity.proxy_wallet",
+      "kind": "identity",
+      "label": "El snapshot confirma la wallet congelada",
+      "operator": "eq",
+      "passed": true,
+      "source": "data/nagi777_activity_24h_20260814.json"
+    },
+    {
+      "actual": 21807,
+      "expected": 21807,
+      "field": "activity_count",
+      "kind": "identity",
+      "label": "La captura contiene 21.807 actividades",
+      "operator": "eq",
+      "passed": true,
+      "source": "data/nagi777_activity_24h_20260814.json"
+    },
+    {
+      "actual": "DESCRIPTIVE_ONLY",
+      "expected": "DESCRIPTIVE_ONLY",
+      "field": "verdict",
+      "kind": "identity",
+      "label": "El resultado permanece descriptivo",
+      "operator": "eq",
+      "passed": true,
+      "source": "data/resultado_nagi777_wallet24h_20260814.json"
+    },
+    {
+      "actual": 0.9963768115942029,
+      "expected": 0.99,
+      "field": "metrics.markets_with_both_sides_bought_fraction",
+      "kind": "identity",
+      "label": "Más del 99% de mercados compró ambos lados",
+      "operator": "gt",
+      "passed": true,
+      "source": "data/resultado_nagi777_wallet24h_20260814.json"
+    },
+    {
+      "actual": 1.005722067017582,
+      "expected": 1.0,
+      "field": "metrics.estimated_weighted_complete_set_cost",
+      "kind": "identity",
+      "label": "El coste ponderado contemporáneo supera uno",
+      "operator": "gt",
+      "passed": true,
+      "source": "data/resultado_nagi777_wallet24h_20260814.json"
+    },
+    {
+      "actual": false,
+      "expected": false,
+      "field": "safety.market_outcomes_read",
+      "kind": "safety",
+      "label": "No se leyeron outcomes ganadores",
+      "operator": "eq",
+      "passed": true,
+      "source": "data/resultado_nagi777_wallet24h_20260814.json"
+    }
+  ],
+  "frozen_sources": [
+    {
+      "relative_path": "data/retrovalix_posts_raw.json",
+      "role": "Texto del post fuente.",
+      "sha256": "1793412f7ef5d1fd765064c07bdaaf87df52e9996865e611ac5b91e739fd9653"
+    },
+    {
+      "relative_path": "data/prereg_nagi777_wallet24h_20260814.json",
+      "role": "Identidad, ventana, métricas y código congelados antes de la captura completa.",
+      "sha256": "9708fffdaa93a92a1910245d8d27f6284dd10a827ec7a6d4312302ab0f3582cf"
+    },
+    {
+      "relative_path": "data/nagi777_activity_24h_20260814.json",
+      "role": "Snapshot inmutable de actividad pública.",
+      "sha256": "7690ac4c7718b13c0674bb5959f21c8c0e70a9603d8bb07ce8de69e2ddec9dea"
+    },
+    {
+      "relative_path": "data/resultado_nagi777_wallet24h_20260814.json",
+      "role": "Resultado descriptivo reproducible sin outcomes ni PnL.",
+      "sha256": "d1218a75a69d5f16b42c62555f357ed2e329be3bffe2a5b23e578feeab6a4fa6"
+    }
+  ],
+  "interpretation_notice": "Hecho observado: wallet, registros públicos y métricas descriptivas. Interpretación: el comportamiento es compatible con acumulación multi-fill de ambos lados. No pueden inferirse órdenes simultáneas, maker/taker, prioridad, cancelaciones ni rentabilidad.",
+  "manifest_sha256": "80b7b40dcb5d1e993cc26617a50f0b8a95c16f4ff979228ad800edd066439e7f",
+  "missing_evidence": [
+    "Order lifecycle completo con órdenes no llenadas, cancelaciones y replacements.",
+    "Atribución maker/taker, prioridad de cola, latencia, rebates y fees.",
+    "Reglas deterministas de precio, sizing, skew y límites de inventario.",
+    "Periodo y metodología exactos usados para las métricas publicadas.",
+    "Prueba paper independiente prerregistrada de máximo 24 horas."
+  ],
+  "next_valid_test": [
+    "Diseñar una V0.18 separada de acumulación multi-fill e inventario objetivo.",
+    "Congelar reglas y gates antes de evaluar una ventana paper nueva.",
+    "Modelar delay, profundidad, cancelación y reprice sin asumir fill por tocar precio.",
+    "Limitar la prueba a 24 horas y mantener dinero real bloqueado."
+  ],
+  "observed_metrics": [
+    {
+      "field": "metrics.btc_5m_activity_records",
+      "format": "plain",
+      "label": "Actividades públicas BTC 5m",
+      "source": "data/resultado_nagi777_wallet24h_20260814.json",
+      "value": 21807
+    },
+    {
+      "field": "metrics.btc_5m_markets",
+      "format": "plain",
+      "label": "Mercados BTC 5m",
+      "source": "data/resultado_nagi777_wallet24h_20260814.json",
+      "value": 276
+    },
+    {
+      "field": "metrics.markets_with_both_sides_bought_fraction",
+      "format": "percent",
+      "label": "Mercados con ambos lados",
+      "source": "data/resultado_nagi777_wallet24h_20260814.json",
+      "value": 0.9963768115942029
+    },
+    {
+      "field": "metrics.estimated_paired_capital_fraction",
+      "format": "percent",
+      "label": "Capital pareado estimado",
+      "source": "data/resultado_nagi777_wallet24h_20260814.json",
+      "value": 0.8227028723912491
+    },
+    {
+      "field": "metrics.estimated_weighted_complete_set_cost",
+      "format": "plain",
+      "label": "Coste ponderado estimado del set",
+      "source": "data/resultado_nagi777_wallet24h_20260814.json",
+      "value": 1.005722067017582
+    },
+    {
+      "field": "metrics.buy_outcome_switches",
+      "format": "plain",
+      "label": "Cambios observados UP/DOWN",
+      "source": "data/resultado_nagi777_wallet24h_20260814.json",
+      "value": 2716
+    }
+  ],
+  "pack_id": "retrovalix_208802_wallet24h",
+  "reasons": [
+    "La identidad y la estructura general de compras en ambos lados están verificadas.",
+    "El proxy pareado de 82,27% está cerca del 78,7% publicado.",
+    "El coste ponderado observado de 1,00572 no reproduce el 0,9843 publicado.",
+    "La API no expone el ciclo de órdenes necesario para reconstruir ejecución y edge.",
+    "Las unidades públicas no reproducen trades/hora ni average trade del post."
+  ],
+  "safety": {
+    "active_forward_modified": false,
+    "active_forward_read": false,
+    "maximum_new_experiment_hours": 24,
+    "new_experiment_opened": false,
+    "orders_enabled": false,
+    "real_money": "BLOQUEADO",
+    "wallet_required": false
+  },
+  "schema": "evidence_pack_1",
+  "scope_statement": "Este pack estudia solamente actividad pública ejecutada durante una ventana contemporánea prerregistrada de 24 horas. No reemplaza el pack V0.16/V0.17: aquella interpretación mínima continúa en FAIL y esta reconstrucción observable continúa con evidencia insuficiente.",
+  "source_post": {
+    "claim_summary": "El post atribuye +$126.836 a nagi777 y describe límites en UP/DOWN, coste medio del set 0,9843, 78,7% de capital pareado y 21,3% residual.",
+    "date": "2026-08-13",
+    "id": "2088025556428501021",
+    "url": "https://x.com/RetroValix/status/2088025556428501021"
+  },
+  "strategy_spec": {
+    "decision_timing": "Múltiples ejecuciones durante cada mercado; el resultado sellado registra 21.807 actividades y 2.716 cambios de lado.",
+    "entry_rules": [
+      "La actividad observable contiene compras pequeñas y repetidas.",
+      "La señal y el precio límite que originan cada compra no son públicos."
+    ],
+    "execution_assumptions": [
+      "Cada fila es actividad ejecutada pública y no una orden completa.",
+      "No se asume que side BUY pruebe que la orden original fuera maker o límite."
+    ],
+    "exit_rules": [
+      "La ventana no contiene una regla de salida identificable.",
+      "No se leyeron resoluciones ni se calculó PnL."
+    ],
+    "hedge_rules": [
+      "La wallet compra ambos lados en 275 de 276 mercados.",
+      "El pareado se estima con el mínimo de shares compradas UP/DOWN; no es matching exacto de lotes."
+    ],
+    "market_universe": "276 mercados BTC UP/DOWN de cinco minutos operados por la wallet dentro de la ventana congelada.",
+    "unknowns": [
+      "Regla de cotización, reprice y cancelación.",
+      "Prioridad de cola, latencia y partial fills.",
+      "Sizing objetivo e inventario máximo.",
+      "Maker/taker, rebates, fees y coste neto.",
+      "Metodología y periodo exactos usados por RetroValix."
+    ]
+  },
+  "title": "Evidence Pack — actividad pública 24h de nagi777",
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "verdict_scope": "La ventana pública confirma una estructura de acumulación pareada y residual, pero no permite reconstruir las órdenes ni demostrar un edge replicable."
+}

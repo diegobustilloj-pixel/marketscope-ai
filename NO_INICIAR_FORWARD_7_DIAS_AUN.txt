@@ -1,0 +1,13 @@
+FASE 4.2 v0.9.3 EXPERIMENTAL
+
+NO use iniciar_shadow_forward_7_dias.bat (corresponde al protocolo anterior).
+
+Ruta acelerada autorizada SOLO en paper/shadow:
+1. Ejecutar iniciar_prueba_twap_transfer_v093_15min.bat.
+2. Revisar que TWAP actual y TWAP de apertura esten frescos y que el modelo
+   twap_transfer_strike_hgb genere predicciones.
+3. Solo despues ejecutar iniciar_forward_twap_transfer_7_dias_v093.bat.
+
+Sin wallet. Sin Kelly. Sin ordenes reales.
+Aunque el forward resulte candidato, dinero real permanece bloqueado hasta
+revision manual.

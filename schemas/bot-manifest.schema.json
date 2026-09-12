@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.proyectobotv4/schemas/bot-manifest.schema.json",
+  "title": "ProyectoBotV4 bot manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "bot_id",
+    "display_name",
+    "domain",
+    "version",
+    "lifecycle_stage",
+    "enabled",
+    "managed_by_registry",
+    "execution",
+    "entrypoint",
+    "data_dir",
+    "safety",
+    "tags",
+    "notes"
+  ],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "bot_id": {"type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"},
+    "display_name": {"type": "string", "minLength": 1},
+    "domain": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+].+)?$"},
+    "lifecycle_stage": {
+      "enum": ["draft", "research", "backtest", "shadow", "paper", "approved", "live", "paused", "archived"]
+    },
+    "enabled": {"type": "boolean"},
+    "managed_by_registry": {"type": "boolean"},
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "environment"],
+      "properties": {
+        "mode": {"enum": ["read_only", "manual_signal", "shadow", "paper", "live"]},
+        "environment": {"enum": ["development", "backtest", "shadow", "paper", "production"]}
+      }
+    },
+    "entrypoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["script", "module"],
+      "properties": {
+        "script": {"type": "string", "minLength": 1},
+        "module": {"type": ["string", "null"]}
+      }
+    },
+    "data_dir": {"type": "string", "minLength": 1},
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["real_money", "automatic_orders", "withdrawals"],
+      "properties": {
+        "real_money": {"const": false},
+        "automatic_orders": {"const": false},
+        "withdrawals": {"const": false}
+      }
+    },
+    "tags": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "notes": {"type": "string"}
+  }
+}

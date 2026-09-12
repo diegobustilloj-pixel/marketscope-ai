@@ -1,0 +1,205 @@
+FASE 3 GOLD 
+Inicio de informe: mar. 28/07/2026 12:08:24,25 
+ 
+RESULTADO GOLD 
+{
+  "data_contract_sha256": "c20eb2b9fb5978f8f010c3ab7248211e4b99610cf9be2d434f6237cef3a05da3",
+  "dropped_feature_rows": {},
+  "elapsed_seconds": 2.877,
+  "eligible_markets": 537,
+  "expected_feature_rows": 2148,
+  "feature_null_counts": {
+    "binance_price": 2056,
+    "chainlink_return_60s_bps": 0,
+    "chainlink_up_fraction_60s": 87,
+    "chainlink_vol_60s_bps": 0,
+    "down_bid_depth_5c": 117,
+    "down_last_trade_price": 0,
+    "up_bid_depth_5c": 131,
+    "up_last_trade_price": 0
+  },
+  "feature_row_coverage": 1.0,
+  "feature_rows": 2148,
+  "horizons_seconds": [
+    15,
+    30,
+    60,
+    90
+  ],
+  "leakage_violations": 0,
+  "markets_without_features": 0,
+  "orphan_features": 0,
+  "output_bytes": 1724416,
+  "output_committed": true,
+  "output_database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\gold_fase3.db",
+  "passed": true,
+  "requested_output_database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\gold_fase3.db",
+  "source_databases": {
+    "v3": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\silver_completo_v3_865.db",
+    "v4": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\silver_completo_v4_25.db"
+  },
+  "source_opened_read_only": true,
+  "source_quick_checks": {
+    "v3": "ok",
+    "v4": "ok"
+  },
+  "source_sizes_after": {
+    "v3": 113291264,
+    "v4": 3424256
+  },
+  "source_sizes_before": {
+    "v3": 113291264,
+    "v4": 3424256
+  },
+  "source_sizes_unchanged": true,
+  "split_order_valid": true,
+  "split_summary": [
+    {
+      "down": 155,
+      "first_market_ms": 1784925000000,
+      "last_market_ms": 1785049500000,
+      "markets": 322,
+      "split": "train",
+      "up": 167
+    },
+    {
+      "down": 47,
+      "first_market_ms": 1785049800000,
+      "last_market_ms": 1785116700000,
+      "markets": 107,
+      "split": "validation",
+      "up": 60
+    },
+    {
+      "down": 60,
+      "first_market_ms": 1785117000000,
+      "last_market_ms": 1785201600000,
+      "markets": 108,
+      "split": "test",
+      "up": 48
+    }
+  ],
+  "sqlite_quick_check": "ok"
+}
+ 
+ESTADO GOLD 
+{
+  "database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\gold_fase3.db",
+  "database_bytes": 1724416,
+  "feature_null_counts": {
+    "binance_price": 2056,
+    "chainlink_return_60s_bps": 0,
+    "chainlink_up_fraction_60s": 87,
+    "chainlink_vol_60s_bps": 0,
+    "down_bid_depth_5c": 117,
+    "down_last_trade_price": 0,
+    "up_bid_depth_5c": 131,
+    "up_last_trade_price": 0
+  },
+  "feature_rows": 2148,
+  "leakage_violations": 0,
+  "markets": 537,
+  "meta": {
+    "created_at": "2026-07-28T16:08:21+00:00",
+    "data_contract_sha256": "c20eb2b9fb5978f8f010c3ab7248211e4b99610cf9be2d434f6237cef3a05da3",
+    "dropped_feature_rows": {},
+    "elapsed_seconds": 2.8484057000005123,
+    "eligible_markets": 537,
+    "expected_feature_rows": 2148,
+    "feature_null_counts": {
+      "binance_price": 2056,
+      "chainlink_return_60s_bps": 0,
+      "chainlink_up_fraction_60s": 87,
+      "chainlink_vol_60s_bps": 0,
+      "down_bid_depth_5c": 117,
+      "down_last_trade_price": 0,
+      "up_bid_depth_5c": 131,
+      "up_last_trade_price": 0
+    },
+    "feature_row_coverage": 1.0,
+    "feature_rows": 2148,
+    "feature_time_policy": "solo_datos_con_timestamp_hasta_decision_inclusive",
+    "horizons_seconds": [
+      15,
+      30,
+      60,
+      90
+    ],
+    "leakage_violations": 0,
+    "markets_without_features": 0,
+    "orphan_features": 0,
+    "schema_version": 1,
+    "source_databases": {
+      "v3": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\silver_completo_v3_865.db",
+      "v4": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\silver_completo_v4_25.db"
+    },
+    "source_quick_checks": {
+      "v3": "ok",
+      "v4": "ok"
+    },
+    "source_sizes_bytes": {
+      "v3": 113291264,
+      "v4": 3424256
+    },
+    "split_order_valid": true,
+    "split_policy": "chronological_60_20_20",
+    "split_summary": [
+      {
+        "down": 155,
+        "first_market_ms": 1784925000000,
+        "last_market_ms": 1785049500000,
+        "markets": 322,
+        "split": "train",
+        "up": 167
+      },
+      {
+        "down": 47,
+        "first_market_ms": 1785049800000,
+        "last_market_ms": 1785116700000,
+        "markets": 107,
+        "split": "validation",
+        "up": 60
+      },
+      {
+        "down": 60,
+        "first_market_ms": 1785117000000,
+        "last_market_ms": 1785201600000,
+        "markets": 108,
+        "split": "test",
+        "up": 48
+      }
+    ],
+    "target": "y_up",
+    "training_coverage_threshold": 0.95
+  },
+  "split_order_valid": true,
+  "split_summary": [
+    {
+      "down": 155,
+      "first_market_ms": 1784925000000,
+      "last_market_ms": 1785049500000,
+      "markets": 322,
+      "split": "train",
+      "up": 167
+    },
+    {
+      "down": 47,
+      "first_market_ms": 1785049800000,
+      "last_market_ms": 1785116700000,
+      "markets": 107,
+      "split": "validation",
+      "up": 60
+    },
+    {
+      "down": 60,
+      "first_market_ms": 1785117000000,
+      "last_market_ms": 1785201600000,
+      "markets": 108,
+      "split": "test",
+      "up": 48
+    }
+  ],
+  "sqlite_quick_check": "ok"
+}
+ 
+Fin: mar. 28/07/2026 12:08:24,57 

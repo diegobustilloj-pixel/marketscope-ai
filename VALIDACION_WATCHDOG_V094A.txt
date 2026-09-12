@@ -1,0 +1,41 @@
+FASE 4.2 v0.9.4a1 - WATCHDOG RTDS/TWAP
+======================================
+
+Hallazgo que motiva el parche
+-----------------------------
+El forward v0.9.3 mantuvo shadow-rtds=CONNECTED aunque el ultimo TWAP tenia
+~1.899.000 ms de antiguedad. El socket estaba vivo pero el flujo TWAP quedo
+silencioso. Resultado observado: 36 features, solo 8 scores y 28 skips.
+
+Correccion
+----------
+- NO relaja twap_30s_fresh ni twap_open_fresh.
+- NO cambia el modelo ni sus pesos.
+- NO usa precios viejos para rellenar huecos.
+- Agrega watchdog solo al feed RTDS del forward:
+  * exige mensajes validos crypto_prices_twap_thirty BTC/USD window_s=30;
+  * si pasan 12 s sin TWAP valido, marca STALE;
+  * cierra el websocket y fuerza resuscripcion/reconexion;
+  * registra rtds:stale_watchdog y rtds:stale_reconnects.
+- Health se persiste cada 60 s para detectar el problema mucho antes.
+- Corrige el BAT que imprimia "El sistema no puede encontrar el archivo"
+  porque CMD interpretaba el simbolo < de "<=5 s" como redireccion.
+
+Validacion local
+----------------
+- unittest completo: 45 tests OK.
+- Incluye test que simula un socket conectado que solo responde PONG:
+  el watchdog lo cierra, reconecta y acepta despues un TWAP valido.
+- Python compile: OK.
+
+Inicio limpio
+-------------
+Usar una base nueva:
+  data\shadow_forward_twap_transfer_v094a.db
+No borrar la base v093; conservarla para auditoria.
+
+Seguridad
+---------
+Wallet: NO.
+Ordenes reales: NO.
+Dinero real: BLOQUEADO.

@@ -1,0 +1,8 @@
+{
+  "environment": "production",
+  "enabled": false,
+  "real_money": false,
+  "automatic_orders": false,
+  "blocked_reason": "No existe todavía un gate independiente de aprobación y custodia de secretos.",
+  "purpose": "reservado; no utilizable"
+}

@@ -1,0 +1,234 @@
+FASE 4.2 v0.9.4a1 - AUDITORIA FORWARD AUTOMATICA
+Fin: 2026-08-17T03:43:39+00:00
+
+AUDITORIA
+{
+  "approved_models": [],
+  "database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\shadow_forward_twap_transfer_v094a.db",
+  "database_bytes": 102068224,
+  "elapsed_hours": 168.0,
+  "expected_markets": 2016,
+  "experiment_complete": true,
+  "feature_coverage": 0.99739583,
+  "features": 1915,
+  "first_market_start_ms": 1786320300000,
+  "forward_candidate": false,
+  "historical_test_accessed": true,
+  "historical_test_accessed_by_phase4_pipeline": false,
+  "historical_test_status_note": "El holdout historico fue inspeccionado externamente durante diagnostico y no se usa para seleccionar ni validar v0.9.3.",
+  "historical_test_still_locked": false,
+  "kelly_used": false,
+  "last_market_start_ms": 1786924500000,
+  "market_coverage": 0.95238095,
+  "markets": 1920,
+  "meta": {
+    "artifact_created_at": "2026-08-08T19:43:00+00:00",
+    "code_version": "0.9.4a1",
+    "experiment_completed_at": "2026-08-17T00:02:18+00:00",
+    "experiment_started_at": "2026-08-10T00:02:18+00:00",
+    "fee_rate": 0.07,
+    "gold_contract_sha256": "2f6b9ef6aae7613916619c206f2532069a6a776683cacf947571e1af48ad09fa",
+    "historical_test_accessed": false,
+    "historical_test_consumed_externally": true,
+    "hypotheses": [
+      {
+        "minimum_edge": 0.1,
+        "model_name": "twap_transfer_strike_hgb",
+        "scope": "twap_open_fresh"
+      }
+    ],
+    "legacy_strike_model_enabled": false,
+    "money_real_enabled": false,
+    "orders_enabled": false,
+    "phase4_contract_sha256": "daa9874d9d3c41cb0ceb3364b380c247e242b1cad9355112f1e81dff894028e7",
+    "rtds_topics": [
+      "crypto_prices_chainlink",
+      "crypto_prices_twap_thirty"
+    ],
+    "schema_version": "4",
+    "slippage_per_share": 0.005,
+    "target_end_at": "2026-08-17T00:02:18+00:00",
+    "target_hours": 168.0,
+    "twap_capture_only": false,
+    "twap_max_age_ms": 5000,
+    "twap_retraining_required": false,
+    "twap_transfer_distance_feature": "twap_distance_to_open_bps",
+    "twap_transfer_model_enabled": true,
+    "twap_transfer_origin_model": "strike_hist_gradient_boosting",
+    "twap_window_seconds": 30,
+    "wallet_required": false
+  },
+  "model_results": [
+    {
+      "candidate": false,
+      "failures": [
+        "lcb_forward_no_positivo",
+        "brier_peor_que_mercado"
+      ],
+      "market_implied_probability": {
+        "accuracy_at_0_5": 0.90420436,
+        "brier": 0.07104896,
+        "ece_10_bins": 0.01752325,
+        "log_loss": 0.23630947,
+        "mean_probability_up": 0.51050302,
+        "roc_auc": 0.96636281,
+        "rows": 1879,
+        "up_rate": 0.50133049
+      },
+      "minimum_edge": 0.1,
+      "model_name": "twap_transfer_strike_hgb",
+      "probability": {
+        "accuracy_at_0_5": 0.89249601,
+        "brier": 0.08128604,
+        "ece_10_bins": 0.02322913,
+        "log_loss": 0.27511627,
+        "mean_probability_up": 0.49586029,
+        "roc_auc": 0.95257088,
+        "rows": 1879,
+        "up_rate": 0.50133049
+      },
+      "resolved_predictions": 1879,
+      "scope": "twap_open_fresh",
+      "trading": {
+        "confidence_z": 1.64485363,
+        "lower_confidence_bound_mean_pnl": -0.04229071,
+        "max_drawdown": 9.167567,
+        "mean_pnl": -0.00180507,
+        "net_pnl_per_share_sequence": -0.5306895,
+        "pnl_standard_deviation": 0.42203403,
+        "profit_factor": 0.99031951,
+        "roi_on_cost": -0.00369739,
+        "trades": 294,
+        "win_rate": 0.48639456,
+        "wins": 143
+      }
+    }
+  ],
+  "money_real_candidate": false,
+  "multiple_testing": {
+    "confidence_z": 1.6448536269514715,
+    "family_alpha": 0.05,
+    "hypotheses": 1
+  },
+  "orders_created": false,
+  "phase4_contract_matches_frozen": true,
+  "phase4_opened_read_only": true,
+  "phase4_unchanged": true,
+  "requires_manual_review_before_live": true,
+  "resolution_coverage": 1.0,
+  "resolved": 1920,
+  "runs": [
+    {
+      "error": "RECOVERED_STALE_RUNNING",
+      "finished_at": "2026-08-10T16:08:40+00:00",
+      "run_id": 1,
+      "started_at": "2026-08-10T00:02:18+00:00",
+      "status": "INTERRUPTED"
+    },
+    {
+      "error": "RECOVERED_STALE_RUNNING",
+      "finished_at": "2026-08-13T13:54:48+00:00",
+      "run_id": 2,
+      "started_at": "2026-08-10T16:08:40+00:00",
+      "status": "INTERRUPTED"
+    },
+    {
+      "error": null,
+      "finished_at": "2026-08-17T00:05:12+00:00",
+      "run_id": 3,
+      "started_at": "2026-08-13T13:54:48+00:00",
+      "status": "COMPLETED"
+    }
+  ],
+  "sqlite_quick_check": "ok",
+  "strategy_validation_blocked_reason": null,
+  "target_hours": 168.0,
+  "technical_passed": true,
+  "twap_retraining_required": false,
+  "wallet_required": false
+}
+
+ESTADO FINAL
+{
+  "database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\shadow_forward_twap_transfer_v094a.db",
+  "database_bytes": 102068224,
+  "diagnostic_failures": 14,
+  "diagnostic_features": 5741,
+  "experiment_completed_at": "2026-08-17T00:02:18+00:00",
+  "experiment_started_at": "2026-08-10T00:02:18+00:00",
+  "features": 1915,
+  "features_with_fresh_twap_at_decision": 1890,
+  "features_with_official_strike_at_decision": 0,
+  "features_with_twap_at_decision": 1915,
+  "latest_health": {
+    "connections": {
+      "shadow-binance": "CANCELLED",
+      "shadow-rtds": "CANCELLED"
+    },
+    "counters": {
+      "binance:aggTrade": 1144384,
+      "clob:best_bid_ask": 3763659,
+      "clob:book": 2650004,
+      "clob:last_trade_price": 1278798,
+      "clob:malformed": 28439,
+      "clob:market": 28439,
+      "clob:new_market": 84417,
+      "clob:price_change": 95850408,
+      "clob:tick_size_change": 892,
+      "rtds:crypto_price": 110,
+      "rtds:crypto_prices": 109,
+      "rtds:crypto_prices_chainlink": 279100,
+      "rtds:crypto_prices_twap_thirty": 279163,
+      "rtds:malformed": 109,
+      "rtds:stale_reconnects": 24,
+      "rtds:stale_watchdog": 86,
+      "rtds:twap_watchdog_fresh": 279163,
+      "strike_refresh_failed": 8,
+      "twap:saved": 279163,
+      "twap_transfer_model_scored": 965,
+      "twap_transfer_model_skipped": 18
+    },
+    "database_bytes": 106184496,
+    "free_bytes": 92764872704,
+    "recorded_at": "2026-08-17T00:05:12+00:00"
+  },
+  "markets": 1920,
+  "markets_with_official_strike": 1536,
+  "markets_with_twap_coverage": 1920,
+  "orders_created": false,
+  "resolved": 1920,
+  "runs": [
+    {
+      "error": "RECOVERED_STALE_RUNNING",
+      "finished_at": "2026-08-10T16:08:40+00:00",
+      "run_id": 1,
+      "started_at": "2026-08-10T00:02:18+00:00",
+      "status": "INTERRUPTED"
+    },
+    {
+      "error": "RECOVERED_STALE_RUNNING",
+      "finished_at": "2026-08-13T13:54:48+00:00",
+      "run_id": 2,
+      "started_at": "2026-08-10T16:08:40+00:00",
+      "status": "INTERRUPTED"
+    },
+    {
+      "error": null,
+      "finished_at": "2026-08-17T00:05:12+00:00",
+      "run_id": 3,
+      "started_at": "2026-08-13T13:54:48+00:00",
+      "status": "COMPLETED"
+    }
+  ],
+  "signals": 3794,
+  "sqlite_quick_check": "ok",
+  "target_end_at": "2026-08-17T00:02:18+00:00",
+  "twap_first_timestamp_ms": 1786320139000,
+  "twap_last_timestamp_ms": 1786924935000,
+  "twap_updates": 543063,
+  "twap_window_seconds_max": 30,
+  "twap_window_seconds_min": 30,
+  "wallet_required": false
+}
+
+DINERO REAL: BLOQUEADO

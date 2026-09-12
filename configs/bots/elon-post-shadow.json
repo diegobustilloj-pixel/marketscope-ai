@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "bot_id": "elon-post-shadow",
+  "display_name": "Elon Post Count Shadow",
+  "domain": "culture",
+  "version": "0.1.0",
+  "lifecycle_stage": "shadow",
+  "enabled": false,
+  "managed_by_registry": false,
+  "execution": {"mode": "shadow", "environment": "shadow"},
+  "entrypoint": {"script": "elon_shadow_monitor_v001.py", "module": "polymarket_bot.elon_shadow_monitor"},
+  "data_dir": "data/elon_post_count_v001",
+  "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
+  "tags": ["elon", "forward", "shadow", "receive-only"],
+  "notes": "Monitor receive-only; registro no equivale a proceso activo."
+}

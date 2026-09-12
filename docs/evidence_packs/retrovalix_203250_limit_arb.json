@@ -1,0 +1,125 @@
+{
+  "created_at": "2026-08-14T18:00:00Z",
+  "evidence_checks": [
+    {
+      "actual": "This trader made $178,000 on Polymarket using software, buying markets for $4.6\n\nHis trading bot makes 273 trades per hour or 4.55 trades per minute. He arbitrages 5-min Bitcoin markets and leans into the side where he sees an edge\n\nHis strategy is simple:\n\n> Buys only with limit",
+      "expected": "273 trades per hour",
+      "field": "text",
+      "kind": "identity",
+      "label": "El post afirma 273 trades por hora",
+      "operator": "contains",
+      "passed": true,
+      "source": "data/retrovalix_posts_raw.json"
+    },
+    {
+      "actual": "This trader made $178,000 on Polymarket using software, buying markets for $4.6\n\nHis trading bot makes 273 trades per hour or 4.55 trades per minute. He arbitrages 5-min Bitcoin markets and leans into the side where he sees an edge\n\nHis strategy is simple:\n\n> Buys only with limit",
+      "expected": "Buys only with limit",
+      "field": "text",
+      "kind": "identity",
+      "label": "El fragmento accesible exige órdenes límite",
+      "operator": "contains",
+      "passed": true,
+      "source": "data/retrovalix_posts_raw.json"
+    },
+    {
+      "actual": "You will not find any edge if you don’t have HFT server with 1ms latency. This is a serious setup . SEVER is most likely in New York located . I tried this forget it . Already there are entire companies who are way faster then you . It is all about how fast can you place a bet .",
+      "expected": "1ms latency",
+      "field": "text",
+      "kind": "identity",
+      "label": "La audiencia objeta la latencia HFT",
+      "operator": "contains",
+      "passed": true,
+      "source": "data/retrovalix_comments_2032506967923515706.json"
+    },
+    {
+      "actual": "can do copy trade？",
+      "expected": "copy trade",
+      "field": "text",
+      "kind": "identity",
+      "label": "La audiencia pregunta si puede hacer copy trade",
+      "operator": "contains",
+      "passed": true,
+      "source": "data/retrovalix_comments_2032506967923515706.json"
+    }
+  ],
+  "frozen_sources": [
+    {
+      "relative_path": "data/retrovalix_posts_raw.json",
+      "role": "Texto accesible del post fijado.",
+      "sha256": "1793412f7ef5d1fd765064c07bdaaf87df52e9996865e611ac5b91e739fd9653"
+    },
+    {
+      "relative_path": "data/retrovalix_comments_2032506967923515706.json",
+      "role": "Comentarios públicos con solicitudes y objeciones técnicas.",
+      "sha256": "476d48182d81d5b8f01778a3d40d783d8ca59a66f29d075848c59c4c9b132c91"
+    }
+  ],
+  "interpretation_notice": "Hecho observado: contenido público del post y sus comentarios. Hipótesis: arbitraje con inventario y sesgo. No se atribuye una implementación concreta a ningún modelo matemático sin artefactos verificables.",
+  "manifest_sha256": "7e6b612943c1ac5fc00c70cd2f78faf05587e3ffb4988275bd553230bb387e5d",
+  "missing_evidence": [
+    "Wallet y transacciones exactas usadas por el análisis.",
+    "Regla matemática de edge, spread, inventario y sizing.",
+    "Ciclo completo de órdenes, fees, rebates, latencia y prioridad de cola.",
+    "Evaluación temporal independiente y contemporánea."
+  ],
+  "next_valid_test": [
+    "Obtener la wallet antes de inferir reglas adicionales.",
+    "Separar market making, arbitraje y sesgo direccional en hipótesis independientes.",
+    "Capturar como máximo 24 horas de order book y simular fills con delay y profundidad.",
+    "No usar el PnL público como etiqueta para seleccionar parámetros."
+  ],
+  "observed_metrics": [],
+  "pack_id": "retrovalix_203250_limit_arb",
+  "reasons": [
+    "El post no publica una señal, reglas de cotización ni criterios de cancelación reproducibles.",
+    "Las órdenes límite dependen de fill y prioridad, no solo del precio mostrado.",
+    "Los comentarios identifican latencia, capital, drawdown y compresión del edge como explicaciones alternativas.",
+    "No existe una prueba QuantBot congelada que represente exactamente este bot."
+  ],
+  "safety": {
+    "active_forward_modified": false,
+    "active_forward_read": false,
+    "maximum_new_experiment_hours": 24,
+    "new_experiment_opened": false,
+    "orders_enabled": false,
+    "real_money": "BLOQUEADO",
+    "wallet_required": false
+  },
+  "schema": "evidence_pack_1",
+  "scope_statement": "El texto y los comentarios públicos permiten registrar la hipótesis, pero no sustituyen código, ecuaciones, transacciones, ciclo de órdenes ni validación temporal.",
+  "source_post": {
+    "claim_summary": "El post atribuye $178.000 a software que opera 273 veces por hora, arbitra mercados BTC de cinco minutos, usa órdenes límite y mantiene sesgo hacia el lado con edge.",
+    "date": "2026-03-13",
+    "id": "2032506967923515706",
+    "url": "https://x.com/RetroValix/status/2032506967923515706"
+  },
+  "strategy_spec": {
+    "decision_timing": "Hasta 273 ejecuciones por hora según el post; timing exacto no publicado.",
+    "entry_rules": [
+      "Usar órdenes límite según el fragmento accesible.",
+      "Arbitrar el mercado y sesgar inventario hacia un edge no definido."
+    ],
+    "execution_assumptions": [
+      "Una orden límite no garantiza fill ni prioridad de cola.",
+      "La tasa observada puede depender de infraestructura y capital no publicados."
+    ],
+    "exit_rules": [
+      "No hay una regla de salida reproducible publicada.",
+      "No se conoce el tratamiento del inventario al vencimiento."
+    ],
+    "hedge_rules": [
+      "El post sugiere arbitraje, pero no publica la regla de formación de pares.",
+      "No existe un criterio publicado para cobertura parcial o cancelación."
+    ],
+    "market_universe": "Mercados BTC UP/DOWN de cinco minutos.",
+    "unknowns": [
+      "Wallet y dataset exactos.",
+      "Definición numérica del edge.",
+      "Precios, cancelaciones, replacements y partial fills.",
+      "Capital, drawdown, rebates, fees y latencia."
+    ]
+  },
+  "title": "Evidence Pack — arbitraje BTC 5m con órdenes límite",
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "verdict_scope": "No existe evidencia suficiente para reproducir ni invalidar el bot del post fijado."
+}

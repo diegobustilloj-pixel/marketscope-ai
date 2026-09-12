@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "bot_id": "climate-shadow",
+  "display_name": "Climate Shadow Monitor",
+  "domain": "climate",
+  "version": "0.1.0",
+  "lifecycle_stage": "shadow",
+  "enabled": false,
+  "managed_by_registry": false,
+  "execution": {"mode": "shadow", "environment": "shadow"},
+  "entrypoint": {"script": "climate_shadow_monitor_v001.py", "module": "polymarket_bot.climate_shadow_monitor"},
+  "data_dir": "data/climate_live_v002",
+  "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
+  "tags": ["climate", "forward", "shadow", "receive-only"],
+  "notes": "Registro documental; los BAT históricos continúan controlando ejecución."
+}

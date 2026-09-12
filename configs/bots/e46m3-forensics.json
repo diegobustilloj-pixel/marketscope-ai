@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "bot_id": "e46m3-forensics",
+  "display_name": "e46m3 Wallet Forensics",
+  "domain": "wallet-forensics",
+  "version": "0.1.0",
+  "lifecycle_stage": "research",
+  "enabled": false,
+  "managed_by_registry": false,
+  "execution": {"mode": "read_only", "environment": "development"},
+  "entrypoint": {"script": "e46m3_forensics_v001.py", "module": "polymarket_bot.e46m3_deep_analysis"},
+  "data_dir": "data/e46m3_forensics",
+  "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
+  "tags": ["wallet", "forensics", "copy-reconstruction", "read-only"],
+  "notes": "Resultado guardado para futura reconstrucción, no copia automática."
+}

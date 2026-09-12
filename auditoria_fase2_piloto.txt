@@ -1,0 +1,383 @@
+PILOTO FASE 2 
+Inicio: lun. 27/07/2026 23:28:28,17 
+ 
+2026-07-27T23:28:28Z INFO phase2-silver Fuente V3 en solo lectura | mercados seleccionados=10
+2026-07-27T23:28:29Z INFO phase2-silver Etiquetas Gamma: 1/10 | verificadas=1
+2026-07-27T23:28:33Z INFO phase2-silver Etiquetas Gamma: 10/10 | verificadas=10
+2026-07-27T23:28:48Z INFO phase2-silver Procesamiento: bloques=500 | envelopes=483000
+2026-07-27T23:29:01Z INFO phase2-silver Procesamiento: bloques=1000 | envelopes=964261
+{
+  "binance_coverage": 0.0,
+  "binance_expected": false,
+  "binance_rows": 0,
+  "chunks_scanned": 1127,
+  "core_complete_rows": 2737,
+  "core_coverage": 0.912333,
+  "elapsed_seconds": 36.931,
+  "envelopes_scanned": 1085542,
+  "event_counts": [
+    {
+      "count": 41149,
+      "source": "clob",
+      "stream": "best_bid_ask"
+    },
+    {
+      "count": 34191,
+      "source": "clob",
+      "stream": "book"
+    },
+    {
+      "count": 16245,
+      "source": "clob",
+      "stream": "last_trade_price"
+    },
+    {
+      "count": 272,
+      "source": "clob",
+      "stream": "market"
+    },
+    {
+      "count": 194,
+      "source": "clob",
+      "stream": "new_market"
+    },
+    {
+      "count": 990794,
+      "source": "clob",
+      "stream": "price_change"
+    },
+    {
+      "count": 11,
+      "source": "gamma",
+      "stream": "events_metadata"
+    },
+    {
+      "count": 1,
+      "source": "rtds",
+      "stream": "crypto_price"
+    },
+    {
+      "count": 1,
+      "source": "rtds",
+      "stream": "crypto_prices"
+    },
+    {
+      "count": 2672,
+      "source": "rtds",
+      "stream": "crypto_prices_chainlink"
+    },
+    {
+      "count": 12,
+      "source": "system",
+      "stream": "collector_connected"
+    }
+  ],
+  "labels_failed": [],
+  "labels_verified": 10,
+  "late_events": 0,
+  "malformed_items": 0,
+  "markets_selected": 10,
+  "output_bytes": 1327104,
+  "output_database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\silver_pilot_v3_10.db",
+  "passed": true,
+  "second_rows": 3000,
+  "source_database": "C:\\ProyectoBotV3\\polymarket_quant_bot\\data\\polymarket_soak_72h_v3.db",
+  "source_opened_read_only": true,
+  "source_schema_version": 3,
+  "source_size_after": 16493203456,
+  "source_size_before": 16493203456,
+  "source_size_unchanged": true,
+  "sqlite_quick_check": "ok"
+}
+2026-07-27T23:29:05Z INFO phase2-silver Fuente V4 en solo lectura | mercados seleccionados=10
+2026-07-27T23:29:06Z INFO phase2-silver Etiquetas Gamma: 1/10 | verificadas=1
+2026-07-27T23:29:10Z INFO phase2-silver Etiquetas Gamma: 10/10 | verificadas=10
+2026-07-27T23:29:25Z INFO phase2-silver Procesamiento: bloques=500 | envelopes=493728
+2026-07-27T23:29:39Z INFO phase2-silver Procesamiento: bloques=1000 | envelopes=989510
+{
+  "binance_coverage": 0.931333,
+  "binance_expected": true,
+  "binance_rows": 2794,
+  "chunks_scanned": 1419,
+  "core_complete_rows": 2719,
+  "core_coverage": 0.906333,
+  "elapsed_seconds": 45.365,
+  "envelopes_scanned": 1407825,
+  "event_counts": [
+    {
+      "count": 24529,
+      "source": "binance",
+      "stream": "aggTrade"
+    },
+    {
+      "count": 42870,
+      "source": "clob",
+      "stream": "best_bid_ask"
+    },
+    {
+      "count": 31822,
+      "source": "clob",
+      "stream": "book"
+    },
+    {
+      "count": 15267,
+      "source": "clob",
+      "stream": "last_trade_price"
+    },
+    {
+      "count": 264,
+      "source": "clob",
+      "stream": "market"
+    },
+    {
+      "count": 607,
+      "source": "clob",
+      "stream": "new_market"
+    },
+    {
+      "count": 1289749,
+      "source": "clob",
+      "stream": "price_change"
+    },
+    {
+      "count": 8,
+      "source": "clob",
+      "stream": "tick_size_change"
+    },
+    {
+      "count": 11,
+      "source": "gamma",
+      "stream": "events_metadata"
+    },
+    {
+      "count": 4,
+      "source": "rtds",
+      "stream": "crypto_price"
+    },
+    {
+      "count": 4,
+      "source": "rtds",
+      "stream": "crypto_prices"
+    },
+    {
+      "count": 2663,
+      "source": "rtds",
+      "stream": "crypto_prices_chainlink"
+    },
+    {
+      "count": 20,
+      "source": "system",
+      "stream": "collector_connected"
+    },
+    {
+      "count": 7,
+      "source": "system",
+      "stream": "collector_disconnected"
+    }
+  ],
+  "labels_failed": [],
+  "labels_verified": 10,
+  "late_events": 2,
+  "malformed_items": 0,
+  "markets_selected": 10,
+  "output_bytes": 1368064,
+  "output_database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\silver_pilot_v4_10.db",
+  "passed": true,
+  "second_rows": 3000,
+  "source_database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\polymarket_fuentes_2h_v4.db",
+  "source_opened_read_only": true,
+  "source_schema_version": 4,
+  "source_size_after": 643162112,
+  "source_size_before": 643162112,
+  "source_size_unchanged": true,
+  "sqlite_quick_check": "ok"
+}
+ 
+ESTADO SILVER V3 
+{
+  "complete_core_coverage": 0.912333,
+  "complete_core_rows": 2737,
+  "database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\silver_pilot_v3_10.db",
+  "database_bytes": 1327104,
+  "markets": 10,
+  "meta": {
+    "binance_coverage": 0.0,
+    "chunks_scanned": 1127,
+    "core_coverage": 0.9123333333333333,
+    "created_at": "2026-07-28T03:28:33+00:00",
+    "elapsed_seconds": 36.93146429999979,
+    "envelopes_scanned": 1085542,
+    "event_counts": [
+      {
+        "count": 41149,
+        "source": "clob",
+        "stream": "best_bid_ask"
+      },
+      {
+        "count": 34191,
+        "source": "clob",
+        "stream": "book"
+      },
+      {
+        "count": 16245,
+        "source": "clob",
+        "stream": "last_trade_price"
+      },
+      {
+        "count": 272,
+        "source": "clob",
+        "stream": "market"
+      },
+      {
+        "count": 194,
+        "source": "clob",
+        "stream": "new_market"
+      },
+      {
+        "count": 990794,
+        "source": "clob",
+        "stream": "price_change"
+      },
+      {
+        "count": 11,
+        "source": "gamma",
+        "stream": "events_metadata"
+      },
+      {
+        "count": 1,
+        "source": "rtds",
+        "stream": "crypto_price"
+      },
+      {
+        "count": 1,
+        "source": "rtds",
+        "stream": "crypto_prices"
+      },
+      {
+        "count": 2672,
+        "source": "rtds",
+        "stream": "crypto_prices_chainlink"
+      },
+      {
+        "count": 12,
+        "source": "system",
+        "stream": "collector_connected"
+      }
+    ],
+    "fetch_labels": true,
+    "labels_verified": 10,
+    "late_events": 0,
+    "malformed_items": 0,
+    "schema_version": 1,
+    "selected_markets": 10,
+    "source_database": "C:\\ProyectoBotV3\\polymarket_quant_bot\\data\\polymarket_soak_72h_v3.db",
+    "source_schema_version": 3,
+    "source_size_bytes": 16493203456
+  },
+  "second_rows": 3000,
+  "sqlite_quick_check": "ok",
+  "verified_labels": 10
+}
+ 
+ESTADO SILVER V4 
+{
+  "complete_core_coverage": 0.906333,
+  "complete_core_rows": 2719,
+  "database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\silver_pilot_v4_10.db",
+  "database_bytes": 1368064,
+  "markets": 10,
+  "meta": {
+    "binance_coverage": 0.9313333333333333,
+    "chunks_scanned": 1419,
+    "core_coverage": 0.9063333333333333,
+    "created_at": "2026-07-28T03:29:11+00:00",
+    "elapsed_seconds": 45.364849600002344,
+    "envelopes_scanned": 1407825,
+    "event_counts": [
+      {
+        "count": 24529,
+        "source": "binance",
+        "stream": "aggTrade"
+      },
+      {
+        "count": 42870,
+        "source": "clob",
+        "stream": "best_bid_ask"
+      },
+      {
+        "count": 31822,
+        "source": "clob",
+        "stream": "book"
+      },
+      {
+        "count": 15267,
+        "source": "clob",
+        "stream": "last_trade_price"
+      },
+      {
+        "count": 264,
+        "source": "clob",
+        "stream": "market"
+      },
+      {
+        "count": 607,
+        "source": "clob",
+        "stream": "new_market"
+      },
+      {
+        "count": 1289749,
+        "source": "clob",
+        "stream": "price_change"
+      },
+      {
+        "count": 8,
+        "source": "clob",
+        "stream": "tick_size_change"
+      },
+      {
+        "count": 11,
+        "source": "gamma",
+        "stream": "events_metadata"
+      },
+      {
+        "count": 4,
+        "source": "rtds",
+        "stream": "crypto_price"
+      },
+      {
+        "count": 4,
+        "source": "rtds",
+        "stream": "crypto_prices"
+      },
+      {
+        "count": 2663,
+        "source": "rtds",
+        "stream": "crypto_prices_chainlink"
+      },
+      {
+        "count": 20,
+        "source": "system",
+        "stream": "collector_connected"
+      },
+      {
+        "count": 7,
+        "source": "system",
+        "stream": "collector_disconnected"
+      }
+    ],
+    "fetch_labels": true,
+    "labels_verified": 10,
+    "late_events": 2,
+    "malformed_items": 0,
+    "schema_version": 1,
+    "selected_markets": 10,
+    "source_database": "C:\\ProyectoBotV4\\polymarket_quant_bot\\data\\polymarket_fuentes_2h_v4.db",
+    "source_schema_version": 4,
+    "source_size_bytes": 643162112
+  },
+  "second_rows": 3000,
+  "sqlite_quick_check": "ok",
+  "verified_labels": 10
+}
+ 
+Fin: lun. 27/07/2026 23:29:51,58 

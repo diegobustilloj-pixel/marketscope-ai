@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "bot_id": "climate-research",
+  "display_name": "Climate Research",
+  "domain": "climate",
+  "version": "0.1.0",
+  "lifecycle_stage": "research",
+  "enabled": false,
+  "managed_by_registry": false,
+  "execution": {"mode": "read_only", "environment": "development"},
+  "entrypoint": {"script": "climate_research_v001.py", "module": "polymarket_bot.climate_research"},
+  "data_dir": "data/climate_research_v001",
+  "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
+  "tags": ["climate", "research", "backtest", "read-only"],
+  "notes": "Dataset y modelado de temperatura; no ejecuta órdenes."
+}

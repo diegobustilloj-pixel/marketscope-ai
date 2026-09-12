@@ -1,0 +1,103 @@
+{
+  "created_at": "2026-08-14T18:00:00Z",
+  "evidence_checks": [
+    {
+      "actual": "This guy built an HFT bot on Polymarket and made +$185,054\n\nIt trades 5-minute crypto Up/Down markets using a directional strategy with a dynamic hedge:\n\n1. Finds the outcome its model sees as undervalued and starts building a position\n\n2. If the underlying asset’s movement changes, it starts buying the opposite side\n\n3. Within a single market, it can switch between Up and Down several times, constantly changing its net exposure\n\nPart of the accumulated Up and Down position turns into matched inventory. The remaining imbalance forms directional exposure\n\n> Average trade: $23.59\n> Trades/active hour: 148\n> Win Rate: 42%\n\nHis Polymarket nickname: pspspsps5\n\nYou can also automate your trading in two clicks, free for a trial run: \n\nhttps://\njoin.horizon.trade/retrovalix",
+      "expected": "directional strategy with a dynamic hedge",
+      "field": "detailText",
+      "kind": "identity",
+      "label": "El post describe dynamic hedge",
+      "operator": "contains",
+      "passed": true,
+      "source": "data/retrovalix_posts_raw.json"
+    },
+    {
+      "actual": "This guy built an HFT bot on Polymarket and made +$185,054\n\nIt trades 5-minute crypto Up/Down markets using a directional strategy with a dynamic hedge:\n\n1. Finds the outcome its model sees as undervalued and starts building a position\n\n2. If the underlying asset’s movement changes, it starts buying the opposite side\n\n3. Within a single market, it can switch between Up and Down several times, constantly changing its net exposure\n\nPart of the accumulated Up and Down position turns into matched inventory. The remaining imbalance forms directional exposure\n\n> Average trade: $23.59\n> Trades/active hour: 148\n> Win Rate: 42%\n\nHis Polymarket nickname: pspspsps5\n\nYou can also automate your trading in two clicks, free for a trial run: \n\nhttps://\njoin.horizon.trade/retrovalix",
+      "expected": "pspspsps5",
+      "field": "detailText",
+      "kind": "identity",
+      "label": "El post identifica al trader como pspspsps5",
+      "operator": "contains",
+      "passed": true,
+      "source": "data/retrovalix_posts_raw.json"
+    }
+  ],
+  "frozen_sources": [
+    {
+      "relative_path": "data/retrovalix_posts_raw.json",
+      "role": "Texto completo accesible del post fuente.",
+      "sha256": "1793412f7ef5d1fd765064c07bdaaf87df52e9996865e611ac5b91e739fd9653"
+    }
+  ],
+  "interpretation_notice": "Hecho observado: la descripción y las métricas públicas del post. Hipótesis: existe un modelo privado de probabilidad y una regla dinámica de cambio de exposición. No se conocen sus parámetros.",
+  "manifest_sha256": "641b094304543ac74ee716a20f7b513a536ee2223d62e79cbd0d226adfc6ba0f",
+  "missing_evidence": [
+    "Wallet y conjunto exacto de ejecuciones analizadas.",
+    "Modelo de probabilidad con variables, calibración y thresholds.",
+    "Order type, latencia, fills, fees, rebates y slippage.",
+    "Reglas de sizing, inventario, switching y salida.",
+    "Datos contemporáneos suficientes para una prueba forward independiente."
+  ],
+  "next_valid_test": [
+    "Conseguir la wallet o un export verificable de ejecuciones.",
+    "Escribir una sola interpretación determinista y marcar todos los supuestos.",
+    "Congelar una ventana paper de máximo 24 horas sin leer el forward activo.",
+    "Mantener `INSUFFICIENT_EVIDENCE` si no puede definirse la señal antes de ver resultados."
+  ],
+  "observed_metrics": [],
+  "pack_id": "retrovalix_208796_dynamic_hedge",
+  "reasons": [
+    "La frase 'el modelo ve infravalorado' no define una señal reproducible.",
+    "No se publican reglas de switching, sizing, salida ni ejecución.",
+    "Las cifras de PnL, win rate y trades por hora no bastan para atribuir causalidad a la estrategia descrita.",
+    "No existe un artefacto sellado de QuantBot que implemente exactamente esta hipótesis."
+  ],
+  "safety": {
+    "active_forward_modified": false,
+    "active_forward_read": false,
+    "maximum_new_experiment_hours": 24,
+    "new_experiment_opened": false,
+    "orders_enabled": false,
+    "real_money": "BLOQUEADO",
+    "wallet_required": false
+  },
+  "schema": "evidence_pack_1",
+  "scope_statement": "El pack conserva la narrativa como hipótesis, no como especificación. Ningún resultado V0.16/V0.17 puede transferirse a esta estrategia porque no usa el mismo modelo de entrada, switching ni sizing.",
+  "source_post": {
+    "claim_summary": "El post atribuye +$185.054 a un bot que compra el resultado considerado infravalorado, cambia de lado cuando se mueve el subyacente y acumula inventario pareado más exposición residual.",
+    "date": "2026-08-13",
+    "id": "2087965513020580350",
+    "url": "https://x.com/RetroValix/status/2087965513020580350"
+  },
+  "strategy_spec": {
+    "decision_timing": "Múltiples decisiones dentro de cada mercado; los instantes exactos no están publicados.",
+    "entry_rules": [
+      "Comprar el resultado que el modelo privado considera infravalorado.",
+      "Permitir múltiples cambios entre UP y DOWN dentro del mismo mercado."
+    ],
+    "execution_assumptions": [
+      "El post no especifica maker/taker, latencia, fees, slippage ni partial fills.",
+      "Las métricas públicas no prueban que un tercero alcance los mismos precios."
+    ],
+    "exit_rules": [
+      "No hay una regla de cierre publicada.",
+      "No hay una regla publicada para liquidar el residual direccional."
+    ],
+    "hedge_rules": [
+      "Comprar el lado opuesto cuando cambia el movimiento del subyacente.",
+      "Permitir que parte de las posiciones opuestas forme inventario pareado."
+    ],
+    "market_universe": "Mercados cripto UP/DOWN de cinco minutos mencionados por el post.",
+    "unknowns": [
+      "Fórmula y calibración del modelo de probabilidad.",
+      "Umbral que define infravaloración.",
+      "Regla exacta que detecta reversión del subyacente.",
+      "Sizing, límites de inventario y exposición máxima.",
+      "Reglas de cierre, cancelación y gestión de una pierna incompleta.",
+      "Direcciones de wallet y transacciones usadas en el análisis."
+    ]
+  },
+  "title": "Evidence Pack — directional strategy con dynamic hedge",
+  "verdict": "INSUFFICIENT_EVIDENCE",
+  "verdict_scope": "No existe evidencia suficiente para aprobar o rechazar la estrategia atribuida a pspspsps5."
+}

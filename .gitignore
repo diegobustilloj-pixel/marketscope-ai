@@ -1,0 +1,54 @@
+# Entornos y cachés locales
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secretos: solo se versiona el ejemplo sin credenciales
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.seed
+
+# Datos y resultados: se conservan localmente, no en Git
+data/**
+!data/README.md
+!data/.gitkeep
+logs/**
+!logs/README.md
+artifacts/runtime/**
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.duckdb
+*.parquet
+*.joblib
+*.partial
+
+# Paquetes y copias históricas binarias
+*.zip
+*.bak
+archive/packages/**
+!archive/packages/README.md
+archive/source_backups/**
+!archive/source_backups/README.md
+archive/unknown_artifacts/**
+!archive/unknown_artifacts/README.md
+
+# Build
+dist/
+build/
+
+# Sistema operativo e IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

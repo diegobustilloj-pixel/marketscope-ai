@@ -1,0 +1,8 @@
+{
+  "environment": "shadow",
+  "network_access": "public_receive_only",
+  "real_money": false,
+  "automatic_orders": false,
+  "max_runtime_hours": 24,
+  "purpose": "forward test sin firmas ni órdenes"
+}

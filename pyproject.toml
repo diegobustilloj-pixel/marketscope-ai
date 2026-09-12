@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "polymarket-quant-bot"
+version = "0.9.5a1"
+description = "Datos, modelos y forward shadow BTC 5m auditables"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "Proprietary - personal project"}
+authors = [{name = "Proyecto de Señor Diego"}]
+dependencies = [
+  "duckdb>=1.5,<2",
+  "joblib>=1.4,<2",
+  "numpy>=2,<3",
+  "scikit-learn>=1.6,<2",
+  "tzdata>=2025.2; platform_system == 'Windows'",
+  "websockets>=15,<17",
+]
+
+[project.scripts]
+polymarket-bot = "polymarket_bot.cli:main"
+polyledger-sentinel = "polymarket_bot.polyledger:main"
+polymarket-registry = "polymarket_bot.platform.registry:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<10",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

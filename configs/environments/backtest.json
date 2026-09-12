@@ -1,0 +1,9 @@
+{
+  "environment": "backtest",
+  "network_access": "disabled_during_replay",
+  "real_money": false,
+  "automatic_orders": false,
+  "source_data": "read_only",
+  "max_runtime_hours": 24,
+  "purpose": "replay reproducible sin look-ahead"
+}

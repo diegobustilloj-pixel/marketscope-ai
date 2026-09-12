@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "bot_id": "sports-nba-v1",
+  "display_name": "NBA Probability",
+  "domain": "sports",
+  "version": "0.1.0",
+  "lifecycle_stage": "draft",
+  "enabled": false,
+  "managed_by_registry": false,
+  "execution": {"mode": "read_only", "environment": "development"},
+  "entrypoint": {"script": "apps/sports-nba-v1/main.py", "module": null},
+  "data_dir": "data/sports-nba-v1",
+  "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
+  "tags": ["generated", "draft"],
+  "notes": "Definir hipótesis y gates antes de promover."
+}

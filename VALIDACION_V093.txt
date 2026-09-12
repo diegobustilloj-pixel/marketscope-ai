@@ -1,0 +1,31 @@
+VALIDACION FASE 4.2 v0.9.3 - TWAP TRANSFER
+===========================================
+
+Suite automatizada:
+- 43 tests passed
+- 3 subtests passed
+- compileall correcto
+
+Candidato:
+- model_name: twap_transfer_strike_hgb
+- decision: 60 s
+- minimum_edge neto: 0.10
+- base estimator: strike_hist_gradient_boosting
+- training rows: 467
+- fit rows: 374
+- calibration rows: 93
+- TWAP current freshness: <= 5 s
+- TWAP opening freshness: <= 5 s
+- distance feature at scoring: twap_distance_to_open_bps
+- wallet: false
+- orders real: false
+- money_real_candidate: siempre false hasta revision manual
+
+Control metodologico:
+- El candidato residual Ridge nuevo fue rechazado al fallar el holdout historico.
+- El holdout historico se considera consumido desde ese diagnostico y no se usa
+  para seleccionar v0.9.3.
+- v0.9.3 usa una hipotesis preexistente prometedora (strike HGB, edge 0.10),
+  transferida al nuevo dato de resolucion TWAP para validacion futura independiente.
+- Debe pasar primero smoke test 15 min y luego forward 7 dias.
+f39b43d02c916e959297a8a6bbdacbe1cd2323ee0b8243244854339d84b23785  data/modelos_twap_transfer_v093.joblib

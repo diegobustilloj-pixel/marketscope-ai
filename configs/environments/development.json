@@ -1,0 +1,8 @@
+{
+  "environment": "development",
+  "network_access": "optional",
+  "real_money": false,
+  "automatic_orders": false,
+  "write_scope": "temporary_or_dedicated_data_dir",
+  "purpose": "desarrollo, pruebas unitarias y diagnóstico"
+}

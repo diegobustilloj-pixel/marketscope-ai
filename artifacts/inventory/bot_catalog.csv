@@ -1,0 +1,12 @@
+﻿bot_id,display_name,domain,lifecycle_stage,execution_mode,enabled,managed_by_registry,real_money,entrypoint,data_dir
+btc5m-shadow-v003,BTC 5m Shadow V003,crypto-btc-5m,shadow,shadow,False,False,False,btc5m90_v003_shadow.py,data/btc5m90_v003
+car-forensics,car Wallet Forensics,wallet-forensics,research,read_only,False,False,False,car_forensics_v001.py,data/car_forensics
+climate-manual-ticket,Climate Manual Ticket,climate,shadow,manual_signal,False,False,False,climate_manual_ticket_v001.py,data/climate_manual_strategy_v001
+climate-research,Climate Research,climate,research,read_only,False,False,False,climate_research_v001.py,data/climate_research_v001
+climate-shadow,Climate Shadow Monitor,climate,shadow,shadow,False,False,False,climate_shadow_monitor_v001.py,data/climate_live_v002
+e46m3-forensics,e46m3 Wallet Forensics,wallet-forensics,research,read_only,False,False,False,e46m3_forensics_v001.py,data/e46m3_forensics
+elon-post-research,Elon Post Count Research,culture,research,read_only,False,False,False,elon_post_count_research_v001.py,data/elon_post_count_v001
+elon-post-shadow,Elon Post Count Shadow,culture,shadow,shadow,False,False,False,elon_shadow_monitor_v001.py,data/elon_post_count_v001
+polyledger-sentinel,PolyLedger Sentinel,ledger,research,read_only,False,False,False,polyledger_sentinel_v001.py,data/polyledger
+reward-market-maker-shadow,Liquidity Rewards Market Maker Shadow,market-making,shadow,shadow,False,False,False,reward_mm_shadow.py,data/reward_mm_shadow_v001
+sports-wallet-research,Sports Wallet Research,sports,research,read_only,False,False,False,sports_wallet_research_v001.py,data/sports_wallet_research_v001

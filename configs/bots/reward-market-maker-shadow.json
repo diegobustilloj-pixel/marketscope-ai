@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0.0",
+  "bot_id": "reward-market-maker-shadow",
+  "display_name": "Liquidity Rewards Market Maker Shadow",
+  "domain": "market-making",
+  "version": "0.1.0",
+  "lifecycle_stage": "shadow",
+  "enabled": false,
+  "managed_by_registry": false,
+  "execution": {"mode": "shadow", "environment": "shadow"},
+  "entrypoint": {"script": "reward_mm_shadow.py", "module": "polymarket_bot.reward_mm_shadow"},
+  "data_dir": "data/reward_mm_shadow_v001",
+  "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
+  "tags": ["market-making", "liquidity-rewards", "shadow", "read-only"],
+  "notes": "Los rewards configurados no se interpretan como ganancia esperada."
+}
