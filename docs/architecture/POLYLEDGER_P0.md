@@ -27,3 +27,28 @@ ledger, reconciliación y evidencia independiente real.
 
 Dinero real, conexiones de wallet, firma, retiros y órdenes automáticas siguen
 bloqueados. Ningún módulo P0 contiene un ejecutor o un firmante.
+
+## Entrega 2: contratos y decodificadores
+
+El registro exige rangos finitos sin solapamientos, fuente, ABI y hash de código.
+Cada observación de código y slots EIP-1967/beacon está fijada a un bloque/hash.
+Un cambio o una observación contradictoria bloquea la decodificación. Coincidir
+con un hash de configuración acredita esa correspondencia, no demuestra que un
+proveedor RPC sea honesto ni sustituye revisar la vinculación fuente/bytecode.
+
+`configs/polyledger/abi_catalog.json` conserva interfaces de eventos extraídas de
+los clones ya investigados, con commit y hash del archivo fuente. No incorpora
+implementaciones BUSL ni presume verificados los despliegues. El generador es
+`tools/build_polyledger_abi_catalog.py`; no se necesita ejecutarlo para operar.
+
+Hay familias separadas CLOB V1, CLOB V2/CTF, CTF, NegRisk, collateral y Combo.
+Combo permanece bloqueado hasta obtener ABI verificada y vectores de IDs; no se
+deducen interfaces de las auditorías. Los eventos desconocidos se conservan y
+quedan en cuarentena. `TransferBatch` conserva el log padre y el índice interno.
+`OrdersMatched` es anotación, no otro fill. La comisión V1 BUY se expresa en
+outcomes; V2 la expresa en colateral. Los hashes EIP-712 son cálculos sin firma,
+con dominio Exchange v2 y direcciones CTF/NegRisk distintas.
+
+Verificación acumulada: 13 pruebas P0. Incluyen hashes de topic contrastados con
+el colector histórico independiente, rangos, drift de implementación, payloads
+malformados, lotes ERC-1155 y cuarentena de ABI desconocida.

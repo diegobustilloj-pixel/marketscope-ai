@@ -1,0 +1,1179 @@
+{
+  "schema": 1,
+  "deployment_verified": false,
+  "families": {
+    "clob_v1": {
+      "abi": [
+        {
+          "type": "event",
+          "name": "FeeCharged",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "receiver",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "tokenId",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "NewAdmin",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "newAdminAddress",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "NewOperator",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "newOperatorAddress",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "OrderCancelled",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "orderHash",
+              "type": "bytes32",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "OrderFilled",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "orderHash",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "maker",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "taker",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "makerAssetId",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "takerAssetId",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "makerAmountFilled",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "takerAmountFilled",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "fee",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "OrdersMatched",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "takerOrderHash",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "takerOrderMaker",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "makerAssetId",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "takerAssetId",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "makerAmountFilled",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "takerAmountFilled",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "ProxyFactoryUpdated",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "oldProxyFactory",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "newProxyFactory",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "RemovedAdmin",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "removedAdmin",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "RemovedOperator",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "removedOperator",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "SafeFactoryUpdated",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "oldSafeFactory",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "newSafeFactory",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "TokenRegistered",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "token0",
+              "type": "uint256",
+              "indexed": true
+            },
+            {
+              "name": "token1",
+              "type": "uint256",
+              "indexed": true
+            },
+            {
+              "name": "conditionId",
+              "type": "bytes32",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "TradingPaused",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "pauser",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "TradingUnpaused",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "pauser",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://github.com/Polymarket/polymarket-subgraph/blob/7a92ba026a9466c07381e0d245a323ba23ee8701/abis/Exchange.json",
+          "sha256": "cb1fb6e85366f31976db9b016fc9dab1ba9b13b46ef2ecf7c1f4dc531ed286b3",
+          "license_note": "LGPL-3.0; event interface facts only"
+        }
+      ]
+    },
+    "ctf": {
+      "abi": [
+        {
+          "type": "event",
+          "name": "ConditionPreparation",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "conditionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "oracle",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "questionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "outcomeSlotCount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "ConditionResolution",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "conditionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "oracle",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "questionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "outcomeSlotCount",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "payoutNumerators",
+              "type": "uint256[]",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "PositionSplit",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "stakeholder",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "collateralToken",
+              "type": "address",
+              "indexed": false
+            },
+            {
+              "name": "parentCollectionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "conditionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "partition",
+              "type": "uint256[]",
+              "indexed": false
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "PositionsMerge",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "stakeholder",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "collateralToken",
+              "type": "address",
+              "indexed": false
+            },
+            {
+              "name": "parentCollectionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "conditionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "partition",
+              "type": "uint256[]",
+              "indexed": false
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "PayoutRedemption",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "redeemer",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "collateralToken",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "parentCollectionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "conditionId",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "name": "indexSets",
+              "type": "uint256[]",
+              "indexed": false
+            },
+            {
+              "name": "payout",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "TransferSingle",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "operator",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "from",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "to",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "id",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "value",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "TransferBatch",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "operator",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "from",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "to",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "ids",
+              "type": "uint256[]",
+              "indexed": false
+            },
+            {
+              "name": "values",
+              "type": "uint256[]",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "ApprovalForAll",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "operator",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "approved",
+              "type": "bool",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "URI",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "value",
+              "type": "string",
+              "indexed": false
+            },
+            {
+              "name": "id",
+              "type": "uint256",
+              "indexed": true
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://github.com/Polymarket/polymarket-subgraph/blob/7a92ba026a9466c07381e0d245a323ba23ee8701/abis/ConditionalTokens.json",
+          "sha256": "a0f94fe4fef6808340f2b01f70e84d6fd92af177a49fed1f480ba6c7bc071666",
+          "license_note": "LGPL-3.0; event interface facts only"
+        }
+      ]
+    },
+    "negrisk": {
+      "abi": [
+        {
+          "type": "event",
+          "name": "MarketPrepared",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "marketId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "oracle",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "feeBips",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "data",
+              "type": "bytes",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "NewAdmin",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "newAdminAddress",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "OutcomeReported",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "marketId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "questionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "outcome",
+              "type": "bool",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "PayoutRedemption",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "redeemer",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "conditionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "amounts",
+              "type": "uint256[]",
+              "indexed": false
+            },
+            {
+              "name": "payout",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "PositionSplit",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "stakeholder",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "conditionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "PositionsConverted",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "stakeholder",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "marketId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "indexSet",
+              "type": "uint256",
+              "indexed": true
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "PositionsMerge",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "stakeholder",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "conditionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "QuestionPrepared",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "marketId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "questionId",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "index",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "data",
+              "type": "bytes",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "RemovedAdmin",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "removedAdmin",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://github.com/Polymarket/polymarket-subgraph/blob/7a92ba026a9466c07381e0d245a323ba23ee8701/abis/NegRiskAdapter.json",
+          "sha256": "6533d3002708c8ea00a1eb8a3c1c23cb312071dc26ac6574c10d15b80bf44d2e",
+          "license_note": "LGPL-3.0; event interface facts only"
+        }
+      ]
+    },
+    "collateral": {
+      "abi": [
+        {
+          "type": "event",
+          "name": "Approval",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "spender",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "Transfer",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "from",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "to",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://github.com/Polymarket/polymarket-subgraph/blob/7a92ba026a9466c07381e0d245a323ba23ee8701/abis/ERC20.json",
+          "sha256": "c83c22887b3d44c95b7d746c5c34b8cd14a2c054c0a904d64563122e4c3942e4",
+          "license_note": "LGPL-3.0; event interface facts only"
+        }
+      ]
+    },
+    "clob_v2_ctf": {
+      "abi": [
+        {
+          "type": "event",
+          "name": "NewAdmin",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "newAdminAddress",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "NewOperator",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "newOperatorAddress",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "RemovedAdmin",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "removedAdmin",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "RemovedOperator",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "removedOperator",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "admin",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "FeeCharged",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "receiver",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "FeeReceiverUpdated",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "feeReceiver",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "MaxFeeRateUpdated",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "maxFeeRate",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "TradingPaused",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "pauser",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "TradingUnpaused",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "pauser",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "OrderPreapproved",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "orderHash",
+              "type": "bytes32",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "OrderPreapprovalInvalidated",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "orderHash",
+              "type": "bytes32",
+              "indexed": true
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "OrderFilled",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "orderHash",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "maker",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "taker",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "side",
+              "type": "uint8",
+              "indexed": false
+            },
+            {
+              "name": "tokenId",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "makerAmountFilled",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "takerAmountFilled",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "fee",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "builder",
+              "type": "bytes32",
+              "indexed": false
+            },
+            {
+              "name": "metadata",
+              "type": "bytes32",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "OrdersMatched",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "takerOrderHash",
+              "type": "bytes32",
+              "indexed": true
+            },
+            {
+              "name": "takerOrderMaker",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "side",
+              "type": "uint8",
+              "indexed": false
+            },
+            {
+              "name": "tokenId",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "makerAmountFilled",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "takerAmountFilled",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "UserPauseBlockIntervalUpdated",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "oldInterval",
+              "type": "uint256",
+              "indexed": false
+            },
+            {
+              "name": "newInterval",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "UserPaused",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "user",
+              "type": "address",
+              "indexed": true
+            },
+            {
+              "name": "effectivePauseBlock",
+              "type": "uint256",
+              "indexed": false
+            }
+          ]
+        },
+        {
+          "type": "event",
+          "name": "UserUnpaused",
+          "anonymous": false,
+          "inputs": [
+            {
+              "name": "user",
+              "type": "address",
+              "indexed": true
+            }
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "url": "https://github.com/Polymarket/ctf-exchange-v2/blob/ccc0596074f4dfd62c944fbca4de252893b82b4b/src/exchange/interfaces/IAuth.sol",
+          "sha256": "d69e11ecbf54abf188cea7f511b085b2e1e69298b78902682b708543bfc72742",
+          "license_note": "BUSL-1.1; event interface facts only; no implementation reused"
+        },
+        {
+          "url": "https://github.com/Polymarket/ctf-exchange-v2/blob/ccc0596074f4dfd62c944fbca4de252893b82b4b/src/exchange/interfaces/IFees.sol",
+          "sha256": "c909521efc6af61bdb81d31844d4ae875b27978a2fc4fbf49ca6a9e160f829f9",
+          "license_note": "BUSL-1.1; event interface facts only; no implementation reused"
+        },
+        {
+          "url": "https://github.com/Polymarket/ctf-exchange-v2/blob/ccc0596074f4dfd62c944fbca4de252893b82b4b/src/exchange/interfaces/IPausable.sol",
+          "sha256": "dbb75e315785376db9366213aa1fea6e817955cbd7d2139e50f4ed3d7860ef2b",
+          "license_note": "BUSL-1.1; event interface facts only; no implementation reused"
+        },
+        {
+          "url": "https://github.com/Polymarket/ctf-exchange-v2/blob/ccc0596074f4dfd62c944fbca4de252893b82b4b/src/exchange/interfaces/ISignatures.sol",
+          "sha256": "c3515ec6fe93c00c906918a57505acb64796ee0ca116e5300f0d46b5daaaffc3",
+          "license_note": "BUSL-1.1; event interface facts only; no implementation reused"
+        },
+        {
+          "url": "https://github.com/Polymarket/ctf-exchange-v2/blob/ccc0596074f4dfd62c944fbca4de252893b82b4b/src/exchange/interfaces/ITrading.sol",
+          "sha256": "f0d8dcf5af702668efced362e6a39ebba4e1351c3b134b0aa3d7aa374519f872",
+          "license_note": "BUSL-1.1; event interface facts only; no implementation reused"
+        },
+        {
+          "url": "https://github.com/Polymarket/ctf-exchange-v2/blob/ccc0596074f4dfd62c944fbca4de252893b82b4b/src/exchange/interfaces/IUserPausable.sol",
+          "sha256": "ff81404b2b04a58a96ba6c01d379269f1c79d63b0e9cad94476859928ba6ee00",
+          "license_note": "BUSL-1.1; event interface facts only; no implementation reused"
+        }
+      ]
+    },
+    "combo_v2": {
+      "abi": [],
+      "status": "BLOCKED_VERIFIED_ABI_AND_TOKEN_VECTORS_REQUIRED",
+      "sources": []
+    }
+  }
+}
