@@ -24,6 +24,7 @@ dependencies = [
 [project.scripts]
 polymarket-bot = "polymarket_bot.cli:main"
 polyledger-sentinel = "polymarket_bot.polyledger:main"
+polyledger-p0 = "polymarket_bot.ledger.__main__:main"
 polymarket-registry = "polymarket_bot.platform.registry:main"
 
 [project.optional-dependencies]

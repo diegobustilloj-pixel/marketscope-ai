@@ -12,5 +12,5 @@
   "data_dir": "data/polyledger",
   "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
   "tags": ["wallet", "ledger", "forensics", "p0-foundation", "ops-sentinel-planned", "read-only"],
-  "notes": "Núcleo compartido para P0, OPS Sentinel y copiado por reconstrucción; construcción pendiente."
+  "notes": "Núcleo P0 implementado en polymarket_bot.ledger con captura/replay read-only; aprobación bloqueada por ABI/vectores Combo y evidencia independiente real de siete días. Sentinel histórico compatible; nuevas salidas P0 en data/polyledger-sentinel."
 }

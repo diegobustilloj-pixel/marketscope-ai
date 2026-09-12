@@ -9,7 +9,7 @@ from typing import Callable, Iterator
 from .common import EvidenceError, address, canonical, digest, hex_bytes, now_utc, uint
 
 APPLICATION_ID = 0x504C5030
-SCHEMA = 1
+SCHEMA = 2
 
 
 class EvidenceStore:
@@ -88,7 +88,10 @@ class EvidenceStore:
                 FOREIGN KEY(raw_id) REFERENCES raw_logs(id));
             CREATE TABLE IF NOT EXISTS derived_runs(
                 id TEXT PRIMARY KEY, chain INTEGER NOT NULL, epoch INTEGER NOT NULL,
-                tip_hash TEXT NOT NULL, input_hash TEXT NOT NULL, payload TEXT NOT NULL);
+                tip_hash TEXT NOT NULL, input_hash TEXT NOT NULL, payload TEXT NOT NULL,
+                evidence_revision INTEGER NOT NULL);
+            CREATE TABLE IF NOT EXISTS evidence_state(id INTEGER PRIMARY KEY CHECK(id=1), revision INTEGER NOT NULL);
+            INSERT OR IGNORE INTO evidence_state VALUES(1,0);
             CREATE VIEW IF NOT EXISTS canonical_logs AS
                 SELECT r.* FROM raw_logs r JOIN canonical_blocks b
                 ON r.chain=b.chain AND r.block_number=b.number AND r.block_hash=b.hash;
@@ -96,8 +99,15 @@ class EvidenceStore:
                 SELECT d.* FROM decoded_events d JOIN canonical_logs r ON r.id=d.raw_id;
             CREATE VIEW IF NOT EXISTS current_runs AS
                 SELECT r.* FROM derived_runs r JOIN chain_cursors c
-                ON r.chain=c.chain AND r.epoch=c.epoch AND r.tip_hash=c.hash;
+                ON r.chain=c.chain AND r.epoch=c.epoch AND r.tip_hash=c.hash
+                WHERE r.evidence_revision=(SELECT revision FROM evidence_state WHERE id=1);
         """)
+        for table in ("contract_versions", "contract_observations", "source_messages"):
+            self.db.execute(f"""CREATE TRIGGER IF NOT EXISTS dependency_{table}
+                AFTER INSERT ON {table} BEGIN UPDATE evidence_state SET revision=revision+1 WHERE id=1; END""")
+        self.db.execute("""CREATE TRIGGER IF NOT EXISTS dependency_incident AFTER INSERT ON incidents
+            WHEN NEW.code IN ('SOURCE_GAP','CONTRACT_DRIFT') BEGIN
+            UPDATE evidence_state SET revision=revision+1 WHERE id=1; END""")
         for table in ("blocks", "raw_logs", "batches", "source_messages", "incidents",
                       "contract_versions", "contract_observations", "decoded_events", "derived_runs"):
             for operation in ("UPDATE", "DELETE"):
@@ -273,11 +283,42 @@ class EvidenceStore:
         for row in self.db.execute("SELECT * FROM canonical_logs WHERE chain=? ORDER BY block_number,tx_index,log_index", (chain,)):
             yield {**dict(row), "raw": json.loads(row["payload"])}
 
-    def save_run(self, chain: int, expected_cursor: dict, input_hash: str, result: dict) -> str:
-        key = digest([chain, expected_cursor, input_hash, result])
+    def revision(self) -> int:
+        return self.db.execute("SELECT revision FROM evidence_state WHERE id=1").fetchone()[0]
+
+    def verify(self) -> dict:
+        """Read-only structural and payload-hash audit; no repairs or rewrites."""
+        errors = []
+        integrity = self.db.execute("PRAGMA integrity_check").fetchone()[0]
+        if integrity != "ok":
+            errors.append("SQLITE_INTEGRITY_FAILURE")
+        if self.db.execute("PRAGMA foreign_key_check").fetchall():
+            errors.append("FOREIGN_KEY_FAILURE")
+        checked = 0
+        for table in ("blocks", "raw_logs", "source_messages"):
+            for row in self.db.execute(f"SELECT payload,payload_hash FROM {table}"):
+                checked += 1
+                if digest(json.loads(row["payload"])) != row["payload_hash"]:
+                    errors.append(table.upper() + "_HASH_MISMATCH")
+        for cursor in self.db.execute("SELECT * FROM chain_cursors"):
+            rows = self.db.execute("SELECT b.* FROM canonical_blocks c JOIN blocks b ON c.chain=b.chain AND c.hash=b.hash WHERE c.chain=? ORDER BY c.number",
+                                   (cursor["chain"],)).fetchall()
+            if (not rows or rows[0]["number"] != cursor["first_number"] or rows[-1]["hash"] != cursor["hash"]
+                    or rows[-1]["number"] != cursor["number"]):
+                errors.append("CURSOR_CANONICAL_MISMATCH")
+            for previous, current in zip(rows, rows[1:]):
+                if current["number"] != previous["number"] + 1 or current["parent"] != previous["hash"]:
+                    errors.append("CANONICAL_CHAIN_GAP")
+        return {"status": "OK" if not errors else "BLOCKED", "payloads_checked": checked,
+                "errors": sorted(set(errors)), "sqlite_integrity": integrity}
+
+    def save_run(self, chain: int, expected_cursor: dict, input_hash: str, result: dict,
+                 *, expected_revision: int | None = None) -> str:
+        revision = self.revision() if expected_revision is None else expected_revision
+        key = digest([chain, expected_cursor, input_hash, result, revision])
         with self.transaction():
-            if self.cursor(chain) != expected_cursor:
-                raise EvidenceError("Cannot publish reconstruction: canonical chain changed")
-            self.db.execute("INSERT OR IGNORE INTO derived_runs VALUES(?,?,?,?,?,?)",
-                            (key, chain, expected_cursor["epoch"], expected_cursor["hash"], input_hash, canonical(result)))
+            if self.cursor(chain) != expected_cursor or self.revision() != revision:
+                raise EvidenceError("Cannot publish reconstruction: canonical chain changed or new source/contract evidence")
+            self.db.execute("INSERT OR IGNORE INTO derived_runs VALUES(?,?,?,?,?,?,?)",
+                            (key, chain, expected_cursor["epoch"], expected_cursor["hash"], input_hash, canonical(result), revision))
         return key

@@ -78,8 +78,15 @@ class ContractRegistry:
         Observations are exact-block and survive reorgs as orphan evidence.
         """
         evidence = json.loads(canonical(evidence))
+        registered = self.store.db.execute("SELECT payload FROM contract_versions WHERE id=?", (version["id"],)).fetchone()
+        if not registered or {k: v for k, v in version.items() if k != "id"} != json.loads(registered[0]):
+            raise EvidenceError("Observation must use the immutable registered contract version")
         number = uint(evidence["block_number"])
-        hex_bytes(evidence["block_hash"], 32)
+        evidence["block_hash"] = hex_bytes(evidence["block_hash"], 32)
+        known_block = self.store.db.execute("SELECT number FROM blocks WHERE chain=? AND hash=?",
+                                           (evidence["chain"], evidence["block_hash"])).fetchone()
+        if known_block and known_block[0] != number:
+            raise EvidenceError("Observation block number/hash mismatch")
         if (evidence["chain"] != version["chain"] or address(evidence["address"]) != version["address"]
                 or not version["valid_from_block"] <= number <= version["valid_to_block"] or not evidence.get("source")):
             raise EvidenceError("Contract observation outside registered era")

@@ -12,6 +12,10 @@ Desde `C:\ProyectoBotV4\polymarket_quant_bot`:
 
 Un error de catálogo, test o ruta bloquea cualquier cambio de etapa.
 
+Para el núcleo PolyLedger P0, captura pública, replay y pruebas de recuperación,
+consulte `docs/operations/POLYLEDGER_P0_RUNBOOK.md`. La reconciliación `MATCH` no
+aprueba el P0 ni permite órdenes; los gates pendientes están documentados allí.
+
 ## Crear un bot
 
 ```powershell

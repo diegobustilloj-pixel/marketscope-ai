@@ -12,7 +12,7 @@
 | 2 | Perfil `car` | Shadow Copy | Pendiente |
 | 3 | Perfil `e46m3` | Reconstrucción del mecanismo NegRisk | Pendiente |
 | 4 | Perfil `Oxp3mny` | PolyLedger OPS Sentinel: API/WS, relayer, reglas, UMA y capital recuperable | Pendiente; falta fijar perfil y wallet exactos en un artefacto local |
-| 5 | Forensia de GitHub | Construir el P0 de PolyLedger | Pendiente |
+| 5 | Forensia de GitHub | Construir el P0 de PolyLedger | Núcleo implementado; salida P0 bloqueada por evidencia |
 
 `e46m9` se normaliza como `e46m3`, porque ese es el perfil ya auditado y registrado. `PO` se interpreta como **P0**, la prioridad cero definida por la forensia de GitHub. Si alguno de esos dos nombres representa otra entidad, debe corregirse antes de construir.
 
@@ -30,6 +30,14 @@ P0 PolyLedger
 ```
 
 ### Etapa 1 — P0 de PolyLedger
+
+**Actualización de construcción (2026-09-12):** raw/cursor/reorg, registro y
+verificación de contratos, decodificadores CLOB/CTF/NegRisk, motor de lotes,
+reconciliación y captura/replay están implementados. Combo permanece en
+cuarentena. Faltan sus ABI/vectores verificados, mapeos de transacciones mixtas y
+el replay real de siete días con PnL independiente. No se cumple aún el criterio
+de salida. Detalle: `docs/architecture/POLYLEDGER_P0.md` y
+`docs/operations/POLYLEDGER_P0_RUNBOOK.md`. Las investigaciones siguen cerradas.
 
 Objetivo: crear una única fuente de verdad antes de evaluar o copiar estrategias.
 

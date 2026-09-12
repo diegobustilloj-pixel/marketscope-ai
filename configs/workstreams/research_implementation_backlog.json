@@ -89,7 +89,18 @@
       "research_order": 5,
       "profile": "github-forensics",
       "research_status": "complete",
-      "build_status": "not_started",
+      "build_status": "core_implemented_exit_blocked",
+      "build_updated_at": "2026-09-12",
+      "implementation": "src/polymarket_bot/ledger",
+      "build_evidence": [
+        "docs/architecture/POLYLEDGER_P0.md",
+        "docs/operations/POLYLEDGER_P0_RUNBOOK.md"
+      ],
+      "exit_blockers": [
+        "verified Combo implementation ABI and token-ID vectors",
+        "real seven-day known-wallet replay with opening basis and same-cut CLOB/onchain snapshots",
+        "independent external PnL evidence and mixed-transaction mappings"
+      ],
       "target": "reorg-safe evidence and ledger foundation",
       "depends_on": [],
       "bot_id": "polyledger-sentinel",

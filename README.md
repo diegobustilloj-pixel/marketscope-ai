@@ -42,6 +42,14 @@ wallet y sin dinero real**.
 
 Auditor separado y de solo lectura para wallets públicas de Polymarket. Conserva actividad incremental en SQLite, distingue conversiones internas de PnL, cruza posiciones con `/value` y leaderboard, detecta inconsistencias y exporta todas las posiciones a CSV. Inicie `ejecutar_polyledger_sentinel.bat` o consulte `docs\POLYLEDGER_SENTINEL_MVP_V001.md`.
 
+**P0 en construcción:** el núcleo `polymarket_bot.ledger` añade raw inmutable,
+cursores atómicos y reorgs, contratos/ABI versionados, lotes contables exactos y
+reconciliación CLOB/ledger/onchain. Incluye captura RPC y replay determinista.
+La aprobación P0 continúa bloqueada por ABI/vectores Combo y por la evidencia
+independiente real de siete días. Operación y comandos:
+`docs/operations/POLYLEDGER_P0_RUNBOOK.md`; diseño y límites:
+`docs/architecture/POLYLEDGER_P0.md`. El Sentinel histórico sigue compatible.
+
 La siguiente fase acordada es **Copiado por reconstrucción**: observar una wallet,
 reconstruir la cesta completa y cotizar si todavía es replicable antes de mostrar
 un ticket manual. El diseño congelado y sus reglas de seguridad están en

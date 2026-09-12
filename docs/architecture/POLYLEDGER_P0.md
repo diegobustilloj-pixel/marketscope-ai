@@ -91,3 +91,39 @@ verificar. Nunca envía cancelaciones ni órdenes reales.
 
 Verificación de esta entrega: FIFO, fees, residuo atómico, conservación de basis,
 importes grandes, costos desconocidos, transferencias y reconciliación negativa.
+
+## Entrega 4: operación y evidencia reproducible
+
+Se reutiliza el transporte público de `car_onchain` (con URL/timeout opcionales
+compatibles) y el cliente GET del Sentinel. El cliente P0 solo permite métodos
+RPC de lectura y selectores de balances/implementación. Captura tanto logs como
+recibos, verifica IDs de respuestas, bloque/hash y buffer de confirmaciones.
+Cada captura es acotada a 1.000 bloques y 24 h; reanuda `.partial` comprobando la
+cadena retenida. No se ha construido un indexador de alto rendimiento de siete
+días ni un consumidor WS vivo; los adaptadores de mensajes y sus gates están
+disponibles para integrarlos con snapshots explícitos de completitud.
+
+El esquema de evidencia es v2. Además de reorgs, nuevas observaciones de
+contrato/fuente invalidan snapshots anteriores. Dos pruebas terminan abruptamente
+un proceso después del raw y después del cursor: al reabrir no hay commit parcial.
+
+El replay conserva configuración, manifiesto, base y reporte. Se registran hash
+de entradas, hash de fuentes, commit, versiones de bibliotecas, hash de ledger y
+de reconciliación. Un reporte `BLOCKED` es un diagnóstico terminado; no una
+aprobación P0. Un fallo de ejecución deja `.partial`.
+
+### Límites que impiden cerrar el P0
+
+- ABI, fuente de implementaciones desplegadas y vectores de IDs Combo no están
+  disponibles en los artefactos existentes. El decoder Combo se mantiene cerrado.
+- Falta una captura real de siete días para la wallet piloto, con inventario y
+  basis iniciales verificables, snapshots completos CLOB y balances al mismo corte.
+- Falta el PnL de un pipeline externo independiente para las conversiones de esa
+  muestra. El segundo cálculo implementado aquí verifica balances, no certifica
+  de forma independiente todo el PnL de NegRisk.
+- Falta ampliar los mapeos de transacciones mixtas con esa evidencia, completar
+  vectores por protocolo y realizar el ensayo adversarial sobre la muestra real.
+
+Los 810 fills reales archivados de `car` coinciden con el decodificador histórico
+independiente. Esto verifica decodificación, no demuestra basis, PnL total ni
+correspondencia entre fuente y bytecode desplegado.

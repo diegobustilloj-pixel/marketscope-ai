@@ -76,18 +76,18 @@ EXCHANGES = (
 )
 
 
-def _rpc(payload: Any, *, attempts: int = 6) -> Any:
+def _rpc(payload: Any, *, attempts: int = 6, rpc_url: str = RPC_URL, timeout: int = 90) -> Any:
     encoded = json.dumps(payload, separators=(",", ":")).encode("utf-8")
     last_error: Exception | None = None
     for attempt in range(attempts):
         request = urllib.request.Request(
-            RPC_URL,
+            rpc_url,
             data=encoded,
             headers={"Content-Type": "application/json", "User-Agent": "PolyLedger-CarForensics/0.1"},
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=90) as response:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
                 return json.loads(response.read().decode("utf-8"))
         except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
             last_error = exc

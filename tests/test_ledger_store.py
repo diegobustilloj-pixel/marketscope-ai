@@ -1,4 +1,6 @@
 import sqlite3
+import subprocess
+import sys
 
 import pytest
 
@@ -98,3 +100,39 @@ def test_historical_database_is_refused(tmp_path):
     db.close()
     with pytest.raises(EvidenceError, match="historical"):
         EvidenceStore(path)
+
+
+def test_new_source_evidence_invalidates_previously_current_run(tmp_path):
+    with EvidenceStore(tmp_path / "e.db") as store:
+        cursor = store.ingest(137, [block(10)], [], expected_cursor=None, scope=SCOPE)
+        revision = store.revision()
+        store.save_run(137, cursor, digest([]), {}, expected_revision=revision)
+        assert store.db.execute("SELECT COUNT(*) FROM current_runs").fetchone()[0] == 1
+        store.capture_message("clob", "rest", "s", 0, 10, {}, expected_sequence=None)
+        assert store.db.execute("SELECT COUNT(*) FROM current_runs").fetchone()[0] == 0
+        with pytest.raises(EvidenceError, match="new source"):
+            store.save_run(137, cursor, digest([]), {}, expected_revision=revision)
+
+
+@pytest.mark.parametrize("stage", ["after_raw", "after_cursor"])
+def test_abrupt_process_exit_has_no_partial_commit(tmp_path, stage):
+    path = tmp_path / "crash.db"
+    script = """
+import json, os, sys
+from pathlib import Path
+from polymarket_bot.ledger.store import EvidenceStore
+config=json.loads(sys.argv[1])
+store=EvidenceStore(Path(config['path']))
+def crash(stage):
+    if stage == config['stage']:
+        os._exit(91)
+store.ingest(137,config['blocks'],config['logs'],expected_cursor=None,scope=config['scope'],fault=crash)
+"""
+    import json
+    payload = json.dumps({"path": str(path), "stage": stage, "blocks": [block(10)], "logs": [raw_log(10)], "scope": SCOPE})
+    result = subprocess.run([sys.executable, "-c", script, payload], capture_output=True)
+    assert result.returncode == 91, result.stderr
+    with EvidenceStore(path) as store:
+        assert store.cursor(137) is None
+        assert list(store.logs(137)) == []
+        assert store.db.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
