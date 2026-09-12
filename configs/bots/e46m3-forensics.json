@@ -11,6 +11,6 @@
   "entrypoint": {"script": "e46m3_forensics_v001.py", "module": "polymarket_bot.e46m3_deep_analysis"},
   "data_dir": "data/e46m3_forensics",
   "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
-  "tags": ["wallet", "forensics", "copy-reconstruction", "read-only"],
-  "notes": "Resultado guardado para futura reconstrucción, no copia automática."
+  "tags": ["wallet", "forensics", "negrisk-reconstruction-planned", "read-only"],
+  "notes": "Auditoría de @e46m3 concluida; reconstrucción del mecanismo NegRisk pendiente."
 }

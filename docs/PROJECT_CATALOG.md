@@ -2,7 +2,7 @@
 
 > Generado automáticamente. No editar a mano; ejecutar `.venv\Scripts\python.exe tools\build_project_catalog.py`.
 
-Actualizado (UTC): `2026-09-12T00:30:00+00:00`
+Actualizado (UTC): `2026-09-12T01:03:07+00:00`
 
 ## Resumen
 

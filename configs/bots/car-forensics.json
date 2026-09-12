@@ -11,6 +11,6 @@
   "entrypoint": {"script": "car_forensics_v001.py", "module": "polymarket_bot.car_forensics"},
   "data_dir": "data/car_forensics",
   "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
-  "tags": ["wallet", "forensics", "read-only"],
-  "notes": "Auditoría histórica de @car; conservar raw y derivados separados."
+  "tags": ["wallet", "forensics", "read-only", "shadow-copy-planned"],
+  "notes": "Auditoría histórica de @car concluida; Shadow Copy permanece pendiente y deshabilitado."
 }

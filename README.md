@@ -23,6 +23,7 @@
 - Operación segura: `docs/operations/RUNBOOK.md`.
 - Política de datos: `docs/operations/DATA_POLICY.md`.
 - Inventario generado: `docs/PROJECT_CATALOG.md`.
+- Backlog de investigación a construcción: `docs/roadmap/RESEARCH_IMPLEMENTATION_BACKLOG.md`.
 - Catálogo: `configs/bots/*.json`.
 - Ambientes: `configs/environments/*.json`.
 - Migración del legado: `docs/migrations/LEGACY_LAYOUT_MIGRATION.md`.

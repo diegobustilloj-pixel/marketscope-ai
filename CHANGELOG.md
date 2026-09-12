@@ -15,3 +15,9 @@
 - Repositorio Git inicializado en la rama `main`; primera instantánea preparada para commit.
 
 No se habilitaron órdenes automáticas ni dinero real.
+
+### Backlog de investigación
+
+- Registradas las conclusiones de Balthazar, `car`, `e46m3`, `Oxp3mny` y la forensia GitHub.
+- Definido el orden de construcción: PolyLedger P0 → OPS Sentinel → NegRisk → Balthazar → `car`.
+- Las cinco construcciones permanecen pendientes y deshabilitadas.

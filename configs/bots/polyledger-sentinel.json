@@ -11,6 +11,6 @@
   "entrypoint": {"script": "polyledger_sentinel_v001.py", "module": "polymarket_bot.polyledger"},
   "data_dir": "data/polyledger",
   "safety": {"real_money": false, "automatic_orders": false, "withdrawals": false},
-  "tags": ["wallet", "ledger", "forensics", "read-only"],
-  "notes": "Capa de evidencia para reconstrucción de carteras; candidato a núcleo compartido."
+  "tags": ["wallet", "ledger", "forensics", "p0-foundation", "ops-sentinel-planned", "read-only"],
+  "notes": "Núcleo compartido para P0, OPS Sentinel y copiado por reconstrucción; construcción pendiente."
 }

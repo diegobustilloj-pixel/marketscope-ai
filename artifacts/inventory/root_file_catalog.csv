@@ -32,7 +32,7 @@ btc5m90_v003_shadow.py,runtime_entrypoint,.py,1679,2026-09-08T16:04:25.996706+00
 calibrar_v011_event_driven.py,python_entrypoint_or_tool,.py,19062,2026-08-11T01:46:49.579235+00:00
 calibrar_v012_execution_ev.py,python_entrypoint_or_tool,.py,10598,2026-08-11T23:19:20.750756+00:00
 car_forensics_v001.py,python_entrypoint_or_tool,.py,86,2026-09-10T20:10:41.551906+00:00
-CHANGELOG.md,documentation_or_report,.md,768,2026-09-12T00:29:48.914277+00:00
+CHANGELOG.md,documentation_or_report,.md,1066,2026-09-12T01:02:47.829469+00:00
 climate_final_report_v001.py,analysis_entrypoint,.py,111,2026-09-02T06:04:24.130585+00:00
 climate_live_v002.py,python_entrypoint_or_tool,.py,108,2026-09-03T16:24:31.387759+00:00
 climate_manual_strategy_v001.py,python_entrypoint_or_tool,.py,114,2026-09-03T16:02:53.083353+00:00
@@ -111,7 +111,7 @@ PROTOCOLO_ACELERADO_V093.txt,documentation_or_report,.txt,2388,2026-08-08T23:42:
 PROTOCOLO_ACELERADO_V094.txt,documentation_or_report,.txt,1981,2026-08-10T00:36:54+00:00
 PROTOCOLO_V014.md,documentation_or_report,.md,1222,2026-08-12T22:51:00.828869+00:00
 pyproject.toml,project_configuration,.toml,937,2026-09-12T00:14:16.469222+00:00
-README.md,documentation_or_report,.md,12494,2026-09-12T00:29:47.654646+00:00
+README.md,documentation_or_report,.md,12590,2026-09-12T01:02:42.888690+00:00
 reanudar_v018_paper.bat,windows_operations,.bat,111,2026-08-14T19:34:14.291102+00:00
 reanudar_v019_paper.bat,windows_operations,.bat,114,2026-08-16T02:22:14.669397+00:00
 reanudar_v020_paper.bat,windows_operations,.bat,114,2026-08-17T03:27:59.980766+00:00

@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0.0",
+  "as_of": "2026-09-11",
+  "status": "recorded",
+  "safety": {
+    "real_money": false,
+    "automatic_orders": false,
+    "signing": false,
+    "withdrawals": false
+  },
+  "normalizations": [
+    {
+      "supplied": "e46m9",
+      "recorded_as": "e46m3",
+      "reason": "e46m3 is the locally audited and registered profile",
+      "confirmation_required_if_distinct": true
+    },
+    {
+      "supplied": "PO de PolyLedger",
+      "recorded_as": "P0 de PolyLedger",
+      "reason": "the GitHub forensics names the foundational tasks P0",
+      "confirmation_required_if_distinct": true
+    }
+  ],
+  "execution_order": [
+    "polyledger-p0",
+    "oxp3mny-ops-sentinel",
+    "e46m3-negrisk-reconstruction",
+    "balthazar-reconstruction-copy",
+    "car-shadow-copy"
+  ],
+  "workstreams": [
+    {
+      "id": "balthazar-reconstruction-copy",
+      "research_order": 1,
+      "profile": "balthazar",
+      "research_status": "complete",
+      "build_status": "not_started",
+      "target": "manual reconstruction-copy ticket",
+      "depends_on": ["polyledger-p0", "e46m3-negrisk-reconstruction"],
+      "bot_id": "polyledger-sentinel",
+      "evidence": [
+        "C:/ProyectoBotV4/archives/research/balthazar/AUDITORIA_BALTHAZAR_X.md",
+        "docs/PLAN_COPIADO_POR_RECONSTRUCCION_V001.md"
+      ]
+    },
+    {
+      "id": "car-shadow-copy",
+      "research_order": 2,
+      "profile": "car",
+      "research_status": "complete",
+      "build_status": "not_started",
+      "target": "shadow-only copy evaluation",
+      "depends_on": ["polyledger-p0", "balthazar-reconstruction-copy"],
+      "bot_id": "car-forensics",
+      "evidence": [
+        "data/car_forensics/car_handoff.md",
+        "data/car_forensics/car_strategy_report.md"
+      ]
+    },
+    {
+      "id": "e46m3-negrisk-reconstruction",
+      "research_order": 3,
+      "profile": "e46m3",
+      "research_status": "complete",
+      "build_status": "not_started",
+      "target": "deterministic NegRisk economic reconstruction",
+      "depends_on": ["polyledger-p0"],
+      "bot_id": "e46m3-forensics",
+      "evidence": [
+        "data/e46m3_forensics/e46m3_handoff.md",
+        "data/e46m3_forensics/e46m3_strategy_report.md"
+      ]
+    },
+    {
+      "id": "oxp3mny-ops-sentinel",
+      "research_order": 4,
+      "profile": "Oxp3mny",
+      "research_status": "complete_user_confirmed",
+      "build_status": "blocked_on_identity_artifact",
+      "target": "API/WS, relayer, rules, UMA and recoverable-capital sentinel",
+      "depends_on": ["polyledger-p0"],
+      "bot_id": "polyledger-sentinel",
+      "evidence": [],
+      "required_input": "exact public profile URL and wallet address"
+    },
+    {
+      "id": "polyledger-p0",
+      "research_order": 5,
+      "profile": "github-forensics",
+      "research_status": "complete",
+      "build_status": "not_started",
+      "target": "reorg-safe evidence and ledger foundation",
+      "depends_on": [],
+      "bot_id": "polyledger-sentinel",
+      "evidence": [
+        "data/github_forensics_20260911/github_research_handoff.md",
+        "data/github_forensics_20260911/polymarket_architecture_recommendations.md",
+        "data/github_forensics_20260911/polymarket_quick_wins.md"
+      ]
+    }
+  ]
+}
