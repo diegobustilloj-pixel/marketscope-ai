@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "date": "2026-09-12",
+  "base_commit": "399f032",
+  "implementation_commit": "2da535c",
+  "status": "CORE_IMPLEMENTED_P0_EXIT_BLOCKED",
+  "tests": {
+    "command": ".venv/Scripts/python.exe -m pytest -q",
+    "passed": 740,
+    "p0_tests": 33,
+    "subtests_passed": 18,
+    "warnings": 831,
+    "warnings_note": "Existing joblib physical-core detection and NumPy shape deprecation warnings; same baseline warnings.",
+    "catalog_validation": "OK; 11 bots; no errors or warnings"
+  },
+  "synthetic_replay": {
+    "runs": [
+      "data/polyledger-sentinel/runs/20260912T010000Z_polyledger_p0_replay_a",
+      "data/polyledger-sentinel/runs/20260912T010000Z_polyledger_p0_replay_b"
+    ],
+    "reconciliation": "MATCH",
+    "ledger_hash": "50cbc4816c876ed810bc1276e805803ef01993cd30d17b99e8474da5e2e52c8d",
+    "known_realized_pnl_quote_atoms": 10,
+    "unrealized_pnl_quote_atoms": "7",
+    "integrity": "OK; 33 payloads checked in each database",
+    "p0_exit": "BLOCKED; synthetic evidence cannot pass the real-wallet exit gate"
+  },
+  "real_archived_fills": {
+    "wallet_profile": "car",
+    "fills_checked": 810,
+    "mismatches": 0,
+    "comparison": "Strict ABI decoder versus existing car_onchain decoder",
+    "raw_input_hash": "9fec6acc11491adba07f227aaa84ab1b2f002fc1936da30aef9c3f338d2929ba",
+    "historical_database_sha256_before_and_after": "8fc1fd13a3bd1eb0107f283c63f6a9ac258ec912baa72abedb9aced6edd8a803",
+    "scope_limit": "Does not verify opening basis, complete PnL or deployed bytecode."
+  },
+  "real_acquisition_comparison": {
+    "chain": 137,
+    "block": 93486482,
+    "contract": "0xe111180000d2663c0091e4f400237545b87b996b",
+    "source": "polygon-bor-rpc.publicnode.com",
+    "methods": ["eth_getLogs", "eth_getTransactionReceipt for every transaction in the block"],
+    "logs_per_method": 103,
+    "all_raw_payloads_equal": true,
+    "raw_logs_hash": "e1fcbcc983da5d0b053e9f5028451d7ad5412d227eb61f148b98263b9c5c4430",
+    "integrity": "OK; 104 payloads checked in each database",
+    "scope_limit": "Independent acquisition paths on the same RPC provider; one contract and one block, not an independent seven-day PnL pipeline."
+  },
+  "exit_blockers": [
+    "Verified Combo implementation ABI and token-ID vectors unavailable in retained evidence; decoder remains quarantined.",
+    "Real known-wallet seven-day evidence with opening inventory/basis and complete CLOB/onchain snapshots at the same cut.",
+    "External independently produced PnL evidence, transaction-specific mappings for mixed operations, and adversarial real-data replay."
+  ],
+  "safety": {
+    "read_only": true,
+    "real_money": false,
+    "signing": false,
+    "automatic_orders": false,
+    "wallet_connection": false,
+    "withdrawals": false
+  }
+}

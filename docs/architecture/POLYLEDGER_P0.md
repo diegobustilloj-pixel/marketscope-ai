@@ -127,3 +127,24 @@ aprobación P0. Un fallo de ejecución deja `.partial`.
 Los 810 fills reales archivados de `car` coinciden con el decodificador histórico
 independiente. Esto verifica decodificación, no demuestra basis, PnL total ni
 correspondencia entre fuente y bytecode desplegado.
+
+## Validación sellada — 2026-09-12
+
+Código verificado: `2da535c`, sobre la base solicitada `399f032`.
+
+- Suite completa: **740 tests aprobados**, incluidos 33 P0 y 18 subtests.
+  Persisten los mismos 831 warnings de joblib/NumPy de la línea base.
+- Catálogo: 11 bots válidos, cero errores y cero warnings.
+- Dos replays sintéticos en bases nuevas: reconciliación `MATCH`, integridad
+  correcta y hash de ledger idéntico
+  `50cbc4816c876ed810bc1276e805803ef01993cd30d17b99e8474da5e2e52c8d`.
+- 810 fills reales de `car`: cero discrepancias entre decodificadores; el hash
+  del archivo histórico permanece intacto antes y después.
+- Bloque Polygon 93486482: 103 logs idénticos obtenidos mediante `eth_getLogs`
+  y mediante los recibos de todas sus transacciones. Se usó un mismo RPC público:
+  son rutas de adquisición diferentes, no proveedores independientes.
+- Dinero real, firmas, wallet, retiros y órdenes continúan bloqueados.
+
+Resumen versionado: `artifacts/polyledger_p0/validation_20260912.json`. El criterio
+de salida P0 **no está aprobado**. Los bloqueos anteriores requieren evidencia
+externa; ninguna de estas pruebas autoriza capital ni sustituye ese ensayo.

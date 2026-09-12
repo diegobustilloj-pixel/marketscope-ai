@@ -1,7 +1,7 @@
 # Backlog de investigación a construcción
 
 **Estado de corte:** 11 de septiembre de 2026  
-**Regla:** las conclusiones de investigación están cerradas; las construcciones descritas aquí siguen pendientes.  
+**Regla:** las conclusiones de investigación están cerradas; el estado de cada construcción se actualiza con evidencia verificable.
 **Seguridad:** todos los entregables nacen en modo de solo lectura, backtest o shadow. No se habilitan dinero real, firma ni órdenes automáticas.
 
 ## Registro acordado
