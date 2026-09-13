@@ -2,7 +2,7 @@ import copy
 from pathlib import Path
 
 from polymarket_bot.ledger.fixtures import sample_bundle
-from polymarket_bot.ledger.replay import replay
+from polymarket_bot.ledger.replay import P0_WINDOW_SECONDS, replay
 
 CATALOG = Path(__file__).resolve().parents[1] / "configs/polyledger/abi_catalog.json"
 
@@ -49,3 +49,18 @@ def test_opening_lot_provenance_does_not_depend_on_acquisition_chunking(tmp_path
     second = replay(bundle, tmp_path / "second.db")
     assert first["reconciliation"]["status"] == second["reconciliation"]["status"] == "MATCH"
     assert first["ledger"]["ledger_hash"] == second["ledger"]["ledger_hash"]
+
+
+def test_operator_window_is_now_twenty_four_hours(tmp_path):
+    bundle = sample_bundle(CATALOG)
+    origin = 1_800_000_000
+    for index, batch in enumerate(bundle["batches"]):
+        timestamp = origin + (P0_WINDOW_SECONDS * index // (len(bundle["batches"]) - 1))
+        batch["blocks"][0]["timestamp"] = hex(timestamp)
+    bundle["as_of"] = origin + P0_WINDOW_SECONDS
+    for row in bundle["health"]:
+        row["received_at"] = bundle["as_of"]
+    result = replay(bundle, tmp_path / "window.db")
+    assert result["duration_seconds"] == P0_WINDOW_SECONDS
+    assert "TWENTY_FOUR_HOUR_REPLAY_MISSING" not in result["p0_exit"]["blockers"]
+    assert result["p0_exit"]["status"] == "BLOCKED"

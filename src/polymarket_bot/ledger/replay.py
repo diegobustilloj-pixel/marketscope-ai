@@ -16,6 +16,8 @@ from .reconcile import independent_transfer_balances, reconcile, source_gate
 from .registry import ContractRegistry
 from .store import EvidenceStore
 
+P0_WINDOW_SECONDS = 24 * 60 * 60
+
 
 def replay(bundle: dict, database: Path) -> dict:
     """Replay a sealed input bundle without networking or historical DB writes.
@@ -102,11 +104,11 @@ def replay(bundle: dict, database: Path) -> dict:
         blockers = list(reconciliation["reasons"]) + gate["reasons"]
         duration = last["event_time"] - first["event_time"]
         # A successful synthetic fixture or a short capture never qualifies as
-        # the real known-wallet, seven-day P0 exit experiment.
+        # the real known-wallet, 24-hour P0 pilot requested by the operator.
         if bundle.get("evidence_kind") != "public_capture":
             blockers.append("SYNTHETIC_EVIDENCE_ONLY")
-        if duration < 7 * 86400:
-            blockers.append("SEVEN_DAY_REPLAY_MISSING")
+        if duration < P0_WINDOW_SECONDS:
+            blockers.append("TWENTY_FOUR_HOUR_REPLAY_MISSING")
         # Independent balance folding is implemented. Full independent PnL for
         # complex inventory still needs an external pipeline evidence pack.
         external = independent.get("accounting_report", {})
