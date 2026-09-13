@@ -6,6 +6,7 @@ from pathlib import Path
 
 from . import SAFETY
 from .acquire import ReadOnlyRPC, capture_range
+from .deployments import verify_deployment
 from .common import EvidenceError, canonical
 from .fixtures import sample_bundle
 from .replay import replay_file
@@ -31,6 +32,18 @@ def main(argv=None):
     capture.add_argument("--method", choices=("logs", "receipts"), default="logs")
     capture.add_argument("--confirmations", type=int, default=200)
     capture.add_argument("--output", type=Path, required=True)
+    capture.add_argument("--rpc-url", help="Public HTTPS RPC endpoint; no inline credentials")
+    verify = commands.add_parser("verify-contract", help="Check a source-verifier report against exact-block RPC code")
+    verify.add_argument("--chain", type=int, default=137)
+    verify.add_argument("--contract", required=True)
+    verify.add_argument("--block", type=int, required=True)
+    verify.add_argument("--family", required=True)
+    verify.add_argument("--proxy-kind", choices=("direct", "eip1967"), default="direct")
+    verify.add_argument("--implementation")
+    verify.add_argument("--source-report", type=Path, required=True)
+    verify.add_argument("--source-url", required=True)
+    verify.add_argument("--rpc-url")
+    verify.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -43,10 +56,17 @@ def main(argv=None):
             result = {"output": str(args.output.resolve()), "ledger_hash": report["ledger"]["ledger_hash"],
                       "reconciliation": report["reconciliation"]["status"], "p0_exit": report["p0_exit"], "safety": SAFETY}
         elif args.command == "capture":
-            result = capture_range(ReadOnlyRPC(), args.output, chain=args.chain, first=args.first_block,
+            rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
+            result = capture_range(rpc, args.output, chain=args.chain, first=args.first_block,
                                    last=args.last_block, contracts=args.contract, method=args.method,
                                    confirmations=args.confirmations,
                                    progress=lambda row: print(json.dumps(row), flush=True))
+        elif args.command == "verify-contract":
+            rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
+            result = verify_deployment(rpc, report_path=args.source_report, output=args.output, chain=args.chain,
+                                       contract=args.contract, block_number=args.block, family=args.family,
+                                       proxy_kind=args.proxy_kind, expected_implementation=args.implementation,
+                                       source_url=args.source_url)
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -57,6 +77,8 @@ def main(argv=None):
                           "incidents": [dict(r) for r in store.db.execute("SELECT code,COUNT(*) AS count FROM incidents GROUP BY code")],
                           "safety": SAFETY}
         print(json.dumps(result, indent=2))
+        if args.command == "verify-contract":
+            return 0 if result["status"] == "VERIFIED_AT_BLOCK" else 2
         return 0 if args.command != "replay" or result["p0_exit"]["status"] == "PASS" else 2
     except (EvidenceError, ValueError, KeyError, OSError) as exc:
         print(json.dumps({"status": "BLOCKED", "error": str(exc), "safety": SAFETY}, indent=2))

@@ -1,0 +1,255 @@
+{
+  "schema": 1,
+  "family": "combo_v2",
+  "scope": "PositionManager transfers, ID fields and operational annotations only",
+  "implementation": "0xcc5de1e9d14a7ab75e872e23fc9d605518bac2d0",
+  "verified_full_abi_hash": "199de324c176daf395b2c9035b64a8f07f8fbcf5fd677c62a406f1198c5a5ded",
+  "selected_event_abi_hash": "7d40a26cdd5fb6cad4bf367cb4028facb653f055839d4e2973f3cf0abd82371c",
+  "ids_source_sha256": "8c752ea7edb0518f4e3575be4a1b1b92852cb5b2c6c264e2055d16828f5b6268",
+  "economic_mapping": "blocked_pending_verified_module_abis_and_vectors",
+  "abi": [
+    {
+      "type": "event",
+      "name": "ApprovalForAll",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "owner",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "operator",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "isApproved",
+          "type": "bool",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "CrossModuleAuthSet",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "module",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "authorized",
+          "type": "bool",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "Initialized",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "version",
+          "type": "uint64",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "ModuleAdded",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "moduleId",
+          "type": "uint256",
+          "indexed": true
+        },
+        {
+          "name": "module",
+          "type": "address",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "ModuleRemoved",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "moduleId",
+          "type": "uint256",
+          "indexed": true
+        },
+        {
+          "name": "module",
+          "type": "address",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "OwnershipHandoverCanceled",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "pendingOwner",
+          "type": "address",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "OwnershipHandoverRequested",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "pendingOwner",
+          "type": "address",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "OwnershipTransferred",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "oldOwner",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "newOwner",
+          "type": "address",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "RolesUpdated",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "user",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "roles",
+          "type": "uint256",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "TransferBatch",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "operator",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "from",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "to",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "ids",
+          "type": "uint256[]",
+          "indexed": false
+        },
+        {
+          "name": "amounts",
+          "type": "uint256[]",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "TransferSingle",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "operator",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "from",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "to",
+          "type": "address",
+          "indexed": true
+        },
+        {
+          "name": "id",
+          "type": "uint256",
+          "indexed": false
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "URI",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "value",
+          "type": "string",
+          "indexed": false
+        },
+        {
+          "name": "id",
+          "type": "uint256",
+          "indexed": true
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "Upgraded",
+      "anonymous": false,
+      "inputs": [
+        {
+          "name": "implementation",
+          "type": "address",
+          "indexed": true
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "url": "https://sourcify.dev/server/v2/contract/137/0xCc5De1e9D14a7AB75E872E23FC9D605518Bac2D0?fields=all",
+      "report_hash": "ed5f0aea8751bd39963b8b30c99e9f168b19035c8d8ac4fbac038f26e602a5fe",
+      "license_note": "BUSL-1.1 implementation not copied; event interfaces and wire-format facts only"
+    }
+  ]
+}

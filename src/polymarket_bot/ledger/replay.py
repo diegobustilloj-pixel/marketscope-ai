@@ -82,7 +82,7 @@ def replay(bundle: dict, database: Path) -> dict:
         # folding. Chain position fields prevent cross-fork equality by accident.
         if sorted(digest(r) for r in canonical_logs) != sorted(digest(r) for r in independent.get("raw_logs", [])):
             failures.append({"code": "INDEPENDENT_RAW_MISMATCH"})
-        token_contracts = {s["address"].lower() for s in bundle["contracts"] if s["family"] == "ctf"}
+        token_contracts = {s["address"].lower() for s in bundle["contracts"] if s["family"] in {"ctf", "combo_v2"}}
         cash_contracts = {s["address"].lower() for s in bundle["contracts"] if s["family"] == "collateral"}
         try:
             folded = independent_transfer_balances(independent.get("raw_logs", []), wallet, opening_balances,
@@ -116,9 +116,9 @@ def replay(bundle: dict, database: Path) -> dict:
                 or external.get("known_realized_pnl") != snapshot["known_realized_pnl"]
                 or external.get("unrealized_pnl") != snapshot["unrealized_pnl"]):
             blockers.append("INDEPENDENT_PNL_EVIDENCE_MISSING_OR_MISMATCH")
-        # This release has no implemented Combo semantic mapping. No input flag
-        # may authorize an unsupported decoder or turn the P0 exit gate green.
-        blockers.append("COMBO_ABI_AND_TOKEN_VECTORS_MISSING")
+        # PositionManager transfers/IDs are supported; module economics still
+        # need verified mappings. No input flag can override this missing work.
+        blockers.append("COMBO_MODULE_ECONOMICS_AND_FULL_VECTORS_PENDING")
         report = {"version": VERSION, "input_hash": input_hash, "safety": SAFETY,
                   "evidence_kind": bundle.get("evidence_kind", "unknown"),
                   "ledger": snapshot, "reconciliation": reconciliation, "source_gate": gate,

@@ -4,9 +4,10 @@ from eth_abi import decode, encode
 from eth_hash.auto import keccak
 
 from .common import EvidenceError, canonical, digest, hex_bytes
+from .combo import position_fields, require_supported_layout
 from .registry import ContractRegistry
 
-DECODER_VERSION = "abi-events/1"
+DECODER_VERSION = "abi-events/2"
 INVENTORY = {"PositionSplit": "split", "PositionsMerge": "merge",
              "PositionsConverted": "convert", "PayoutRedemption": "redeem",
              "Wrapped": "wrap", "Unwrapped": "unwrap"}
@@ -18,8 +19,9 @@ FAMILY_EVENTS = {
     "negrisk": {"PositionSplit", "PositionsMerge", "PositionsConverted", "PayoutRedemption",
                 "MarketPrepared", "QuestionPrepared", "OutcomeReported"},
     "collateral": {"Transfer", "Approval", "Wrapped", "Unwrapped", "Paused", "Unpaused"},
-    # No guessed Combo token layout, event signatures or economic mapping.
-    "combo_v2": set(),
+    "combo_v2": {"TransferSingle", "TransferBatch", "ApprovalForAll", "URI", "Upgraded", "Initialized",
+                 "ModuleAdded", "ModuleRemoved", "CrossModuleAuthSet", "OwnershipHandoverCanceled",
+                 "OwnershipHandoverRequested", "OwnershipTransferred", "RolesUpdated"},
 }
 
 
@@ -87,12 +89,14 @@ def semantics(family: str, name: str, args: dict) -> dict:
                 "order_hash": args["orderHash"], "fee_asset": "outcome" if family == "clob_v1" and buy else "collateral"}
     if name in ("TransferSingle", "TransferBatch"):
         ids = args["ids"] if name == "TransferBatch" else [args["id"]]
-        quantities = args["values"] if name == "TransferBatch" else [args["value"]]
+        plural, singular = ("amounts", "amount") if family == "combo_v2" else ("values", "value")
+        quantities = args[plural] if name == "TransferBatch" else [args[singular]]
         if len(ids) != len(quantities):
             raise EvidenceError("TransferBatch array lengths differ")
         return {"kind": "transfer", "movements": [
             {"item_index": i, "token_id": str(token), "quantity": quantity,
-             "from": args["from"], "to": args["to"]}
+             "from": args["from"], "to": args["to"],
+             **({"position": position_fields(token)} if family == "combo_v2" else {})}
             for i, (token, quantity) in enumerate(zip(ids, quantities))]}
     if name == "Transfer":
         return {"kind": "cash_transfer", "from": args["from"], "to": args["to"], "quantity": args.get("value", args.get("amount"))}
@@ -107,6 +111,8 @@ def decode_canonical(registry: ContractRegistry, chain: int) -> tuple[list[dict]
         try:
             version = registry.resolve(chain, row["address"], row["block_number"])
             registry.require_attestation(version, row["block_hash"])
+            if version["family"] == "combo_v2":
+                require_supported_layout(version)
             name, args = decode_event(row["raw"], version["abi"])
             result = {"raw_id": row["id"], "registry_id": version["id"],
                       "decoder": DECODER_VERSION + "/" + version["family"], "family": version["family"],

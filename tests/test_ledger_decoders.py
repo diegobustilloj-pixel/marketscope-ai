@@ -118,7 +118,7 @@ def test_canonical_decode_preserves_provenance_and_quarantines_unknown(tmp_path)
         decode_canonical(reg, 137)
         assert store.db.execute("SELECT COUNT(*) FROM decoded_events").fetchone()[0] == 1
         with pytest.raises(EvidenceError, match="Unsupported combo"):
-            semantics("combo_v2", "TransferSingle", {})
+            semantics("combo_v2", "UnverifiedModuleConversion", {})
 
 
 def test_unsigned_v2_vectors_separate_ctf_negrisk_and_http_fields():
