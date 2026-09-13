@@ -115,6 +115,27 @@ activos con 422 transferencias y cero diferencias. Su estado correcto sigue sien
 `CAPTURED_BLOCKED`: un `MATCH` de balances no aporta basis ni PnL independiente.
 Resumen versionado: `artifacts/polyledger_p0/car_24h_capture_20260913.json`.
 
+## Valoración suplementaria de la captura sellada
+
+La valoración se escribe en un directorio nuevo y nunca modifica la captura raw:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger value-wallet-24h --capture data/polyledger-sentinel/p0/car_24h_20260913_sealed --wallet 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b --state-rpc-url https://polygon.drpc.org --output data/polyledger-sentinel/p0/car_24h_20260913_valuation_v4
+```
+
+La pasada final consultó 10.907 token IDs, 21.817 activos por corte, 2.367
+condiciones CTF y 627 posiciones Combo. No hubo errores de saldo; 2.417 CTF
+estaban liquidados al inicio y 2.418 al cierre. Los 627 Combo con saldo positivo
+coincidieron con registros `RESOLVED_LOSS` anteriores al inicio y se valoraron en
+cero. Cuatro posiciones CTF no resueltas, sin marca fresca y sin cambio de saldo
+impiden una cifra puntual.
+
+Después de separar US$3.480,481 de retiros externos, el cambio MTM de 24 horas
+queda acotado entre **-US$1.439,257067014 y -US$172,785159014** dentro del
+universo observado. El intervalo completo es negativo, pero no equivale a PnL
+realizado ni prueba completitud de toda la wallet. Resumen versionado:
+`artifacts/polyledger_p0/car_24h_valuation_20260913.json`.
+
 ## Pruebas y datos
 
 ```powershell

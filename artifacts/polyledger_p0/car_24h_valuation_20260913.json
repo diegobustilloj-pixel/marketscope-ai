@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "date_bolivia": "2026-09-13",
+  "profile": "car",
+  "wallet": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
+  "status": "VALUATION_INTERVAL_AVAILABLE_P0_BLOCKED",
+  "window": {
+    "start_bolivia": "2026-09-12T00:27:46-04:00",
+    "end_bolivia": "2026-09-13T00:27:46-04:00",
+    "duration_seconds": 86400,
+    "opening_block": 93654821,
+    "closing_block": 93712422
+  },
+  "activity": {
+    "rows": 199,
+    "trades": 187,
+    "buys": 113,
+    "sells": 74,
+    "gross_trade_notional_usd": "37272.883983",
+    "explicit_rewards_usd": "157.8191"
+  },
+  "expanded_observed_universe": {
+    "queried_assets_per_cut": 21817,
+    "union_token_ids": 10907,
+    "positive_assets_opening": 3453,
+    "positive_assets_closing": 3458,
+    "balance_read_errors": 0,
+    "ctf_positive_token_ids": 2834,
+    "ctf_settled_opening": 2417,
+    "ctf_settled_closing": 2418,
+    "ctf_fresh_or_settled_at_both_cuts": 2830,
+    "ctf_unpriced_at_one_or_both_cuts": 4,
+    "combo_positive_token_ids": 627,
+    "combo_resolved_losses_at_both_cuts": 627,
+    "combo_resolution_errors": 0,
+    "full_wallet_universe_proven": false
+  },
+  "cash_reconciliation": {
+    "status": "MATCH",
+    "cash_transactions": 187,
+    "mismatches": 0,
+    "opening_pusd": "89275.855086",
+    "closing_pusd": "84911.177283",
+    "raw_cash_delta_usd": "-4364.677803",
+    "external_net_funding_usd": "-3480.481",
+    "interpretation": "The two direct cash-only transfers are external capital outflows, not trading losses."
+  },
+  "valuation": {
+    "opening_equity_lower_bound_usd": "771184.386823332",
+    "opening_equity_upper_bound_usd": "771817.622777332",
+    "closing_equity_lower_bound_usd": "766897.884710318",
+    "closing_equity_upper_bound_usd": "767531.120664318",
+    "funding_adjusted_mtm_lower_bound_usd": "-1439.257067014",
+    "funding_adjusted_mtm_upper_bound_usd": "-172.785159014",
+    "funding_adjusted_return_lower_bound_percent": "-0.1866294354",
+    "funding_adjusted_return_upper_bound_percent": "-0.0223867859",
+    "unchanged_unpriced_inventory_proxy_usd": "-806.021113014",
+    "proxy_return_percent": "-0.1044744087",
+    "proxy_assumption": "All four unpriced, onchain-unresolved balances retained the same mark at opening and closing.",
+    "conclusion": "The funding-adjusted 24-hour mark-to-market result is negative throughout the conservative interval for the expanded observed universe. It is not independently reconstructed realized PnL."
+  },
+  "unpriced_unchanged_inventory": [
+    {
+      "market": "Will Trump send the national guard to Maryland?",
+      "outcome": "No",
+      "shares": "22"
+    },
+    {
+      "market": "US confirms pilots rescued by April 4?",
+      "outcome": "No",
+      "shares": "500"
+    },
+    {
+      "market": "Trump mentioned 70 or more times at the DNC on day 3?",
+      "outcome": "Yes",
+      "shares": "11.235954"
+    },
+    {
+      "market": "Will US gov sell Bitcoin before March?",
+      "outcome": "No",
+      "shares": "100"
+    }
+  ],
+  "current_tracking_snapshot": {
+    "captured_at_utc": "2026-09-13T17:09:26.335232+00:00",
+    "standard_position_rows": 283,
+    "api_current_value_usd": "702081.9167",
+    "api_unrealized_cash_pnl_usd": "-4492.3626",
+    "mergeable_position_rows": 44,
+    "paired_binary_conditions": 22,
+    "estimated_complete_sets_recoverable_usd": "361204.4567",
+    "largest_recovery_candidate": {
+      "market": "Will JD Vance win the 2028 US Presidential Election?",
+      "yes_shares": "360000",
+      "no_shares": "360000",
+      "estimated_complete_set_usd": "360000"
+    },
+    "warning": "This is a current Data API indication, not an exact-block merge instruction. Validate contract balances and rules before any manual recovery action."
+  },
+  "evidence": {
+    "raw_capture_directory": "data/polyledger-sentinel/p0/car_24h_20260913_sealed",
+    "valuation_directory": "data/polyledger-sentinel/p0/car_24h_20260913_valuation_v4",
+    "raw_manifest_sha256": "dc8301547daf4380424bd774873cbce50a5f8ce289e6be55b762b522df9129c1",
+    "valuation_manifest_summary_hash": "5d91e8053ce386da06aca63d9cacf17e0494f61d9842cd31fe958650f8e9307b",
+    "valuation_summary_sha256": "fdb0cdd3c0d3e1366bbc6d61567918020967ac6c8cec8d0ed13501b94d473bfe",
+    "code_commit": "93429dfcd01241e7dadb654993446074282f9094"
+  },
+  "blockers": [
+    "FULL_WALLET_ASSET_UNIVERSE_NOT_PROVEN",
+    "HISTORICAL_MARKS_NOT_EXECUTABLE",
+    "REALIZED_UNREALIZED_DECOMPOSITION_REQUIRES_OPENING_BASIS",
+    "FOUR_UNRESOLVED_POSITIONS_LACK_FRESH_HISTORICAL_MARKS"
+  ],
+  "p0_exit_allowed": false,
+  "copy_trading_allowed": false,
+  "execution_allowed": false,
+  "safety": {
+    "read_only": true,
+    "real_money": false,
+    "signing": false,
+    "automatic_orders": false,
+    "wallet_connection": false,
+    "withdrawals": false
+  }
+}
