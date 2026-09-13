@@ -12,6 +12,7 @@ from .fixtures import sample_bundle
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
+from .wallet_capture import capture_wallet_24h
 
 
 def main(argv=None):
@@ -52,6 +53,20 @@ def main(argv=None):
     readiness.add_argument("--wallet", required=True)
     readiness.add_argument("--window-days", type=int, default=7)
     readiness.add_argument("--output", type=Path, required=True)
+    wallet24 = commands.add_parser("capture-wallet-24h", help="Capture a sealed 24h public wallet evidence pack")
+    wallet24.add_argument("--wallet", required=True)
+    wallet24.add_argument("--identity", type=Path, required=True)
+    wallet24.add_argument("--deployments", type=Path,
+                          default=Path("configs/polyledger/polygon_wallet_capture.json"))
+    wallet24.add_argument("--catalog", type=Path, default=Path("configs/polyledger/abi_catalog.json"))
+    wallet24.add_argument("--combo-abi", type=Path,
+                          default=Path("configs/polyledger/combo_position_manager_abi.json"))
+    wallet24.add_argument("--validation", type=Path,
+                          default=Path("artifacts/polyledger_p0/validation_20260912.json"))
+    wallet24.add_argument("--confirmations", type=int, default=200)
+    wallet24.add_argument("--rpc-url")
+    wallet24.add_argument("--state-rpc-url", help="Independent HTTPS RPC for exact-block balances/code")
+    wallet24.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -81,6 +96,15 @@ def main(argv=None):
             args.output.parent.mkdir(parents=True, exist_ok=True)
             with args.output.open("x", encoding="utf-8") as target:
                 target.write(canonical(result) + "\n")
+        elif args.command == "capture-wallet-24h":
+            rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
+            state_rpc = ReadOnlyRPC(**({"url": args.state_rpc_url} if args.state_rpc_url else {})) \
+                if args.state_rpc_url else rpc
+            result = capture_wallet_24h(output=args.output, wallet=args.wallet, identity_path=args.identity,
+                                        deployments_path=args.deployments, catalog_path=args.catalog,
+                                        combo_path=args.combo_abi, validation_path=args.validation,
+                                        rpc=rpc, state_rpc=state_rpc, confirmations=args.confirmations,
+                                        progress=lambda row: print(json.dumps(row), flush=True))
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -95,6 +119,8 @@ def main(argv=None):
             return 0 if result["status"] == "VERIFIED_AT_BLOCK" else 2
         if args.command == "pilot-readiness":
             return 2  # A legacy census can diagnose readiness, never approve P0.
+        if args.command == "capture-wallet-24h":
+            return 2  # Captured evidence remains blocked until all P0 gates pass.
         return 0 if args.command != "replay" or result["p0_exit"]["status"] == "PASS" else 2
     except (EvidenceError, ValueError, KeyError, OSError) as exc:
         print(json.dumps({"status": "BLOCKED", "error": str(exc), "safety": SAFETY}, indent=2))
