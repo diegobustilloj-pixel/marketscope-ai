@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "date_bolivia": "2026-09-13",
+  "profile": "car",
+  "wallet": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
+  "status": "CAPTURED_BLOCKED",
+  "capture": {
+    "directory": "data/polyledger-sentinel/p0/car_24h_20260913_sealed",
+    "first_block": 93654822,
+    "last_block": 93712422,
+    "opening_block": 93654821,
+    "start_utc": "2026-09-12T04:27:46Z",
+    "end_utc": "2026-09-13T04:27:46Z",
+    "start_bolivia": "2026-09-12T00:27:46-04:00",
+    "end_bolivia": "2026-09-13T00:27:46-04:00",
+    "duration_seconds": 86400,
+    "activity_rows": 199,
+    "activity_transactions": 186,
+    "wallet_indexed_logs": 711,
+    "wallet_indexed_transactions": 188,
+    "receipts": 188,
+    "receipt_logs": 5397,
+    "sealed_block_headers": 166,
+    "declared_balance_assets": 101,
+    "receipt_transfer_logs": 422
+  },
+  "activity": {
+    "types": {"TRADE": 187, "MERGE": 6, "REDEEM": 1, "REWARD": 2, "YIELD": 1, "MAKER_REBATE": 1, "SPLIT": 1},
+    "buy_trades": 113,
+    "sell_trades": 74,
+    "buy_notional_usdc": "21013.883393",
+    "sell_notional_usdc": "16259.000590",
+    "gross_trade_notional_usdc": "37272.883983",
+    "api_assets": 45,
+    "conditions": 40,
+    "events": 29,
+    "scope_limit": "Gross activity figures are flows, not profit or loss."
+  },
+  "cash_observation": {
+    "asset": "137:0xc011a7e12a19f7b1f670d46f03b03f3342e82dfb:erc20",
+    "symbol_context": "pUSD",
+    "decimals": 6,
+    "opening_atomic": 89275855086,
+    "closing_atomic": 84911177283,
+    "delta_atomic": -4364677803,
+    "delta_display": "-4364.677803",
+    "scope_limit": "Cash change is not PnL because inventory value and opening basis are not complete."
+  },
+  "reconciliation": {
+    "status": "MATCH",
+    "method": "Opening exact-block balances plus wallet transfer logs from full transaction receipts versus closing exact-block balances.",
+    "assets": 101,
+    "transfer_logs": 422,
+    "mismatches": 0,
+    "opening_balance_errors": 0,
+    "closing_balance_errors": 0
+  },
+  "sources": {
+    "activity": "data-api.polymarket.com",
+    "logs_and_receipts": "polygon-bor-rpc.publicnode.com",
+    "balances_and_contract_state": "polygon.drpc.org",
+    "independent_rpc_hosts": true,
+    "ctf_runtime_continues": true,
+    "combo_runtime_continues": true
+  },
+  "manifest": {
+    "code_commit": "34812445b91138e6258fb3a90770eb6edffd6c21",
+    "working_tree_clean": true,
+    "evidence_files": 200,
+    "hash_mismatches": 0,
+    "summary_hash": "6ca57a98a75a92f586676ea734def912f53315850f1923d8144faf28ebe25b93",
+    "manifest_sha256": "dc8301547daf4380424bd774873cbce50a5f8ce289e6be55b762b522df9129c1"
+  },
+  "blockers": [
+    "CLOB_ORDER_SNAPSHOT_MISSING",
+    "COMBO_MODULE_ECONOMICS_AND_FULL_VECTORS_PENDING",
+    "DEPLOYMENTS_NOT_ALL_SOURCE_QUALIFIED",
+    "FULL_WALLET_ASSET_UNIVERSE_NOT_PROVEN",
+    "INDEPENDENT_PNL_PIPELINE_MISSING",
+    "OPENING_BASIS_MISSING"
+  ],
+  "conclusion": "The requested 24-hour public capture and scoped balance reconciliation completed. PnL, strategy profitability and P0 approval remain unavailable until the six blockers are resolved.",
+  "p0_exit_allowed": false,
+  "execution_allowed": false,
+  "safety": {"read_only": true, "real_money": false, "signing": false, "automatic_orders": false, "wallet_connection": false, "withdrawals": false}
+}

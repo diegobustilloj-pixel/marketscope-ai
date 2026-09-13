@@ -2,12 +2,12 @@
   "schema": 1,
   "date": "2026-09-12",
   "base_commit": "399f032",
-  "implementation_commit": "2bba26a",
+  "implementation_commit": "ae9b531",
   "status": "CORE_IMPLEMENTED_P0_EXIT_BLOCKED",
   "tests": {
     "command": ".venv/Scripts/python.exe -m pytest -q",
-    "passed": 751,
-    "p0_tests": 44,
+    "passed": 758,
+    "p0_tests": 51,
     "subtests_passed": 18,
     "warnings": 831,
     "warnings_note": "Existing joblib physical-core detection and NumPy shape deprecation warnings; same baseline warnings.",
@@ -44,7 +44,7 @@
     "all_raw_payloads_equal": true,
     "raw_logs_hash": "e1fcbcc983da5d0b053e9f5028451d7ad5412d227eb61f148b98263b9c5c4430",
     "integrity": "OK; 104 payloads checked in each database",
-    "scope_limit": "Independent acquisition paths on the same RPC provider; one contract and one block, not an independent seven-day PnL pipeline."
+    "scope_limit": "Independent acquisition paths on the same RPC provider; one contract and one block, not the complete wallet pilot or an independent PnL pipeline."
   },
   "contract_source_qualification": {
     "chain": 137,
@@ -81,9 +81,27 @@
     "artifact": "artifacts/polyledger_p0/pilot_readiness_car_20260912.json",
     "reason": "The legacy archive has dates and useful discovery data but lacks a completeness manifest, opening atomic basis, full lifecycle logs, same-cut balances and independent PnL."
   },
+  "public_wallet_24h_capture": {
+    "profile": "car",
+    "wallet": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
+    "blocks": [93654822, 93712422],
+    "duration_seconds": 86400,
+    "activity_rows": 199,
+    "wallet_indexed_logs": 711,
+    "receipts": 188,
+    "receipt_logs": 5397,
+    "declared_balance_assets": 101,
+    "receipt_transfer_logs": 422,
+    "balance_reconciliation": "MATCH; 0 mismatches",
+    "independent_rpc_hosts": true,
+    "ctf_runtime_continues": true,
+    "combo_runtime_continues": true,
+    "status": "CAPTURED_BLOCKED",
+    "artifact": "artifacts/polyledger_p0/car_24h_capture_20260913.json"
+  },
   "exit_blockers": [
     "Combo PositionManager is qualified for transfers and structural IDs; verified module ABIs, economic mappings and full resolution/conversion/settlement vectors remain unavailable.",
-    "Real known-wallet seven-day evidence with opening inventory/basis and complete CLOB/onchain snapshots at the same cut.",
+    "The real 24-hour wallet capture reconciles scoped balances, but opening basis, the full wallet asset universe and complete CLOB orders at the same cut remain missing.",
     "External independently produced PnL evidence, transaction-specific mappings for mixed operations, and adversarial real-data replay."
   ],
   "safety": {

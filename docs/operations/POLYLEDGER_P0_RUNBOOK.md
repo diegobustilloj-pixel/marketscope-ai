@@ -83,7 +83,7 @@ que nunca se capturaron. `raw_ids` se generan al guardar las fuentes en la base.
 Las marcas usan cadenas decimales de átomos de colateral por átomo de outcome.
 Un balance inicial por sí solo no acredita su costo: basis desconocido es `null`.
 Se requiere el reporte independiente de PnL y sus hashes/versión para el criterio
-de salida. Siete días de replay son una auditoría histórica de conservación;
+de salida. El piloto solicitado usa 24 horas de replay como auditoría de conservación;
 los experimentos y capturas individuales nuevos siguen limitados a 24 h.
 
 Antes de intentar convertir un archivo legado en bundle, ejecutar el censo:
@@ -97,6 +97,23 @@ nunca aprueba P0. Para `car`, el diagnóstico confirma fechas suficientes pero
 rechaza los datos por falta de completitud, ciclo onchain, basis, balances al
 mismo corte, PnL independiente e importes atómicos. No debe transformarse ese
 `BLOCKED` en `PASS` ni rellenarse lo ausente con cero.
+
+## Captura pública sellada de 24 horas
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger capture-wallet-24h --wallet 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b --identity data/car_forensics/car_wallet_identity.json --state-rpc-url https://polygon.drpc.org --output data/polyledger-sentinel/p0/car_24h_20260913_sealed
+```
+
+PublicNode adquiere logs y recibos; dRPC obtiene estado histórico EIP-1898. El
+capturador exige que ambos proveedores coincidan en los hashes de apertura y
+cierre. Descubre eventos de la wallet por topics, añade transacciones de la API,
+guarda el recibo completo de la unión y amplía el universo a cada token tocado.
+Después compara saldo inicial más transferencias de recibos contra saldo final.
+
+La ejecución sellada del 13 de septiembre cubrió 86.400 segundos y concilió 101
+activos con 422 transferencias y cero diferencias. Su estado correcto sigue siendo
+`CAPTURED_BLOCKED`: un `MATCH` de balances no aporta basis ni PnL independiente.
+Resumen versionado: `artifacts/polyledger_p0/car_24h_capture_20260913.json`.
 
 ## Pruebas y datos
 

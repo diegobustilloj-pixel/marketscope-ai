@@ -102,9 +102,11 @@ Se reutiliza el transporte público de `car_onchain` (con URL/timeout opcionales
 compatibles) y el cliente GET del Sentinel. El cliente P0 solo permite métodos
 RPC de lectura y selectores de balances/implementación. Captura tanto logs como
 recibos, verifica IDs de respuestas, bloque/hash y buffer de confirmaciones.
-Cada captura es acotada a 1.000 bloques y 24 h; reanuda `.partial` comprobando la
-cadena retenida. No se ha construido un indexador de alto rendimiento de siete
-días ni un consumidor WS vivo; los adaptadores de mensajes y sus gates están
+La captura genérica es acotada a 1.000 bloques y 24 h. El piloto por wallet cubre
+exactamente 24 h mediante consultas indexadas, cierra el universo de transacciones
+con recibos completos y sella saldos de los activos tocados en ambos cortes.
+Ambos reanudan `.partial` comprobando la cadena retenida. No se ha construido un
+consumidor WS vivo; los adaptadores de mensajes y sus gates están
 disponibles para integrarlos con snapshots explícitos de completitud.
 
 El esquema de evidencia es v2. Además de reorgs, nuevas observaciones de
@@ -129,8 +131,9 @@ convierte a Sourcify o al RPC en fuentes independientes entre sí.
   fórmulas económicas y vectores completos de cada módulo de resolución,
   conversión y liquidación. Sus movimientos pueden contarse; no se puede inferir
   PnL ni equivalencia económica a partir del ID.
-- Falta una captura real de siete días para la wallet piloto, con inventario y
-  basis iniciales verificables, snapshots completos CLOB y balances al mismo corte.
+- La captura real de 24 horas de `car` está terminada y sus saldos del alcance
+  concilian, pero falta demostrar el universo total de activos, el basis inicial
+  y un snapshot CLOB de órdenes completo al mismo corte.
 - Falta el PnL de un pipeline externo independiente para las conversiones de esa
   muestra. El segundo cálculo implementado aquí verifica balances, no certifica
   de forma independiente todo el PnL de NegRisk.
@@ -153,9 +156,9 @@ backtest fallido ni una estimación de rentabilidad.
 
 ## Validación sellada — 2026-09-12
 
-Código verificado: `2bba26a`, sobre la base solicitada `399f032`.
+Código verificado: `ae9b531`, sobre la base solicitada `399f032`.
 
-- Suite completa: **751 tests aprobados**, incluidos 44 P0 y 18 subtests.
+- Suite completa: **758 tests aprobados**, incluidos 51 P0 y 18 subtests.
   Persisten los mismos 831 warnings de joblib/NumPy de la línea base.
 - Catálogo: 11 bots válidos, cero errores y cero warnings.
 - Dos replays sintéticos en bases nuevas: reconciliación `MATCH`, integridad
@@ -170,6 +173,11 @@ Código verificado: `2bba26a`, sobre la base solicitada `399f032`.
   `0x006f...9fef` quedaron observados. El slot EIP-1967 de Combo apunta a
   `0xcc5d...c2d0`; sus bytes coinciden con el runtime y las transformaciones del
   informe Sourcify retenido. La comprobación no recompiló Solidity localmente.
+- Piloto `car`, 24 h exactas (bloques 93654822–93712422): 199 eventos públicos,
+  711 logs indexados, 188 recibos completos y 5.397 logs de recibo. Los 101
+  saldos declarados se obtuvieron sin errores en apertura/cierre. El fold
+  independiente de 422 transferencias produjo **MATCH**, cero discrepancias.
+  PublicNode aportó logs/recibos y dRPC estado; ambos coincidieron en los anclajes.
 - Dinero real, firmas, wallet, retiros y órdenes continúan bloqueados.
 
 Resumen versionado: `artifacts/polyledger_p0/validation_20260912.json`. El criterio

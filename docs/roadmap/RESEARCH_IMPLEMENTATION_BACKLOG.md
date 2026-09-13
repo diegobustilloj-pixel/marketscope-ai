@@ -35,9 +35,10 @@ P0 PolyLedger
 verificación de contratos, decodificadores CLOB/CTF/NegRisk, motor de lotes,
 reconciliación y captura/replay están implementados. PositionManager Combo ya
 permite transferencias e IDs estructurales con implementación/fuente verificadas;
-faltan la economía y vectores de sus módulos, mapeos de transacciones mixtas y el
-replay real de siete días con PnL independiente. El archivo de `car` fue censado
-y rechazado como bundle contable incompleto. No se cumple aún el criterio de
+faltan la economía y vectores de sus módulos y mapeos de transacciones mixtas.
+El piloto real de 24 horas de `car` ya capturó y reconcilió los saldos del alcance;
+faltan basis inicial, universo total, órdenes CLOB y PnL independiente. El archivo
+histórico también fue censado y rechazado como bundle contable incompleto. No se cumple el criterio de
 salida. Detalle: `docs/architecture/POLYLEDGER_P0.md` y
 `docs/operations/POLYLEDGER_P0_RUNBOOK.md`. Las investigaciones siguen cerradas.
 
@@ -52,7 +53,7 @@ Entregables mínimos:
 - reconciliación CLOB + ledger + balances onchain;
 - control de gaps REST/WS, reorgs, cambios de contrato y fallos de decodificación;
 - importes en unidades atómicas o `Decimal`, nunca `float` contable;
-- replay determinista de siete días con hashes reproducibles.
+- replay determinista de 24 horas con hashes reproducibles.
 
 Criterio de salida: dos pipelines independientes deben producir los mismos balances y PnL para una wallet conocida, incluyendo pruebas inyectadas de crash, gap y reorg.
 

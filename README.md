@@ -48,7 +48,7 @@ reconciliación CLOB/ledger/onchain. Incluye captura RPC y replay determinista.
 El PositionManager de Combo ya tiene despliegue/implementación calificados,
 transferencias ERC-1155 e IDs estructurales; no se infiere todavía la economía
 de sus módulos. La aprobación P0 continúa bloqueada por esos mapeos y por la
-evidencia independiente real de siete días. Operación y comandos:
+evidencia independiente del piloto de 24 horas. Operación y comandos:
 `docs/operations/POLYLEDGER_P0_RUNBOOK.md`; diseño y límites:
 `docs/architecture/POLYLEDGER_P0.md`. El Sentinel histórico sigue compatible.
 

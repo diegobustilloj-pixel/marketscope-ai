@@ -29,6 +29,10 @@ No se habilitaron órdenes automáticas ni dinero real.
 - Gate `pilot-readiness` para censar archivos históricos en solo lectura y
   rechazar muestras sin identidad, completitud, basis, ciclo on-chain, balances
   al mismo corte o PnL independiente.
+- Captura sellada de 24 horas por wallet: actividad paginada, logs indexados,
+  cierre sobre recibos completos, saldos en ambos cortes y observación de
+  contratos. Admite proveedores separados y reconcilia transferencias contra
+  balances sin interpretar el flujo como PnL.
 
 ### Backlog de investigación
 
