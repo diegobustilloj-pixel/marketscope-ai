@@ -14,6 +14,7 @@ import os
 import sqlite3
 import subprocess
 from collections import defaultdict
+from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
 from urllib.parse import urlsplit
@@ -22,7 +23,13 @@ import duckdb
 from eth_abi import decode, encode
 from eth_hash.auto import keccak
 
-from polymarket_bot.polyledger import build_url, fetch_all_positions, stable_json
+from polymarket_bot.polyledger import (
+    DATA_API,
+    build_url,
+    fetch_all_positions,
+    fetch_offset_pages,
+    stable_json,
+)
 
 from . import SAFETY, VERSION
 from .acquire import ExactPublicClient, ReadOnlyRPC, atomic_decimal
@@ -136,6 +143,106 @@ def _current_positions(client, wallet: str) -> tuple[list[dict], list[dict]]:
     return rows, [row.as_dict() for row in pages]
 
 
+def _redeemable_positions(client, wallet: str) -> tuple[list[dict], list[dict]]:
+    rows, pages, complete = fetch_offset_pages(
+        client, "/positions",
+        {"user": wallet, "sizeThreshold": 0, "redeemable": True,
+         "sortBy": "TOKENS", "sortDirection": "DESC"},
+        wallet=wallet, limit=500, max_offset=10_000,
+    )
+    if not complete:
+        raise EvidenceError("Redeemable position pagination did not prove completeness")
+    return rows, [row.as_dict() for row in pages]
+
+
+def _position_key(row: dict) -> tuple[str, str, str]:
+    return (str(row.get("conditionId") or "").lower(), str(row.get("asset") or ""),
+            str(row.get("outcomeIndex") if row.get("outcomeIndex") is not None else ""))
+
+
+def _merge_position_rows(*groups: list[dict]) -> list[dict]:
+    unique: dict[tuple[str, str, str], dict] = {}
+    for group in groups:
+        for row in group:
+            key = _position_key(row)
+            previous = unique.get(key)
+            if previous is None:
+                unique[key] = row
+            elif previous != row:
+                # Prefer the explicitly redeemable view for a resolved position.
+                if bool(row.get("redeemable")) and not bool(previous.get("redeemable")):
+                    unique[key] = row
+                elif bool(previous.get("redeemable")) == bool(row.get("redeemable")):
+                    raise EvidenceError("Position API returned conflicting duplicate rows")
+    return [unique[key] for key in sorted(unique)]
+
+
+def _combo_positions(client, wallet: str) -> tuple[list[dict], list[dict]]:
+    """Fetch the complete current Combo inventory with opaque cursor checks."""
+    cursor = None
+    seen_cursors = set()
+    unique: dict[str, dict] = {}
+    audits = []
+    for page_number in range(100):
+        url = build_url(DATA_API, "/v2/positions/combos",
+                        {"user": wallet, "limit": 1000, "cursor": cursor})
+        payload = client.get_json(url)
+        if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
+            raise EvidenceError("Invalid Combo position response")
+        pagination = payload.get("pagination")
+        if not isinstance(pagination, dict):
+            raise EvidenceError("Combo position pagination metadata is missing")
+        rows = payload["data"]
+        for row in rows:
+            if not isinstance(row, dict) or address(row.get("proxy_wallet")) != wallet:
+                raise EvidenceError("Combo positions contain invalid ownership data")
+            position = str(row.get("combo_position_id") or "")
+            if not position.isdigit():
+                raise EvidenceError("Combo position ID is invalid")
+            previous = unique.get(position)
+            if previous is not None and previous != row:
+                raise EvidenceError("Combo position pagination conflicts")
+            unique[position] = row
+        next_cursor_raw = pagination.get("next_cursor")
+        next_cursor = str(next_cursor_raw) if next_cursor_raw not in (None, "") else None
+        has_more = pagination.get("has_more") is True
+        audits.append({"page": page_number + 1, "rows": len(rows), "url": url,
+                       "has_more": has_more, "next_cursor_present": next_cursor is not None})
+        if not has_more:
+            if next_cursor is not None:
+                raise EvidenceError("Combo pagination ended with an unexpected cursor")
+            return [unique[key] for key in sorted(unique, key=int)], audits
+        if next_cursor is None or next_cursor == cursor or next_cursor in seen_cursors:
+            raise EvidenceError("Combo pagination cursor is missing or repeated")
+        seen_cursors.add(next_cursor)
+        cursor = next_cursor
+    raise EvidenceError("Combo position pagination exceeded its bounded page limit")
+
+
+def _market_token_metadata(path: Path) -> dict[str, dict]:
+    uri = "file:" + path.resolve().as_posix() + "?mode=ro"
+    result: dict[str, dict] = {}
+    with sqlite3.connect(uri, uri=True) as db:
+        rows = db.execute(
+            "SELECT condition_id,outcomes_json,token_ids_json FROM market_metadata"
+        )
+        for condition, outcomes_raw, tokens_raw in rows:
+            outcomes, tokens = json.loads(outcomes_raw), json.loads(tokens_raw)
+            if not isinstance(outcomes, list) or not isinstance(tokens, list) or len(outcomes) != len(tokens):
+                continue
+            condition = hex_bytes(str(condition), 32)
+            for index, (outcome, token) in enumerate(zip(outcomes, tokens, strict=True)):
+                token = str(token)
+                if not token.isdigit():
+                    continue
+                record = {"condition_id": condition, "outcome_index": index, "outcome": str(outcome)}
+                previous = result.get(token)
+                if previous is not None and previous != record:
+                    raise EvidenceError("Market metadata maps one token to conflicting conditions")
+                result[token] = record
+    return result
+
+
 def _erc20_calls(wallet: str, deployments: dict) -> list[tuple[str, str]]:
     result = []
     selector = "0x" + keccak(b"balanceOf(address)")[:4].hex()
@@ -217,6 +324,85 @@ def _expanded_balances(rpc: ReadOnlyRPC, block: dict, wallet: str, deployments: 
             "pinning_methods": sorted(methods), "complete_for_declared_scope": not errors}
 
 
+def _uint_state_calls(rpc: ReadOnlyRPC, block: dict, contract: str,
+                      requests: list[tuple[str, str]]) -> tuple[dict[str, int], list[str], list[str]]:
+    pinned = {"blockHash": hex_bytes(block["hash"], 32), "requireCanonical": True}
+    number_tag = hex(uint(block["number"]))
+    calls = [({"call": {"to": contract, "data": data}, "pinned": pinned,
+               "number_tag": number_tag}, [key]) for key, data in requests]
+    payloads, errors, methods = _call_groups(rpc, calls)
+    values = {}
+    for payload, (key, _) in zip(payloads, requests):
+        if payload is None:
+            continue
+        try:
+            values[key] = int(hex_bytes(payload, 32), 16)
+        except (EvidenceError, ValueError):
+            errors.append(key)
+    if "block-number-with-hash-recheck" in methods and rpc.block(uint(block["number"]))["hash"] != block["hash"]:
+        raise EvidenceError("Reorg during numbered settlement reads")
+    return values, sorted(set(errors)), sorted(methods)
+
+
+def _ctf_settlement_marks(rpc: ReadOnlyRPC, block: dict, ctf: str, tokens: list[int],
+                          metadata: dict[str, dict], progress=None) -> dict:
+    denominator_selector = "0x" + keccak(b"payoutDenominator(bytes32)")[:4].hex()
+    numerator_selector = "0x" + keccak(b"payoutNumerators(bytes32,uint256)")[:4].hex()
+    token_records = {str(token): metadata.get(str(token)) for token in tokens}
+    conditions = sorted({row["condition_id"] for row in token_records.values() if row is not None})
+    denominator_requests = [
+        (condition, denominator_selector + encode(["bytes32"], [bytes.fromhex(condition[2:])]).hex())
+        for condition in conditions
+    ]
+    if progress:
+        progress({"status": "CTF_SETTLEMENT", "cut_block": uint(block["number"]),
+                  "conditions": len(conditions), "phase": "denominators"})
+    denominators, denominator_errors, methods = _uint_state_calls(
+        rpc, block, ctf, denominator_requests
+    )
+    numerator_requests = []
+    for token, row in token_records.items():
+        if row is None or denominators.get(row["condition_id"], 0) == 0:
+            continue
+        key = token
+        data = numerator_selector + encode(
+            ["bytes32", "uint256"],
+            [bytes.fromhex(row["condition_id"][2:]), uint(row["outcome_index"])],
+        ).hex()
+        numerator_requests.append((key, data))
+    if progress:
+        progress({"status": "CTF_SETTLEMENT", "cut_block": uint(block["number"]),
+                  "positions": len(numerator_requests), "phase": "numerators"})
+    numerators, numerator_errors, numerator_methods = _uint_state_calls(
+        rpc, block, ctf, numerator_requests
+    ) if numerator_requests else ({}, [], [])
+    marks = {}
+    for token, row in token_records.items():
+        if row is None:
+            marks[token] = {"status": "METADATA_MISSING", "price": None}
+            continue
+        condition = row["condition_id"]
+        if condition in denominator_errors:
+            marks[token] = {"status": "DENOMINATOR_READ_ERROR", "price": None, **row}
+            continue
+        denominator = denominators.get(condition, 0)
+        if denominator == 0:
+            marks[token] = {"status": "UNRESOLVED", "price": None, **row}
+            continue
+        if token in numerator_errors or token not in numerators:
+            marks[token] = {"status": "NUMERATOR_READ_ERROR", "price": None,
+                            "payout_denominator": denominator, **row}
+            continue
+        numerator = numerators[token]
+        price = Decimal(numerator) / Decimal(denominator)
+        marks[token] = {"status": "SETTLED", "price": _decimal_text(price),
+                        "payout_numerator": numerator, "payout_denominator": denominator, **row}
+    return {"block_number": uint(block["number"]), "block_hash": block["hash"], "marks": marks,
+            "metadata_missing": sum(row is None for row in token_records.values()),
+            "denominator_errors": denominator_errors, "numerator_errors": numerator_errors,
+            "pinning_methods": sorted(set(methods) | set(numerator_methods))}
+
+
 def _history_one(client, token: int, start: int, end: int) -> dict:
     url = build_url(CLOB, "/prices-history", {"market": str(token), "startTs": start,
                                                 "endTs": end, "fidelity": 1})
@@ -272,6 +458,56 @@ def _mark_before(history: list[dict], cut: int, max_age: int) -> dict:
             "timestamp": uint(row["t"]), "age_seconds": age}
 
 
+def _combined_mark(settlement: dict, history: list[dict], cut: int, max_age: int) -> dict:
+    if settlement.get("status") == "SETTLED":
+        return {**settlement, "source": "CTF_ONCHAIN_SETTLEMENT", "timestamp": cut,
+                "age_seconds": 0}
+    mark = _mark_before(history, cut, max_age)
+    return {**mark, "source": "CLOB_HISTORY", "settlement_status": settlement.get("status")}
+
+
+def _combo_resolution_marks(opening: dict, closing: dict, combo: str, positions: list[dict],
+                            opening_timestamp: int) -> dict:
+    records = {str(row["combo_position_id"]): row for row in positions}
+    assets = sorted({asset.rsplit(":", 1)[-1]
+                     for balances in (opening, closing)
+                     for asset, raw in balances["balances"].items()
+                     if raw > 0 and asset.split(":")[1] == combo}, key=int)
+    marks, errors = {}, []
+    for token in assets:
+        asset = f"137:{combo}:{token}"
+        open_raw = opening["balances"].get(asset, 0)
+        close_raw = closing["balances"].get(asset, 0)
+        row = records.get(token)
+        reason = None
+        resolved_timestamp = None
+        if row is None:
+            reason = "COMBO_POSITION_API_RECORD_MISSING"
+        elif str(row.get("status")) != "RESOLVED_LOSS":
+            reason = "COMBO_POSITION_NOT_RESOLVED_LOSS"
+        elif not row.get("resolved_at"):
+            reason = "COMBO_RESOLUTION_TIME_MISSING"
+        else:
+            resolved_timestamp = int(datetime.fromisoformat(
+                str(row["resolved_at"]).replace("Z", "+00:00")
+            ).astimezone(timezone.utc).timestamp())
+            if resolved_timestamp > opening_timestamp:
+                reason = "COMBO_RESOLVED_AFTER_OPENING_CUT"
+            elif atomic_decimal(str(row.get("current_size") or "0")) != close_raw or open_raw != close_raw:
+                reason = "COMBO_API_AND_EXACT_BLOCK_BALANCES_DIFFER"
+        if reason:
+            errors.append({"asset": asset, "reason": reason})
+            marks[token] = {"opening": {"status": "MISSING", "price": None},
+                            "closing": {"status": "MISSING", "price": None}, "evidence": row}
+        else:
+            resolved = {"status": "SETTLED_LOSS", "price": "0",
+                        "source": "DATA_API_COMBO_RESOLUTION_WITH_BALANCE_MATCH",
+                        "resolved_timestamp": resolved_timestamp}
+            marks[token] = {"opening": resolved, "closing": resolved, "evidence": row}
+    return {"marks": marks, "errors": errors, "positions_checked": len(assets),
+            "resolved_loss_at_both_cuts": len(assets) - len(errors)}
+
+
 def _cash_delta_atomic(row: dict) -> int | None:
     event_type = str(row.get("type") or "").upper()
     side = str(row.get("side") or "").upper()
@@ -295,12 +531,21 @@ def _cash_transfer_audit(capture: Path, wallet: str, deployments: dict, activity
                       if row.get("token_standard") == "erc20"}
     actual: dict[str, int] = defaultdict(int)
     actual_by_asset: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    cash_counterparties: dict[str, list[dict]] = defaultdict(list)
+    token_transfer_transactions: set[str] = set()
+    token_contracts = {address(row["address"]) for row in deployments["contracts"]
+                       if row.get("token_standard") == "erc1155"}
+    declared_contracts = {address(row["address"]) for row in deployments["contracts"]}
     for path in sorted((capture / "receipts").glob("*.json")):
         receipt = json.loads(path.read_text(encoding="utf-8"))
         transaction = hex_bytes(receipt["transactionHash"], 32)
         for raw in receipt.get("logs", []):
             contract = address(raw["address"])
             topics = raw.get("topics") or []
+            if (contract in token_contracts and len(topics) == 4
+                    and topics[0].lower() in {TRANSFER_TOPICS["single"], TRANSFER_TOPICS["batch"]}
+                    and any(value[-40:].lower() == wallet[2:] for value in topics[2:4])):
+                token_transfer_transactions.add(transaction)
             if contract not in cash_contracts or len(topics) != 3 or topics[0].lower() != TRANSFER_TOPICS["erc20"]:
                 continue
             sender = "0x" + topics[1][-40:].lower()
@@ -310,6 +555,10 @@ def _cash_transfer_audit(capture: Path, wallet: str, deployments: dict, activity
             if delta:
                 actual[transaction] += delta
                 actual_by_asset[transaction][f"137:{contract}:erc20"] += delta
+                cash_counterparties[transaction].append({"asset": f"137:{contract}:erc20",
+                                                         "direction": "IN" if delta > 0 else "OUT",
+                                                         "counterparty": sender if delta > 0 else receiver,
+                                                         "amount_atomic": amount})
     expected: dict[str, int] = defaultdict(int)
     unknown_types: dict[str, set[str]] = defaultdict(set)
     external: dict[str, int] = defaultdict(int)
@@ -328,10 +577,26 @@ def _cash_transfer_audit(capture: Path, wallet: str, deployments: dict, activity
     transactions = sorted(set(actual) | set(expected) | set(unknown_types))
     rows = []
     for transaction in transactions:
-        difference = actual.get(transaction, 0) - expected.get(transaction, 0)
+        inferred_external = 0
+        counterparties = cash_counterparties.get(transaction, [])
+        direct_external_outflow = (
+            actual.get(transaction, 0) < 0 and transaction not in expected
+            and not unknown_types.get(transaction) and transaction not in token_transfer_transactions
+            and counterparties and all(row["direction"] == "OUT"
+                                       and row["counterparty"] not in declared_contracts
+                                       for row in counterparties)
+        )
+        if direct_external_outflow:
+            inferred_external = actual[transaction]
+            external[transaction] += inferred_external
+        difference = actual.get(transaction, 0) - expected.get(transaction, 0) - inferred_external
         rows.append({"transaction_hash": transaction, "actual_cash_delta_atomic": actual.get(transaction, 0),
                      "actual_by_asset_atomic": dict(sorted(actual_by_asset.get(transaction, {}).items())),
                      "activity_expected_delta_atomic": expected.get(transaction, 0),
+                     "inferred_external_delta_atomic": inferred_external,
+                     "classification": ("ONCHAIN_DIRECT_EXTERNAL_OUTFLOW" if direct_external_outflow
+                                        else "ACTIVITY_RECONCILED" if not difference else "UNRESOLVED"),
+                     "cash_counterparties": counterparties,
                      "difference_atomic": difference,
                      "unknown_activity_types": sorted(unknown_types.get(transaction, set()))})
     mismatches = [row for row in rows if row["difference_atomic"] or row["unknown_activity_types"]]
@@ -361,10 +626,11 @@ def _position_metadata(legacy: list[dict], current: list[dict], activity: list[d
     return result
 
 
-def _value_cut(balances: dict, marks: dict[str, dict], ctf: str, combo: str,
-               cash_contracts: set[str], cut: str) -> dict:
+def _value_cut(balances: dict, marks: dict[str, dict], combo_marks: dict[str, dict],
+               ctf: str, combo: str, cash_contracts: set[str], cut: str) -> dict:
     cash = Decimal(0)
     ctf_value = Decimal(0)
+    combo_value = Decimal(0)
     unpriced = []
     positive_ctf = positive_combo = 0
     for asset, raw in balances["balances"].items():
@@ -382,10 +648,15 @@ def _value_cut(balances: dict, marks: dict[str, dict], ctf: str, combo: str,
                 ctf_value += Decimal(raw) / SCALE * Decimal(mark["price"])
         elif contract == combo:
             positive_combo += 1
-            unpriced.append(asset)
-    subtotal = cash + ctf_value
+            mark = combo_marks.get(token, {}).get(cut, {})
+            if mark.get("price") is None:
+                unpriced.append(asset)
+            else:
+                combo_value += Decimal(raw) / SCALE * Decimal(mark["price"])
+    subtotal = cash + ctf_value + combo_value
     return {"collateral_usd_nominal": _decimal_text(cash),
-            "ctf_historical_mark_value_usd": _decimal_text(ctf_value),
+            "ctf_mark_value_usd": _decimal_text(ctf_value),
+            "combo_mark_value_usd": _decimal_text(combo_value),
             "valued_subtotal_usd": _decimal_text(subtotal),
             "total_equity_usd": _decimal_text(subtotal) if not unpriced else None,
             "positive_ctf_positions": positive_ctf, "positive_combo_positions": positive_combo,
@@ -393,7 +664,7 @@ def _value_cut(balances: dict, marks: dict[str, dict], ctf: str, combo: str,
 
 
 def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployments_path: Path,
-                         history_assets_path: Path, legacy_db_path: Path,
+                         history_assets_path: Path, legacy_db_path: Path, metadata_db_path: Path,
                          rpc: ReadOnlyRPC | None = None, data_client=None,
                          price_lookback_seconds: int = PRICE_LOOKBACK_SECONDS,
                          max_mark_age_seconds: int = MAX_MARK_AGE_SECONDS,
@@ -414,6 +685,9 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
     data_client = data_client or ExactPublicClient()
 
     current_positions, current_pages = _current_positions(data_client, wallet)
+    redeemable_positions, redeemable_pages = _redeemable_positions(data_client, wallet)
+    all_current_positions = _merge_position_rows(current_positions, redeemable_positions)
+    combo_positions, combo_pages = _combo_positions(data_client, wallet)
     legacy_positions, legacy_audit = _legacy_positions(Path(legacy_db_path), wallet)
     activity = json.loads((capture / "activity.json").read_text(encoding="utf-8"))
     captured_open = json.loads((capture / "opening_balances.json").read_text(encoding="utf-8"))
@@ -423,7 +697,8 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                       | _token_ids_from_balance_keys(captured_close)
                       | {uint(row["asset"]) for row in activity if str(row.get("asset") or "").isdigit()})
     legacy_assets = {uint(row["asset"]) for row in legacy_positions if str(row.get("asset") or "").isdigit()}
-    current_assets = {uint(row["asset"]) for row in current_positions if str(row.get("asset") or "").isdigit()}
+    current_assets = {uint(row["asset"]) for row in all_current_positions
+                      if str(row.get("asset") or "").isdigit()}
     token_ids = sorted(history_assets | capture_assets | legacy_assets | current_assets)
 
     opening_number = raw_summary["balances"]["opening_block"]
@@ -447,21 +722,43 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                            for balances in (opening, closing)
                            for asset, raw in balances["balances"].items()
                            if raw > 0 and asset.split(":")[1] == ctf_contract})
+    token_metadata = _market_token_metadata(Path(metadata_db_path))
+    opening_settlement = _ctf_settlement_marks(
+        rpc, opening_header, ctf_contract, price_tokens, token_metadata, progress
+    )
+    closing_settlement = _ctf_settlement_marks(
+        rpc, closing_header, ctf_contract, price_tokens, token_metadata, progress
+    )
+    history_tokens = sorted(
+        token for token in price_tokens
+        if (opening_settlement["marks"].get(str(token), {}).get("status") != "SETTLED"
+            or closing_settlement["marks"].get(str(token), {}).get("status") != "SETTLED")
+    )
     query_start = configuration["start_timestamp"] - uint(price_lookback_seconds)
     query_end = configuration["end_timestamp"]
-    histories = _price_histories(data_client, price_tokens, query_start, query_end, workers, progress)
+    histories = _price_histories(data_client, history_tokens, query_start, query_end, workers, progress)
+    history_by_token = {row["token_id"]: row for row in histories}
     marks: dict[str, dict] = {}
-    for item in histories:
-        token = item["token_id"]
-        marks[token] = {"opening": _mark_before(item["history"], configuration["start_timestamp"],
-                                                uint(max_mark_age_seconds)),
-                        "closing": _mark_before(item["history"], configuration["end_timestamp"],
-                                                uint(max_mark_age_seconds)),
-                        "history_error": item["error"]}
-    opening_value = _value_cut(opening, marks, ctf_contract, combo_contract, cash_contracts, "opening")
-    closing_value = _value_cut(closing, marks, ctf_contract, combo_contract, cash_contracts, "closing")
+    for token_value in price_tokens:
+        token = str(token_value)
+        item = history_by_token.get(token, {"history": [], "error": None})
+        marks[token] = {
+            "opening": _combined_mark(opening_settlement["marks"].get(token, {}), item["history"],
+                                      configuration["start_timestamp"], uint(max_mark_age_seconds)),
+            "closing": _combined_mark(closing_settlement["marks"].get(token, {}), item["history"],
+                                      configuration["end_timestamp"], uint(max_mark_age_seconds)),
+            "history_error": item["error"],
+        }
+    combo_resolution = _combo_resolution_marks(
+        opening, closing, combo_contract, combo_positions, configuration["start_timestamp"]
+    )
+    combo_marks = combo_resolution["marks"]
+    opening_value = _value_cut(opening, marks, combo_marks, ctf_contract, combo_contract,
+                               cash_contracts, "opening")
+    closing_value = _value_cut(closing, marks, combo_marks, ctf_contract, combo_contract,
+                               cash_contracts, "closing")
     cash_audit = _cash_transfer_audit(capture, wallet, deployments, activity)
-    metadata = _position_metadata(legacy_positions, current_positions, activity)
+    metadata = _position_metadata(legacy_positions, all_current_positions, activity)
     position_rows = []
     for token in price_tokens:
         token_text = str(token)
@@ -476,7 +773,8 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                               "closing_mark": marks[token_text]["closing"]})
 
     fresh_missing = sorted(token for token, item in marks.items()
-                           if item["opening"]["status"] != "FRESH" or item["closing"]["status"] != "FRESH")
+                           if item["opening"]["status"] not in {"FRESH", "SETTLED"}
+                           or item["closing"]["status"] not in {"FRESH", "SETTLED"})
     calculation_available = (not opening["errors"] and not closing["errors"]
                              and opening_value["complete_for_expanded_scope"]
                              and closing_value["complete_for_expanded_scope"])
@@ -492,8 +790,7 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                          if str(row.get("type") or "").upper() in
                          {"REWARD", "MAKER_REBATE", "TAKER_REBATE", "REFERRAL_REWARD", "YIELD"})
     blockers = {"FULL_WALLET_ASSET_UNIVERSE_NOT_PROVEN", "HISTORICAL_MARKS_NOT_EXECUTABLE",
-                "REALIZED_UNREALIZED_DECOMPOSITION_REQUIRES_OPENING_BASIS",
-                "COMBO_ECONOMICS_NOT_IMPLEMENTED"}
+                "REALIZED_UNREALIZED_DECOMPOSITION_REQUIRES_OPENING_BASIS"}
     if opening["errors"] or closing["errors"]:
         blockers.add("EXPANDED_BALANCE_READS_INCOMPLETE")
     if not calculation_available:
@@ -502,7 +799,8 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
         blockers.add("FRESH_HISTORICAL_MARKS_MISSING")
     if cash_audit["status"] != "MATCH":
         blockers.add("EXTERNAL_FUNDING_CLASSIFICATION_UNRESOLVED")
-    current_redeemable = sum(bool(row.get("redeemable")) for row in current_positions)
+    if combo_resolution["errors"]:
+        blockers.add("COMBO_ECONOMICS_NOT_FULLY_RESOLVED")
     current_mergeable = sum(bool(row.get("mergeable")) for row in current_positions)
     summary = {
         "schema": 1, "version": VERSION, "status": "PROVISIONAL_VALUATION_BLOCKED",
@@ -518,10 +816,19 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                      "closing_errors": len(closing["errors"]),
                      "opening_positive": sum(value > 0 for value in opening["balances"].values()),
                      "closing_positive": sum(value > 0 for value in closing["balances"].values())},
-        "marks": {"ctf_tokens": len(price_tokens), "fresh_at_both_cuts": len(price_tokens) - len(fresh_missing),
+        "marks": {"ctf_tokens": len(price_tokens), "ctf_settled_at_opening": sum(
+                      row["status"] == "SETTLED" for row in opening_settlement["marks"].values()),
+                  "ctf_settled_at_closing": sum(
+                      row["status"] == "SETTLED" for row in closing_settlement["marks"].values()),
+                  "clob_history_tokens_queried": len(history_tokens),
+                  "fresh_or_settled_at_both_cuts": len(price_tokens) - len(fresh_missing),
                   "not_fresh_at_one_or_both_cuts": len(fresh_missing),
-                  "method": "last official CLOB historical reference at or before each cut",
+                  "method": "exact-block CTF payout when resolved; otherwise last official CLOB historical reference at or before each cut",
                   "max_age_seconds": uint(max_mark_age_seconds), "executable": False},
+        "combo": {"api_positions": len(combo_positions),
+                  "positive_onchain_positions": combo_resolution["positions_checked"],
+                  "resolved_loss_at_both_cuts": combo_resolution["resolved_loss_at_both_cuts"],
+                  "resolution_errors": len(combo_resolution["errors"])},
         "valuation": {"opening": opening_value, "closing": closing_value,
                       "raw_mtm_change_usd": raw_change,
                       "external_net_funding_usd": (_decimal_text(Decimal(cash_audit["external_net_funding_atomic"]) / SCALE)
@@ -534,11 +841,15 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                                 "transactions": cash_audit["cash_transfer_transactions"],
                                 "mismatches": len(cash_audit["mismatches"])},
         "current_tracking_snapshot": {"captured_at": now_utc(), "positions": len(current_positions),
-                                      "redeemable": current_redeemable, "mergeable": current_mergeable,
+                                      "redeemable_position_rows": len(redeemable_positions),
+                                      "combined_unique_position_rows": len(all_current_positions),
+                                      "redeemable": sum(bool(row.get("redeemable"))
+                                                        for row in all_current_positions),
+                                      "mergeable": current_mergeable, "combo_positions": len(combo_positions),
                                       "current_value_usd_api": _decimal_text(sum(Decimal(str(row.get("currentValue") or "0"))
-                                                                                 for row in current_positions)),
+                                                                                 for row in all_current_positions)),
                                       "unrealized_cash_pnl_usd_api": _decimal_text(sum(Decimal(str(row.get("cashPnl") or "0"))
-                                                                                         for row in current_positions)),
+                                                                                         for row in all_current_positions)),
                                       "source": "data-api.polymarket.com/positions",
                                       "used_as_historical_cut_price": False},
         "blockers": sorted(blockers), "p0_exit_allowed": False, "execution_allowed": False,
@@ -548,6 +859,7 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                          "raw_manifest_sha256": summary["raw_capture"]["manifest_sha256"],
                          "deployments_sha256": _sha256(Path(deployments_path)),
                          "historical_assets_sha256": _sha256(Path(history_assets_path)),
+                         "metadata_db_sha256": _sha256(Path(metadata_db_path)),
                          "legacy_db_snapshot": legacy_audit, "state_rpc_source": rpc.url,
                          "price_source": CLOB + "/prices-history", "price_query_start": query_start,
                          "price_query_end": query_end, "price_lookback_seconds": uint(price_lookback_seconds),
@@ -557,10 +869,17 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                                       "source_counts": summary["universe"]})
     _save(partial / "current_positions.json", current_positions)
     _save(partial / "current_position_pages.json", current_pages)
+    _save(partial / "redeemable_positions.json", redeemable_positions)
+    _save(partial / "redeemable_position_pages.json", redeemable_pages)
+    _save(partial / "combo_positions.json", combo_positions)
+    _save(partial / "combo_position_pages.json", combo_pages)
     _save(partial / "expanded_opening_balances.json", opening)
     _save(partial / "expanded_closing_balances.json", closing)
     _save(partial / "price_histories.json", histories)
+    _save(partial / "ctf_settlement_opening.json", opening_settlement)
+    _save(partial / "ctf_settlement_closing.json", closing_settlement)
     _save(partial / "marks.json", marks)
+    _save(partial / "combo_marks.json", combo_resolution)
     _save(partial / "position_tracking.json", position_rows)
     _save(partial / "cash_transfer_audit.json", cash_audit)
     _save(partial / "summary.json", summary)

@@ -79,6 +79,8 @@ def main(argv=None):
     valuation.add_argument("--history-assets", type=Path,
                            default=Path("data/car_forensics/car_raw_activity.parquet"))
     valuation.add_argument("--legacy-db", type=Path, default=Path("data/polyledger/car.db"))
+    valuation.add_argument("--metadata-db", type=Path,
+                           default=Path("data/car_forensics/car_metadata.db"))
     valuation.add_argument("--state-rpc-url")
     valuation.add_argument("--price-lookback-seconds", type=int, default=3600)
     valuation.add_argument("--max-mark-age-seconds", type=int, default=900)
@@ -127,7 +129,7 @@ def main(argv=None):
             result = value_wallet_capture(
                 capture=args.capture, output=args.output, wallet=args.wallet,
                 deployments_path=args.deployments, history_assets_path=args.history_assets,
-                legacy_db_path=args.legacy_db, rpc=rpc,
+                legacy_db_path=args.legacy_db, metadata_db_path=args.metadata_db, rpc=rpc,
                 price_lookback_seconds=args.price_lookback_seconds,
                 max_mark_age_seconds=args.max_mark_age_seconds, workers=args.workers,
                 progress=lambda row: print(json.dumps(row), flush=True),

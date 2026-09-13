@@ -24,6 +24,8 @@ READ_SELECTORS = {
     "0x00fdd58e",  # ERC-1155 balanceOf(address,uint256)
     "0x4e1273f4",  # ERC-1155 balanceOfBatch(address[],uint256[])
     "0x5c60da1b",  # EIP-1967 beacon implementation()
+    "0xdd34de67",  # ConditionalTokens payoutDenominator(bytes32)
+    "0x0504c814",  # ConditionalTokens payoutNumerators(bytes32,uint256)
 }
 
 
