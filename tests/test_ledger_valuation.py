@@ -9,6 +9,7 @@ from polymarket_bot.ledger.valuation import (
     _ctf_settlement_marks,
     _expanded_balances,
     _mark_before,
+    _merge_token_metadata,
     _merge_position_rows,
     _value_cut,
 )
@@ -144,3 +145,16 @@ def test_unpriced_position_produces_conservative_equity_bounds():
     assert value["total_equity_usd"] is None
     assert value["total_equity_lower_bound_usd"] == "1"
     assert value["total_equity_upper_bound_usd"] == "3"
+
+
+def test_metadata_merge_retains_primary_and_reports_conflict():
+    primary = {"7": {"condition_id": "0x" + "11" * 32,
+                     "outcome_index": 0, "outcome": "Yes"}}
+    supplement = {"7": {"condition_id": "0x" + "22" * 32,
+                        "outcome_index": 1, "outcome": "No"},
+                  "8": {"condition_id": "0x" + "33" * 32,
+                        "outcome_index": 1, "outcome": "No"}}
+    merged, conflicts = _merge_token_metadata(primary, supplement)
+    assert merged["7"] == primary["7"]
+    assert merged["8"] == supplement["8"]
+    assert conflicts == ["7"]

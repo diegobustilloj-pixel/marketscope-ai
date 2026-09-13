@@ -278,8 +278,9 @@ def _market_token_metadata(path: Path) -> dict[str, dict]:
     return result
 
 
-def _merge_token_metadata(*sources: dict[str, dict]) -> dict[str, dict]:
+def _merge_token_metadata(*sources: dict[str, dict]) -> tuple[dict[str, dict], list[str]]:
     result: dict[str, dict] = {}
+    conflicts: set[str] = set()
     for source in sources:
         for token, row in source.items():
             previous = result.get(token)
@@ -288,10 +289,13 @@ def _merge_token_metadata(*sources: dict[str, dict]) -> dict[str, dict]:
                 continue
             if (previous["condition_id"], previous["outcome_index"]) != (
                     row["condition_id"], row["outcome_index"]):
-                raise EvidenceError("Token metadata sources disagree on condition or outcome index")
+                # Sources are ordered by authority. Retain the first mapping and
+                # expose every lower-priority disagreement in the evidence pack.
+                conflicts.add(token)
+                continue
             if not previous.get("outcome") and row.get("outcome"):
                 result[token] = dict(row)
-    return result
+    return result, sorted(conflicts, key=int)
 
 
 def _erc20_calls(wallet: str, deployments: dict) -> list[tuple[str, str]]:
@@ -783,7 +787,9 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                            for asset, raw in balances["balances"].items()
                            if raw > 0 and asset.split(":")[1] == ctf_contract})
     database_metadata = _market_token_metadata(Path(metadata_db_path))
-    token_metadata = _merge_token_metadata(database_metadata, historical_metadata)
+    token_metadata, cross_source_metadata_conflicts = _merge_token_metadata(
+        database_metadata, historical_metadata
+    )
     opening_settlement = _ctf_settlement_marks(
         rpc, opening_header, ctf_contract, price_tokens, token_metadata, progress
     )
@@ -885,6 +891,8 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
         "universe": {"historical_activity_tokens": len(history_assets),
                      "historical_metadata_tokens": len(historical_metadata),
                      "historical_metadata_conflicts_excluded": len(historical_metadata_conflicts),
+                     "cross_source_metadata_conflicts_retained_primary": len(
+                         cross_source_metadata_conflicts),
                      "legacy_position_tokens": len(legacy_assets), "current_position_tokens": len(current_assets),
                      "capture_tokens": len(capture_assets), "union_tokens": len(token_ids),
                      "wallet_universe_complete": False},
@@ -946,7 +954,9 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
     _save(partial / "configuration.json", configuration_out)
     _save(partial / "universe.json", {"token_ids": [str(token) for token in token_ids],
                                       "source_counts": summary["universe"],
-                                      "historical_metadata_conflicts_excluded": historical_metadata_conflicts})
+                                      "historical_metadata_conflicts_excluded": historical_metadata_conflicts,
+                                      "cross_source_metadata_conflicts_retained_primary":
+                                          cross_source_metadata_conflicts})
     _save(partial / "current_positions.json", current_positions)
     _save(partial / "current_position_pages.json", current_pages)
     _save(partial / "redeemable_positions.json", redeemable_positions)
