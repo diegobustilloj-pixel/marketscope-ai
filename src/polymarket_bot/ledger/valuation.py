@@ -426,11 +426,10 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
     current_assets = {uint(row["asset"]) for row in current_positions if str(row.get("asset") or "").isdigit()}
     token_ids = sorted(history_assets | capture_assets | legacy_assets | current_assets)
 
-    headers = json.loads((capture / "block_headers.json").read_text(encoding="utf-8"))
     opening_number = raw_summary["balances"]["opening_block"]
     closing_number = raw_summary["balances"]["closing_block"]
-    by_number = {uint(row["number"]): row for row in headers}
-    opening_header, closing_header = by_number[opening_number], by_number[closing_number]
+    opening_header = {"number": hex(opening_number), "hash": captured_open["block_hash"]}
+    closing_header = {"number": hex(closing_number), "hash": captured_close["block_hash"]}
     if rpc.block(opening_number)["hash"] != opening_header["hash"] or rpc.block(closing_number)["hash"] != closing_header["hash"]:
         raise EvidenceError("State RPC disagrees with sealed capture anchors")
     if progress:
