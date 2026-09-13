@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "date_bolivia": "2026-09-13",
+  "component": "PolyLedger P0 inventory and cost-basis engine",
+  "status": "ENGINE_IMPLEMENTED_REAL_BUNDLE_PENDING",
+  "engine": "inventory-basis-period-pnl/1",
+  "accounting_policy": "fifo-atomic-proportional-remainder-v1",
+  "capabilities": [
+    "Exact atomic FIFO lots and proportional remainder conservation",
+    "Buy, sell, split, hierarchical merge, convert, redeem, wrap and unwrap",
+    "Cash funding, rewards and external token transfers",
+    "Evidence-backed boundary basis for externally received tokens",
+    "Opening and closing marked inventory with aggregate and lot provenance",
+    "Realized, unrealized and period PnL in quote-asset atomic units",
+    "Equity-flow and basis-accrual internal PnL identity",
+    "Complete declared-universe closing balance reconciliation",
+    "Strict comparison contract for an independent accounting pipeline",
+    "Immutable output directory and SHA-256 manifest"
+  ],
+  "fail_closed_gates": [
+    "BLOCK_RANGE_NOT_CONTINUOUS",
+    "RAW_ACTION_COVERAGE_INCOMPLETE",
+    "ACTION_MAPPING_INCOMPLETE",
+    "ASSET_UNIVERSE_INCOMPLETE",
+    "OPENING_BASIS_NOT_PROVEN",
+    "OPENING_LOT_BASIS_UNKNOWN",
+    "UNRESOLVED_ACTIONS_PRESENT",
+    "EXTERNAL_TOKEN_FLOW_VALUE_MISSING",
+    "OPENING_MARKS_INCOMPLETE",
+    "CLOSING_MARKS_INCOMPLETE",
+    "OPENING_MARK_EVIDENCE_MISSING",
+    "CLOSING_MARK_EVIDENCE_MISSING",
+    "UNKNOWN_COST_BASIS",
+    "CLOSING_BALANCE_MISMATCH_OR_MISSING",
+    "INTERNAL_PNL_IDENTITY_MISMATCH",
+    "INDEPENDENT_ACCOUNTING_REPORT_MISSING",
+    "INDEPENDENT_ACCOUNTING_MISMATCH"
+  ],
+  "entrypoint": ".\\.venv\\Scripts\\python.exe -m polymarket_bot.ledger inventory-basis --bundle <sealed-input.json> --output <new-output-directory>",
+  "validation": {
+    "targeted_tests_passed": 16,
+    "full_tests_passed": 779,
+    "subtests_passed": 18,
+    "existing_warnings": 831,
+    "bot_registry_status": "OK",
+    "bot_registry_entries": 11,
+    "bot_registry_errors": 0,
+    "bot_registry_warnings": 0
+  },
+  "source": {
+    "commit": "2b7465b86f08e7f655bec248b2a9aead10b6d6c4",
+    "inventory_basis_sha256": "98a7175aad8a6f8f7df92f1e3604576c80fe0cfd0b79f5bf68768b7c1982f8de",
+    "lots_sha256": "03075c5032b1cee03fb604e938149a725b8f71ecc55816770b4e406533b5c41b",
+    "tests_sha256": "080f7f744a9fc9ddfd8107e84c41064779faa33bbe9124ad321e114022245944",
+    "design_sha256": "64778111eafbc1c9ad5fdee891f839fb473be048e190967461b0efd149103521"
+  },
+  "remaining_real_evidence": [
+    "Compile a complete action bundle from wallet origin or independently prove every opening lot basis",
+    "Prove the full token universe for the accounting range",
+    "Resolve reviewed mappings for mixed and Combo transactions",
+    "Capture opening and closing marks with provenance at the same cuts",
+    "Produce the independent accounting report and match the emitted comparison contract"
+  ],
+  "p0_exit_allowed": false,
+  "execution_allowed": false,
+  "safety": {
+    "read_only": true,
+    "real_money": false,
+    "automatic_orders": false,
+    "signing": false,
+    "wallet_connection": false,
+    "withdrawals": false
+  }
+}
