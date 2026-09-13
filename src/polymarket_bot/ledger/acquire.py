@@ -184,7 +184,8 @@ def capture_range(rpc: ReadOnlyRPC, output: Path, *, chain: int, first: int, las
     A failed run stays .partial. Resume validates all retained canonical header
     hashes against the provider, then starts at the first divergence (known
     parent). A reorg deeper than the anchor fails closed. With one RPC request
-    per block this is a correctness baseline, not the seven-day throughput tool.
+    per block this is a correctness baseline; use the wallet-indexed 24h capture
+    for the operator pilot.
     """
     from . import SAFETY, VERSION
     from .store import EvidenceStore

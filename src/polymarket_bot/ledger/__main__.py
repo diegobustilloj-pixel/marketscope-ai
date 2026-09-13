@@ -46,7 +46,7 @@ def main(argv=None):
     verify.add_argument("--source-url", required=True)
     verify.add_argument("--rpc-url")
     verify.add_argument("--output", type=Path, required=True)
-    readiness = commands.add_parser("pilot-readiness", help="Audit legacy inputs before a real seven-day pilot")
+    readiness = commands.add_parser("pilot-readiness", help="Audit legacy inputs before a real wallet pilot")
     readiness.add_argument("--activity", type=Path, required=True)
     readiness.add_argument("--onchain", type=Path, required=True)
     readiness.add_argument("--identity", type=Path, required=True)
