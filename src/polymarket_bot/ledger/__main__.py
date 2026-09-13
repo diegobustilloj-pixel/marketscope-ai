@@ -13,6 +13,7 @@ from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
 from .wallet_capture import capture_wallet_24h
+from .valuation import value_wallet_capture
 
 
 def main(argv=None):
@@ -67,6 +68,22 @@ def main(argv=None):
     wallet24.add_argument("--rpc-url")
     wallet24.add_argument("--state-rpc-url", help="Independent HTTPS RPC for exact-block balances/code")
     wallet24.add_argument("--output", type=Path, required=True)
+    valuation = commands.add_parser(
+        "value-wallet-24h",
+        help="Expand exact-block balances and mark a sealed 24h capture without trading",
+    )
+    valuation.add_argument("--capture", type=Path, required=True)
+    valuation.add_argument("--wallet", required=True)
+    valuation.add_argument("--deployments", type=Path,
+                           default=Path("configs/polyledger/polygon_wallet_capture.json"))
+    valuation.add_argument("--history-assets", type=Path,
+                           default=Path("data/car_forensics/car_raw_activity.parquet"))
+    valuation.add_argument("--legacy-db", type=Path, default=Path("data/polyledger/car.db"))
+    valuation.add_argument("--state-rpc-url")
+    valuation.add_argument("--price-lookback-seconds", type=int, default=3600)
+    valuation.add_argument("--max-mark-age-seconds", type=int, default=900)
+    valuation.add_argument("--workers", type=int, default=12)
+    valuation.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -105,6 +122,16 @@ def main(argv=None):
                                         combo_path=args.combo_abi, validation_path=args.validation,
                                         rpc=rpc, state_rpc=state_rpc, confirmations=args.confirmations,
                                         progress=lambda row: print(json.dumps(row), flush=True))
+        elif args.command == "value-wallet-24h":
+            rpc = ReadOnlyRPC(url=args.state_rpc_url) if args.state_rpc_url else None
+            result = value_wallet_capture(
+                capture=args.capture, output=args.output, wallet=args.wallet,
+                deployments_path=args.deployments, history_assets_path=args.history_assets,
+                legacy_db_path=args.legacy_db, rpc=rpc,
+                price_lookback_seconds=args.price_lookback_seconds,
+                max_mark_age_seconds=args.max_mark_age_seconds, workers=args.workers,
+                progress=lambda row: print(json.dumps(row), flush=True),
+            )
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -119,8 +146,8 @@ def main(argv=None):
             return 0 if result["status"] == "VERIFIED_AT_BLOCK" else 2
         if args.command == "pilot-readiness":
             return 2  # A legacy census can diagnose readiness, never approve P0.
-        if args.command == "capture-wallet-24h":
-            return 2  # Captured evidence remains blocked until all P0 gates pass.
+        if args.command in {"capture-wallet-24h", "value-wallet-24h"}:
+            return 2  # Evidence remains blocked until all P0 gates pass.
         return 0 if args.command != "replay" or result["p0_exit"]["status"] == "PASS" else 2
     except (EvidenceError, ValueError, KeyError, OSError) as exc:
         print(json.dumps({"status": "BLOCKED", "error": str(exc), "safety": SAFETY}, indent=2))

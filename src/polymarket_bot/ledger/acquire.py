@@ -19,7 +19,12 @@ READ_METHODS = {"eth_chainId", "eth_blockNumber", "eth_getBlockByNumber", "eth_g
                 "eth_getLogs", "eth_getTransactionReceipt", "eth_getCode", "eth_getStorageAt", "eth_call"}
 # Only read selectors used by this module; eth_call cannot be repurposed as an
 # order/withdrawal simulator through this public client.
-READ_SELECTORS = {"0x70a08231", "0x00fdd58e", "0x5c60da1b"}
+READ_SELECTORS = {
+    "0x70a08231",  # ERC-20 balanceOf(address)
+    "0x00fdd58e",  # ERC-1155 balanceOf(address,uint256)
+    "0x4e1273f4",  # ERC-1155 balanceOfBatch(address[],uint256[])
+    "0x5c60da1b",  # EIP-1967 beacon implementation()
+}
 
 
 class ExactPublicClient(PublicDataClient):
