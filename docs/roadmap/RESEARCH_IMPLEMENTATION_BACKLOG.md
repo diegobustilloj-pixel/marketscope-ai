@@ -31,13 +31,16 @@ P0 PolyLedger
 
 ### Etapa 1 — P0 de PolyLedger
 
-**Actualización de construcción (2026-09-12):** raw/cursor/reorg, registro y
+**Actualización de construcción (2026-09-13):** raw/cursor/reorg, registro y
 verificación de contratos, decodificadores CLOB/CTF/NegRisk, motor de lotes,
 reconciliación y captura/replay están implementados. PositionManager Combo ya
 permite transferencias e IDs estructurales con implementación/fuente verificadas;
 faltan la economía y vectores de sus módulos y mapeos de transacciones mixtas.
 El piloto real de 24 horas de `car` ya capturó y reconcilió los saldos del alcance;
-faltan basis inicial, universo total, órdenes CLOB y PnL independiente. El archivo
+el nuevo motor de inventario/basis ya exige cobertura completa, costo inicial,
+marcas de ambos cortes, conciliación, doble identidad de PnL y un segundo reporte.
+Falta construir el bundle real desde el origen o basis probado; siguen pendientes
+universo total, órdenes CLOB y PnL independiente. El archivo
 histórico también fue censado y rechazado como bundle contable incompleto. No se cumple el criterio de
 salida. Detalle: `docs/architecture/POLYLEDGER_P0.md` y
 `docs/operations/POLYLEDGER_P0_RUNBOOK.md`. Las investigaciones siguen cerradas.

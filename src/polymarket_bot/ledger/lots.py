@@ -105,23 +105,37 @@ class LotLedger:
                 raise EvidenceError("Duplicate assets or zero quantities in action")
         if kind == "buy" and (inputs or not outputs or cash >= 0):
             raise EvidenceError("Invalid buy legs")
-        if kind in {"sell", "merge", "redeem"} and (not inputs or outputs or cash < 0):
-            raise EvidenceError("Invalid disposal legs")
+        if kind == "sell" and (not inputs or outputs or cash < 0):
+            raise EvidenceError("Invalid sale legs")
+        if kind in {"merge", "redeem"} and (not inputs or cash < 0):
+            raise EvidenceError("Invalid merge/redemption legs")
         if kind in {"split", "wrap", "unwrap", "convert"} and not outputs:
             raise EvidenceError("Conversion needs explicit outputs")
-        if kind == "split" and cash > 0:
-            raise EvidenceError("Split cannot create cash")
+        if kind == "split" and (cash > 0 or (not inputs and cash == 0)):
+            raise EvidenceError("Split needs consumed collateral or parent inventory")
         if kind in {"wrap", "unwrap"} and (not inputs or cash != 0):
             raise EvidenceError("Wrap/unwrap must carry basis between explicit asset legs")
+        if kind == "convert" and not inputs:
+            raise EvidenceError("Conversion needs explicit input inventory")
         if kind == "receive" and (inputs or not outputs or cash):
-            raise EvidenceError("External receipt must have unknown basis")
+            raise EvidenceError("External receipt must have explicit output inventory")
+        received_basis = action.get("received_basis")
+        if received_basis is not None:
+            if kind != "receive" or type(received_basis) is not int or received_basis < 0:
+                raise EvidenceError("Received basis must be a nonnegative atomic integer on a receipt")
+            basis_evidence = action.get("basis_evidence")
+            if (not isinstance(basis_evidence, list) or not basis_evidence
+                    or any(not isinstance(item, str) or not item for item in basis_evidence)):
+                raise EvidenceError("Received basis requires independent evidence")
         if kind == "transfer" and (not inputs or outputs or cash):
             raise EvidenceError("Transfer must have explicit source lots and no proceeds")
         if kind in {"cash", "reward"} and (inputs or outputs):
             raise EvidenceError("Cash/reward cannot create outcome inventory")
         if kind == "reward" and cash < 0:
             raise EvidenceError("Negative reward")
-        cost, provenance, consumed = 0, list(action["raw_ids"]), []
+        cost = 0
+        provenance = list(action["raw_ids"]) + list(action.get("basis_evidence", []))
+        consumed = []
         transfer_parts = []
         for leg in inputs:
             basis, origins, parts = self._consume(wallet, leg["asset"], uint(leg["quantity"]))
@@ -133,7 +147,7 @@ class LotLedger:
         if self.cash[wallet] < 0:
             raise EvidenceError("Negative observed collateral; missing opening cash or transfer")
         pnl = 0
-        if kind in {"sell", "merge", "redeem"}:
+        if kind in {"sell", "merge", "redeem"} and not outputs:
             pnl = None if cost is None else cash - cost
         elif kind == "reward":
             pnl = cash
@@ -146,7 +160,7 @@ class LotLedger:
                     self._open(f"{key}:{i}", target, asset, part["quantity"], part["cost"], provenance)
         if outputs:
             if kind == "receive":
-                output_cost = None
+                output_cost = received_basis
             else:
                 output_cost = None if cost is None else cost - cash
                 if output_cost is not None and output_cost < 0:

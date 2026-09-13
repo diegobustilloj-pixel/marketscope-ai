@@ -33,6 +33,10 @@ No se habilitaron órdenes automáticas ni dinero real.
   cierre sobre recibos completos, saldos en ambos cortes y observación de
   contratos. Admite proveedores separados y reconcilia transferencias contra
   balances sin interpretar el flujo como PnL.
+- Motor sellado `inventory-basis`: lotes FIFO y merges jerárquicos, basis
+  evidenciado para ingresos, valor de frontera de transferencias, inventario
+  agregado, PnL del periodo por dos identidades internas, conciliación total del
+  universo declarado y contrato estricto para un segundo pipeline independiente.
 
 ### Backlog de investigación
 

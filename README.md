@@ -45,12 +45,17 @@ Auditor separado y de solo lectura para wallets públicas de Polymarket. Conserv
 **P0 en construcción:** el núcleo `polymarket_bot.ledger` añade raw inmutable,
 cursores atómicos y reorgs, contratos/ABI versionados, lotes contables exactos y
 reconciliación CLOB/ledger/onchain. Incluye captura RPC y replay determinista.
+El motor `inventory-basis` reconstruye lotes FIFO y PnL del periodo, concilia el
+universo completo declarado y exige coincidencia con un segundo cálculo antes de
+aprobar su gate contable.
 El PositionManager de Combo ya tiene despliegue/implementación calificados,
 transferencias ERC-1155 e IDs estructurales; no se infiere todavía la economía
 de sus módulos. La aprobación P0 continúa bloqueada por esos mapeos y por la
 evidencia independiente del piloto de 24 horas. Operación y comandos:
 `docs/operations/POLYLEDGER_P0_RUNBOOK.md`; diseño y límites:
-`docs/architecture/POLYLEDGER_P0.md`. El Sentinel histórico sigue compatible.
+`docs/architecture/POLYLEDGER_P0.md` y
+`docs/architecture/POLYLEDGER_INVENTORY_BASIS_V1.md`. El Sentinel histórico
+sigue compatible.
 
 La siguiente fase acordada es **Copiado por reconstrucción**: observar una wallet,
 reconstruir la cesta completa y cotizar si todavía es replicable antes de mostrar

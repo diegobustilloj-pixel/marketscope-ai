@@ -96,6 +96,14 @@ verificar. Nunca envía cancelaciones ni órdenes reales.
 Verificación de esta entrega: FIFO, fees, residuo atómico, conservación de basis,
 importes grandes, costos desconocidos, transferencias y reconciliación negativa.
 
+El motor de periodo `inventory_basis` completa esta capa con contrato sellado de
+entrada, inventario agregado, merges jerárquicos, basis evidenciado para ingresos
+externos, valor de frontera para transferencias, doble identidad interna de PnL,
+conciliación exhaustiva del universo declarado y contrato para un segundo método.
+Diseño y operación: `docs/architecture/POLYLEDGER_INVENTORY_BASIS_V1.md`.
+La implementación del motor no demuestra que el archivo real de `car` posea
+basis ni universo completo; esos siguen siendo gates de evidencia.
+
 ## Entrega 4: operación y evidencia reproducible
 
 Se reutiliza el transporte público de `car_onchain` (con URL/timeout opcionales

@@ -150,3 +150,18 @@ Los resultados nuevos P0 viven en `data/polyledger-sentinel/`.
 
 Dinero real, firmas, retiro, conexión de wallet y órdenes permanecen bloqueados
 incluso si la reconciliación devuelve `MATCH`.
+
+## Motor sellado de inventario y basis
+
+Cuando adquisición y normalización produzcan un bundle completo:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger inventory-basis --bundle data/polyledger-sentinel/p0/inventory_basis_input.json --output data/polyledger-sentinel/p0/inventory_basis_result
+```
+
+El comando reconstruye lotes FIFO, basis, PnL realizado/no realizado, flujos
+externos y balances. Compara el PnL por patrimonio y por basis, y después exige
+un reporte independiente. Salida `COMPLETE` con `basis_gate: BLOCKED` significa
+que el motor interno cerró pero falta el segundo pipeline; no es aprobación P0.
+Formato, fórmulas y bloqueos:
+`docs/architecture/POLYLEDGER_INVENTORY_BASIS_V1.md`.

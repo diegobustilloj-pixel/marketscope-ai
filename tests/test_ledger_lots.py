@@ -88,3 +88,33 @@ def test_float_conflicting_action_and_missing_opening_cash():
     ledger.apply_batch([action(1, "buy", outputs=[leg(X, 1)], cash=-5)])
     with pytest.raises(EvidenceError, match="Conflicting"):
         ledger.apply_batch([action(1, "buy", outputs=[leg(X, 2)], cash=-5)])
+
+
+def test_nested_merge_carries_basis_to_parent_output():
+    ledger = LotLedger(opening())
+    ledger.apply_batch([
+        action(1, "buy", outputs=[leg(X, 10)], cash=-20),
+        action(2, "merge", inputs=[leg(X, 10)], outputs=[leg(Y, 5)], cash=0),
+    ])
+    result = ledger.snapshot()
+    assert result["lots"][-1]["remaining_cost"] == 20
+    assert result["journal"][-1]["realized_pnl"] == 0
+
+
+def test_cost_free_split_and_unsupported_received_basis_fail_closed():
+    ledger = LotLedger(opening())
+    with pytest.raises(EvidenceError, match="consumed collateral"):
+        ledger.apply_batch([action(1, "split", outputs=[leg(X, 1)], cash=0)])
+    with pytest.raises(EvidenceError, match="independent evidence"):
+        ledger.apply_batch([action(1, "receive", outputs=[leg(X, 2)], received_basis=3)])
+
+
+def test_evidenced_external_receipt_starts_known_basis():
+    ledger = LotLedger(opening())
+    ledger.apply_batch([action(1, "receive", outputs=[leg(X, 2)], received_basis=3,
+                               basis_evidence=["external-mark:1"])])
+    result = ledger.snapshot({X: "2"})
+    assert result["complete_basis"] is True
+    assert result["lots"][-1]["remaining_cost"] == 3
+    assert "external-mark:1" in result["lots"][-1]["provenance"]
+    assert result["unrealized_pnl"][A] == "1"

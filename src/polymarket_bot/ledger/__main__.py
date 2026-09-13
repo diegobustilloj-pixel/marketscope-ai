@@ -9,6 +9,7 @@ from .acquire import ReadOnlyRPC, capture_range
 from .deployments import verify_deployment
 from .common import EvidenceError, canonical
 from .fixtures import sample_bundle
+from .inventory_basis import build_inventory_basis_file
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
@@ -86,6 +87,12 @@ def main(argv=None):
     valuation.add_argument("--max-mark-age-seconds", type=int, default=900)
     valuation.add_argument("--workers", type=int, default=12)
     valuation.add_argument("--output", type=Path, required=True)
+    basis = commands.add_parser(
+        "inventory-basis",
+        help="Reconstruct sealed FIFO inventory, basis and period PnL without execution",
+    )
+    basis.add_argument("--bundle", type=Path, required=True)
+    basis.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -134,6 +141,8 @@ def main(argv=None):
                 max_mark_age_seconds=args.max_mark_age_seconds, workers=args.workers,
                 progress=lambda row: print(json.dumps(row), flush=True),
             )
+        elif args.command == "inventory-basis":
+            result = build_inventory_basis_file(args.bundle, args.output)
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -150,6 +159,8 @@ def main(argv=None):
             return 2  # A legacy census can diagnose readiness, never approve P0.
         if args.command in {"capture-wallet-24h", "value-wallet-24h"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
+        if args.command == "inventory-basis":
+            return 0 if result["basis_gate"]["status"] == "PASS" else 2
         return 0 if args.command != "replay" or result["p0_exit"]["status"] == "PASS" else 2
     except (EvidenceError, ValueError, KeyError, OSError) as exc:
         print(json.dumps({"status": "BLOCKED", "error": str(exc), "safety": SAFETY}, indent=2))
