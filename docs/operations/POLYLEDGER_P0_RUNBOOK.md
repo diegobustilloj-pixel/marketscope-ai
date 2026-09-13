@@ -21,7 +21,8 @@ $p0RunStamp = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ')
 El ejemplo concilia y calcula PnL exacto. **Su aprobación P0 debe ser `BLOCKED`
 y el comando replay devuelve código 2**: los bloques, precios, contratos y
 observaciones de ese ejemplo son sintéticos, y faltan gates reales. No cambiar
-flags para intentar aprobarlo. El gate Combo no se puede autorizar por input.
+flags para intentar aprobarlo. Los mapeos económicos Combo no se pueden
+autorizar por input.
 
 ## Captura RPC pública
 
@@ -30,7 +31,9 @@ flags para intentar aprobarlo. El gate Combo no se puede autorizar por input.
 .\.venv\Scripts\python.exe -m polymarket_bot.ledger capture --first-block 93486482 --last-block 93486482 --contract 0xe111180000d2663c0091e4f400237545b87b996b --method receipts --output "data/polyledger-sentinel/runs/${p0RunStamp}_receipts"
 ```
 
-El RPC público ya usado por `car_onchain` es el valor por defecto. Una captura
+El RPC público ya usado por `car_onchain` es el valor por defecto. Puede
+seleccionarse otro con `--rpc-url https://...`; se rechazan URLs no HTTPS y no
+deben incluirse credenciales en línea. Una captura
 requiere un rango explícito, un máximo de 1.000 bloques y 200 confirmaciones por
 defecto. La versión actual prima verificabilidad, no rendimiento. Solo se usa
 HTTPS; no requiere cuenta, credenciales ni conexión de wallet. `RAW_CAPTURE_ONLY`
@@ -55,6 +58,19 @@ no registro de despliegues. `ContractRegistry.register` exige por contrato:
 `ContractRegistry.attest` compara contra el registro. Falta de soporte del RPC,
 slot desconocido, código diferente o ABI desconocida bloquean la decodificación.
 No hay fallback a `latest` ni confianza implícita en una dirección del README.
+
+Para construir un registro reproducible desde un informe Sourcify completo:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger verify-contract --chain 137 --contract 0x006f54f7f9a22e0000cc2ab60031000000ae9fef --block 93486482 --family combo_v2 --proxy-kind eip1967 --implementation 0xcc5de1e9d14a7ab75e872e23fc9d605518bac2d0 --source-report "ruta/al/informe_sourcify.json" --source-url "https://sourcify.dev/server/v2/contract/137/0xCc5De1e9D14a7AB75E872e23FC9D605518Bac2D0?fields=all" --output "data/polyledger-sentinel/p0/${p0RunStamp}_combo_verification"
+```
+
+La URL debe ser exactamente el endpoint HTTPS `fields=all` de la dirección que
+se verifica. El comando vuelve a observar el proxy, su slot y la implementación
+en el bloque solicitado. Un resultado exitoso dice `VERIFIED_AT_BLOCK`; cualquier
+contradicción devuelve código 2 y conserva un diagnóstico `BLOCKED`. La ABI de
+referencia recortada en `configs/polyledger/combo_position_manager_abi.json` no
+sustituye el informe completo usado para registrar el despliegue.
 
 El bundle tiene el mismo esquema que el fixture, pero debe contener evidencia
 real: bloques contiguos con logs completos para su alcance, inventario inicial

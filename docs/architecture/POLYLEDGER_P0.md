@@ -42,9 +42,13 @@ implementaciones BUSL ni presume verificados los despliegues. El generador es
 `tools/build_polyledger_abi_catalog.py`; no se necesita ejecutarlo para operar.
 
 Hay familias separadas CLOB V1, CLOB V2/CTF, CTF, NegRisk, collateral y Combo.
-Combo permanece bloqueado hasta obtener ABI verificada y vectores de IDs; no se
-deducen interfaces de las auditorías. Los eventos desconocidos se conservan y
-quedan en cuarentena. `TransferBatch` conserva el log padre y el índice interno.
+El PositionManager Combo V2 ya se identifica como proxy EIP-1967 y se vincula
+con su implementación, ABI y `Ids.sol` verificados. El decoder acepta únicamente
+transferencias ERC-1155 y anotaciones operativas de esa versión. Extrae del ID
+los campos publicados (`module`, `baseHash`, `arity`, reservado, cadena de
+resolución, condición y outcome), pero no les atribuye economía. Los eventos
+desconocidos se conservan y quedan en cuarentena. `TransferBatch` conserva el
+log padre y el índice interno.
 `OrdersMatched` es anotación, no otro fill. La comisión V1 BUY se expresa en
 outcomes; V2 la expresa en colateral. Los hashes EIP-712 son cálculos sin firma,
 con dominio Exchange v2 y direcciones CTF/NegRisk distintas.
@@ -112,10 +116,19 @@ de entradas, hash de fuentes, commit, versiones de bibliotecas, hash de ledger y
 de reconciliación. Un reporte `BLOCKED` es un diagnóstico terminado; no una
 aprobación P0. Un fallo de ejecución deja `.partial`.
 
+La calificación de un despliegue consume un informe completo de Sourcify y una
+observación RPC fijada al mismo bloque. Comprueba cadena/dirección, código exacto,
+transformaciones de bytecode declaradas, ABI y, para proxies EIP-1967, slot y
+código de implementación. Conserva informe, observación, registro y manifiesto.
+Esto vincula los artefactos retenidos; no equivale a una recompilación local ni
+convierte a Sourcify o al RPC en fuentes independientes entre sí.
+
 ### Límites que impiden cerrar el P0
 
-- ABI, fuente de implementaciones desplegadas y vectores de IDs Combo no están
-  disponibles en los artefactos existentes. El decoder Combo se mantiene cerrado.
+- La envoltura PositionManager de Combo está calificada, pero faltan ABIs,
+  fórmulas económicas y vectores completos de cada módulo de resolución,
+  conversión y liquidación. Sus movimientos pueden contarse; no se puede inferir
+  PnL ni equivalencia económica a partir del ID.
 - Falta una captura real de siete días para la wallet piloto, con inventario y
   basis iniciales verificables, snapshots completos CLOB y balances al mismo corte.
 - Falta el PnL de un pipeline externo independiente para las conversiones de esa
@@ -130,9 +143,9 @@ correspondencia entre fuente y bytecode desplegado.
 
 ## Validación sellada — 2026-09-12
 
-Código verificado: `2da535c`, sobre la base solicitada `399f032`.
+Código verificado: `63da42e`, sobre la base solicitada `399f032`.
 
-- Suite completa: **740 tests aprobados**, incluidos 33 P0 y 18 subtests.
+- Suite completa: **748 tests aprobados**, incluidos 41 P0 y 18 subtests.
   Persisten los mismos 831 warnings de joblib/NumPy de la línea base.
 - Catálogo: 11 bots válidos, cero errores y cero warnings.
 - Dos replays sintéticos en bases nuevas: reconciliación `MATCH`, integridad
@@ -143,6 +156,10 @@ Código verificado: `2da535c`, sobre la base solicitada `399f032`.
 - Bloque Polygon 93486482: 103 logs idénticos obtenidos mediante `eth_getLogs`
   y mediante los recibos de todas sus transacciones. Se usó un mismo RPC público:
   son rutas de adquisición diferentes, no proveedores independientes.
+- En ese mismo bloque, CTF `0x4d97...6045` y el proxy Combo
+  `0x006f...9fef` quedaron observados. El slot EIP-1967 de Combo apunta a
+  `0xcc5d...c2d0`; sus bytes coinciden con el runtime y las transformaciones del
+  informe Sourcify retenido. La comprobación no recompiló Solidity localmente.
 - Dinero real, firmas, wallet, retiros y órdenes continúan bloqueados.
 
 Resumen versionado: `artifacts/polyledger_p0/validation_20260912.json`. El criterio

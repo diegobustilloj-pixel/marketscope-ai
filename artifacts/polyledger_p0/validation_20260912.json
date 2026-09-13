@@ -2,12 +2,12 @@
   "schema": 1,
   "date": "2026-09-12",
   "base_commit": "399f032",
-  "implementation_commit": "2da535c",
+  "implementation_commit": "63da42e",
   "status": "CORE_IMPLEMENTED_P0_EXIT_BLOCKED",
   "tests": {
     "command": ".venv/Scripts/python.exe -m pytest -q",
-    "passed": 740,
-    "p0_tests": 33,
+    "passed": 748,
+    "p0_tests": 41,
     "subtests_passed": 18,
     "warnings": 831,
     "warnings_note": "Existing joblib physical-core detection and NumPy shape deprecation warnings; same baseline warnings.",
@@ -46,8 +46,30 @@
     "integrity": "OK; 104 payloads checked in each database",
     "scope_limit": "Independent acquisition paths on the same RPC provider; one contract and one block, not an independent seven-day PnL pipeline."
   },
+  "contract_source_qualification": {
+    "chain": 137,
+    "block": 93486482,
+    "block_hash": "0x30e3468fa24fcd1b5be2d44826eb473c1ec7527ff338253897c3917a12f7889b",
+    "ctf": {
+      "address": "0x4d97dcd97ec945f40cf65f87097ace5ea0476045",
+      "runtime_code_hash": "0xbe524e094025c2a1122ccfbe3264e29fe662d7e0ae518b6926135c814405eceb",
+      "verified_full_abi_hash": "f981b0b7b053d54e9d9f2633defa8a71d3d98d63a63b0891f2b49588c830814e",
+      "sourcify_report_hash": "6a820a188f40905e3cfaf2e758e0f8f53c1b5ab505cacd888903f8ac826f7881"
+    },
+    "combo": {
+      "proxy": "0x006f54f7f9a22e0000cc2ab60031000000ae9fef",
+      "proxy_code_hash": "0xaaa52c8cc8a0e3fd27ce756cc6b4e70c51423e9b597b11f32d3e49f8b1fc890d",
+      "implementation": "0xcc5de1e9d14a7ab75e872e23fc9d605518bac2d0",
+      "implementation_code_hash": "0x4f3ca1f933ee48546581d8ee28506e5c5b89d08e50900ff880603cedcde14c9e",
+      "verified_full_abi_hash": "199de324c176daf395b2c9035b64a8f07f8fbcf5fd677c62a406f1198c5a5ded",
+      "ids_source_sha256": "8c752ea7edb0518f4e3575be4a1b1b92852cb5b2c6c264e2055d16828f5b6268",
+      "sourcify_report_hash": "ed5f0aea8751bd39963b8b30c99e9f168b19035c8d8ac4fbac038f26e602a5fe"
+    },
+    "method": "Sourcify-declared runtime transformations reproduced locally against exact-block RPC bytecode.",
+    "scope_limit": "Not a local Solidity recompilation and not an independent module-economics or PnL validation."
+  },
   "exit_blockers": [
-    "Verified Combo implementation ABI and token-ID vectors unavailable in retained evidence; decoder remains quarantined.",
+    "Combo PositionManager is qualified for transfers and structural IDs; verified module ABIs, economic mappings and full resolution/conversion/settlement vectors remain unavailable.",
     "Real known-wallet seven-day evidence with opening inventory/basis and complete CLOB/onchain snapshots at the same cut.",
     "External independently produced PnL evidence, transaction-specific mappings for mixed operations, and adversarial real-data replay."
   ],

@@ -16,6 +16,17 @@
 
 No se habilitaron órdenes automáticas ni dinero real.
 
+### PolyLedger P0
+
+- Calificación reproducible de fuente Sourcify contra bytecode RPC fijado a un
+  bloque, con soporte explícito para despliegues directos y proxies EIP-1967.
+- PositionManager Combo V2 identificado como proxy y vinculado a su
+  implementación verificada; ABI, fuente y layout de IDs quedan sellados por hash.
+- Transferencias Combo ERC-1155 decodificadas con sus campos estructurales de
+  posición. La economía de módulos, conversiones y resoluciones sigue bloqueada.
+- Captura RPC acepta un endpoint HTTPS explícito sin habilitar credenciales,
+  firma, wallet, órdenes ni dinero real.
+
 ### Backlog de investigación
 
 - Registradas las conclusiones de Balthazar, `car`, `e46m3`, `Oxp3mny` y la forensia GitHub.
