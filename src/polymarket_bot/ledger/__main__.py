@@ -9,6 +9,7 @@ from .acquire import ReadOnlyRPC, capture_range
 from .deployments import verify_deployment
 from .common import EvidenceError, canonical
 from .fixtures import sample_bundle
+from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
 
@@ -44,6 +45,13 @@ def main(argv=None):
     verify.add_argument("--source-url", required=True)
     verify.add_argument("--rpc-url")
     verify.add_argument("--output", type=Path, required=True)
+    readiness = commands.add_parser("pilot-readiness", help="Audit legacy inputs before a real seven-day pilot")
+    readiness.add_argument("--activity", type=Path, required=True)
+    readiness.add_argument("--onchain", type=Path, required=True)
+    readiness.add_argument("--identity", type=Path, required=True)
+    readiness.add_argument("--wallet", required=True)
+    readiness.add_argument("--window-days", type=int, default=7)
+    readiness.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -67,6 +75,12 @@ def main(argv=None):
                                        contract=args.contract, block_number=args.block, family=args.family,
                                        proxy_kind=args.proxy_kind, expected_implementation=args.implementation,
                                        source_url=args.source_url)
+        elif args.command == "pilot-readiness":
+            result = audit_archived_pilot(args.activity, args.onchain, args.identity, wallet=args.wallet,
+                                          window_days=args.window_days)
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            with args.output.open("x", encoding="utf-8") as target:
+                target.write(canonical(result) + "\n")
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -79,6 +93,8 @@ def main(argv=None):
         print(json.dumps(result, indent=2))
         if args.command == "verify-contract":
             return 0 if result["status"] == "VERIFIED_AT_BLOCK" else 2
+        if args.command == "pilot-readiness":
+            return 2  # A legacy census can diagnose readiness, never approve P0.
         return 0 if args.command != "replay" or result["p0_exit"]["status"] == "PASS" else 2
     except (EvidenceError, ValueError, KeyError, OSError) as exc:
         print(json.dumps({"status": "BLOCKED", "error": str(exc), "safety": SAFETY}, indent=2))
