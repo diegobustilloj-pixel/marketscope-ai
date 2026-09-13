@@ -2,12 +2,12 @@
   "schema": 1,
   "date": "2026-09-12",
   "base_commit": "399f032",
-  "implementation_commit": "63da42e",
+  "implementation_commit": "2bba26a",
   "status": "CORE_IMPLEMENTED_P0_EXIT_BLOCKED",
   "tests": {
     "command": ".venv/Scripts/python.exe -m pytest -q",
-    "passed": 748,
-    "p0_tests": 41,
+    "passed": 751,
+    "p0_tests": 44,
     "subtests_passed": 18,
     "warnings": 831,
     "warnings_note": "Existing joblib physical-core detection and NumPy shape deprecation warnings; same baseline warnings.",
@@ -67,6 +67,19 @@
     },
     "method": "Sourcify-declared runtime transformations reproduced locally against exact-block RPC bytecode.",
     "scope_limit": "Not a local Solidity recompilation and not an independent module-economics or PnL validation."
+  },
+  "pilot_readiness": {
+    "profile": "car",
+    "wallet": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
+    "window": "2026-09-03T19:16:30Z/2026-09-10T19:16:30Z",
+    "activity_rows": 2508,
+    "activity_transactions": 2317,
+    "rows_with_onchain_block": 408,
+    "transactions_linked_to_recent_onchain_fill_archive": 721,
+    "onchain_fills": 810,
+    "status": "BLOCKED",
+    "artifact": "artifacts/polyledger_p0/pilot_readiness_car_20260912.json",
+    "reason": "The legacy archive has dates and useful discovery data but lacks a completeness manifest, opening atomic basis, full lifecycle logs, same-cut balances and independent PnL."
   },
   "exit_blockers": [
     "Combo PositionManager is qualified for transfers and structural IDs; verified module ABIs, economic mappings and full resolution/conversion/settlement vectors remain unavailable.",

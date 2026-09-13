@@ -141,11 +141,21 @@ Los 810 fills reales archivados de `car` coinciden con el decodificador históri
 independiente. Esto verifica decodificación, no demuestra basis, PnL total ni
 correspondencia entre fuente y bytecode desplegado.
 
+El gate de preparación aplicado a `car` confirma que el archivo histórico cubre
+fechas suficientes, pero lo rechaza como bundle P0. En sus siete días finales hay
+2.508 trades/2.317 transacciones; 408 filas incluyen bloque onchain y 721 de esas
+transacciones aparecen en el archivo reciente de fills. Este último conserva 810
+`OrderFilled`, pero no el ciclo completo de transferencias, splits, merges,
+conversiones y redenciones. Los importes históricos son `DOUBLE`; tampoco hay
+manifiesto de completitud, basis inicial atómico, balances finales al mismo corte
+ni PnL externo independiente. El resultado reproducible es `BLOCKED`, no un
+backtest fallido ni una estimación de rentabilidad.
+
 ## Validación sellada — 2026-09-12
 
-Código verificado: `63da42e`, sobre la base solicitada `399f032`.
+Código verificado: `2bba26a`, sobre la base solicitada `399f032`.
 
-- Suite completa: **748 tests aprobados**, incluidos 41 P0 y 18 subtests.
+- Suite completa: **751 tests aprobados**, incluidos 44 P0 y 18 subtests.
   Persisten los mismos 831 warnings de joblib/NumPy de la línea base.
 - Catálogo: 11 bots válidos, cero errores y cero warnings.
 - Dos replays sintéticos en bases nuevas: reconciliación `MATCH`, integridad

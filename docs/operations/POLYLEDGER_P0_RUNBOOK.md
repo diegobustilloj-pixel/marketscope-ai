@@ -86,6 +86,18 @@ Se requiere el reporte independiente de PnL y sus hashes/versión para el criter
 de salida. Siete días de replay son una auditoría histórica de conservación;
 los experimentos y capturas individuales nuevos siguen limitados a 24 h.
 
+Antes de intentar convertir un archivo legado en bundle, ejecutar el censo:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger pilot-readiness --activity data/car_forensics/car_trades.parquet --onchain data/car_forensics/car_onchain.db --identity data/car_forensics/car_wallet_identity.json --wallet 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b --window-days 7 --output artifacts/polyledger_p0/pilot_readiness_car_20260912.json
+```
+
+El comando solo lee y sella hashes; devuelve código 2 porque un censo legado
+nunca aprueba P0. Para `car`, el diagnóstico confirma fechas suficientes pero
+rechaza los datos por falta de completitud, ciclo onchain, basis, balances al
+mismo corte, PnL independiente e importes atómicos. No debe transformarse ese
+`BLOCKED` en `PASS` ni rellenarse lo ausente con cero.
+
 ## Pruebas y datos
 
 ```powershell

@@ -33,10 +33,12 @@ P0 PolyLedger
 
 **Actualización de construcción (2026-09-12):** raw/cursor/reorg, registro y
 verificación de contratos, decodificadores CLOB/CTF/NegRisk, motor de lotes,
-reconciliación y captura/replay están implementados. Combo permanece en
-cuarentena. Faltan sus ABI/vectores verificados, mapeos de transacciones mixtas y
-el replay real de siete días con PnL independiente. No se cumple aún el criterio
-de salida. Detalle: `docs/architecture/POLYLEDGER_P0.md` y
+reconciliación y captura/replay están implementados. PositionManager Combo ya
+permite transferencias e IDs estructurales con implementación/fuente verificadas;
+faltan la economía y vectores de sus módulos, mapeos de transacciones mixtas y el
+replay real de siete días con PnL independiente. El archivo de `car` fue censado
+y rechazado como bundle contable incompleto. No se cumple aún el criterio de
+salida. Detalle: `docs/architecture/POLYLEDGER_P0.md` y
 `docs/operations/POLYLEDGER_P0_RUNBOOK.md`. Las investigaciones siguen cerradas.
 
 Objetivo: crear una única fuente de verdad antes de evaluar o copiar estrategias.

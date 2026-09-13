@@ -26,6 +26,9 @@ No se habilitaron órdenes automáticas ni dinero real.
   posición. La economía de módulos, conversiones y resoluciones sigue bloqueada.
 - Captura RPC acepta un endpoint HTTPS explícito sin habilitar credenciales,
   firma, wallet, órdenes ni dinero real.
+- Gate `pilot-readiness` para censar archivos históricos en solo lectura y
+  rechazar muestras sin identidad, completitud, basis, ciclo on-chain, balances
+  al mismo corte o PnL independiente.
 
 ### Backlog de investigación
 
