@@ -10,6 +10,7 @@ from polymarket_bot.ledger.valuation import (
     _expanded_balances,
     _mark_before,
     _merge_position_rows,
+    _value_cut,
 )
 from polymarket_bot.ledger.wallet_capture import TRANSFER_TOPICS
 
@@ -131,3 +132,15 @@ def test_position_views_are_merged_without_double_counting():
               "redeemable": False, "currentValue": "1"}
     redeemable = {**active, "redeemable": True, "currentValue": "2"}
     assert _merge_position_rows([active], [redeemable]) == [redeemable]
+
+
+def test_unpriced_position_produces_conservative_equity_bounds():
+    balances = {"balances": {
+        f"137:{CASH}:erc20": 1_000_000,
+        f"137:{CTF}:7": 2_000_000,
+    }}
+    value = _value_cut(balances, {"7": {"opening": {"price": None}}}, {},
+                       CTF, "0x" + "88" * 20, {CASH}, "opening")
+    assert value["total_equity_usd"] is None
+    assert value["total_equity_lower_bound_usd"] == "1"
+    assert value["total_equity_upper_bound_usd"] == "3"

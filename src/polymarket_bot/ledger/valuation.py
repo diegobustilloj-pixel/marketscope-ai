@@ -106,6 +106,41 @@ def _historical_assets(path: Path) -> list[int]:
     return [uint(row[0]) for row in rows]
 
 
+def _historical_token_metadata(path: Path) -> tuple[dict[str, dict], list[str]]:
+    path = path.resolve()
+    if not path.is_file():
+        raise EvidenceError("Historical activity parquet is missing")
+    with duckdb.connect() as db:
+        rows = db.execute(
+            """SELECT DISTINCT asset, condition_id, outcome_index, outcome
+               FROM read_parquet(?)
+               WHERE asset IS NOT NULL
+                 AND regexp_full_match(asset, '[0-9]+')
+                 AND condition_id IS NOT NULL
+                 AND regexp_full_match(condition_id, '0x[0-9a-fA-F]{64}')
+                 AND outcome_index IS NOT NULL""",
+            [str(path)],
+        ).fetchall()
+    result: dict[str, dict] = {}
+    conflicts: set[str] = set()
+    for token, condition, outcome_index, outcome in rows:
+        token = str(token)
+        if not token.isdigit() or token in conflicts:
+            continue
+        record = {"condition_id": hex_bytes(str(condition), 32),
+                  "outcome_index": uint(outcome_index), "outcome": str(outcome or "")}
+        previous = result.get(token)
+        if previous is not None and (
+                previous["condition_id"], previous["outcome_index"]) != (
+                    record["condition_id"], record["outcome_index"]):
+            result.pop(token)
+            conflicts.add(token)
+            continue
+        if previous is None or (not previous.get("outcome") and record.get("outcome")):
+            result[token] = record
+    return result, sorted(conflicts, key=int)
+
+
 def _legacy_positions(path: Path, wallet: str) -> tuple[list[dict], dict]:
     uri = "file:" + path.resolve().as_posix() + "?mode=ro"
     with sqlite3.connect(uri, uri=True) as db:
@@ -240,6 +275,22 @@ def _market_token_metadata(path: Path) -> dict[str, dict]:
                 if previous is not None and previous != record:
                     raise EvidenceError("Market metadata maps one token to conflicting conditions")
                 result[token] = record
+    return result
+
+
+def _merge_token_metadata(*sources: dict[str, dict]) -> dict[str, dict]:
+    result: dict[str, dict] = {}
+    for source in sources:
+        for token, row in source.items():
+            previous = result.get(token)
+            if previous is None:
+                result[token] = dict(row)
+                continue
+            if (previous["condition_id"], previous["outcome_index"]) != (
+                    row["condition_id"], row["outcome_index"]):
+                raise EvidenceError("Token metadata sources disagree on condition or outcome index")
+            if not previous.get("outcome") and row.get("outcome"):
+                result[token] = dict(row)
     return result
 
 
@@ -631,6 +682,7 @@ def _value_cut(balances: dict, marks: dict[str, dict], combo_marks: dict[str, di
     cash = Decimal(0)
     ctf_value = Decimal(0)
     combo_value = Decimal(0)
+    unpriced_payout_upper_bound = Decimal(0)
     unpriced = []
     positive_ctf = positive_combo = 0
     for asset, raw in balances["balances"].items():
@@ -644,6 +696,7 @@ def _value_cut(balances: dict, marks: dict[str, dict], combo_marks: dict[str, di
             mark = marks.get(token, {}).get(cut, {})
             if mark.get("price") is None:
                 unpriced.append(asset)
+                unpriced_payout_upper_bound += Decimal(raw) / SCALE
             else:
                 ctf_value += Decimal(raw) / SCALE * Decimal(mark["price"])
         elif contract == combo:
@@ -651,6 +704,7 @@ def _value_cut(balances: dict, marks: dict[str, dict], combo_marks: dict[str, di
             mark = combo_marks.get(token, {}).get(cut, {})
             if mark.get("price") is None:
                 unpriced.append(asset)
+                unpriced_payout_upper_bound += Decimal(raw) / SCALE
             else:
                 combo_value += Decimal(raw) / SCALE * Decimal(mark["price"])
     subtotal = cash + ctf_value + combo_value
@@ -658,6 +712,9 @@ def _value_cut(balances: dict, marks: dict[str, dict], combo_marks: dict[str, di
             "ctf_mark_value_usd": _decimal_text(ctf_value),
             "combo_mark_value_usd": _decimal_text(combo_value),
             "valued_subtotal_usd": _decimal_text(subtotal),
+            "unpriced_payout_upper_bound_usd": _decimal_text(unpriced_payout_upper_bound),
+            "total_equity_lower_bound_usd": _decimal_text(subtotal),
+            "total_equity_upper_bound_usd": _decimal_text(subtotal + unpriced_payout_upper_bound),
             "total_equity_usd": _decimal_text(subtotal) if not unpriced else None,
             "positive_ctf_positions": positive_ctf, "positive_combo_positions": positive_combo,
             "unpriced_positive_assets": sorted(unpriced), "complete_for_expanded_scope": not unpriced}
@@ -693,6 +750,9 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
     captured_open = json.loads((capture / "opening_balances.json").read_text(encoding="utf-8"))
     captured_close = json.loads((capture / "closing_balances.json").read_text(encoding="utf-8"))
     history_assets = set(_historical_assets(Path(history_assets_path)))
+    historical_metadata, historical_metadata_conflicts = _historical_token_metadata(
+        Path(history_assets_path)
+    )
     capture_assets = (_token_ids_from_balance_keys(captured_open)
                       | _token_ids_from_balance_keys(captured_close)
                       | {uint(row["asset"]) for row in activity if str(row.get("asset") or "").isdigit()})
@@ -722,7 +782,8 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                            for balances in (opening, closing)
                            for asset, raw in balances["balances"].items()
                            if raw > 0 and asset.split(":")[1] == ctf_contract})
-    token_metadata = _market_token_metadata(Path(metadata_db_path))
+    database_metadata = _market_token_metadata(Path(metadata_db_path))
+    token_metadata = _merge_token_metadata(database_metadata, historical_metadata)
     opening_settlement = _ctf_settlement_marks(
         rpc, opening_header, ctf_contract, price_tokens, token_metadata, progress
     )
@@ -786,6 +847,19 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
         if cash_audit["status"] == "MATCH":
             adjusted = _decimal_text(raw_change_decimal
                                      - Decimal(cash_audit["external_net_funding_atomic"]) / SCALE)
+    interval_available = (not opening["errors"] and not closing["errors"]
+                          and cash_audit["status"] == "MATCH")
+    adjusted_lower = adjusted_upper = None
+    if interval_available:
+        funding = Decimal(cash_audit["external_net_funding_atomic"]) / SCALE
+        adjusted_lower = _decimal_text(
+            Decimal(closing_value["total_equity_lower_bound_usd"])
+            - Decimal(opening_value["total_equity_upper_bound_usd"]) - funding
+        )
+        adjusted_upper = _decimal_text(
+            Decimal(closing_value["total_equity_upper_bound_usd"])
+            - Decimal(opening_value["total_equity_lower_bound_usd"]) - funding
+        )
     rewards_atomic = sum((_cash_delta_atomic(row) or 0) for row in activity
                          if str(row.get("type") or "").upper() in
                          {"REWARD", "MAKER_REBATE", "TAKER_REBATE", "REFERRAL_REWARD", "YIELD"})
@@ -809,6 +883,8 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                         "summary_hash": raw_manifest["summary_hash"]},
         "window": raw_summary["window"],
         "universe": {"historical_activity_tokens": len(history_assets),
+                     "historical_metadata_tokens": len(historical_metadata),
+                     "historical_metadata_conflicts_excluded": len(historical_metadata_conflicts),
                      "legacy_position_tokens": len(legacy_assets), "current_position_tokens": len(current_assets),
                      "capture_tokens": len(capture_assets), "union_tokens": len(token_ids),
                      "wallet_universe_complete": False},
@@ -834,6 +910,9 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                       "external_net_funding_usd": (_decimal_text(Decimal(cash_audit["external_net_funding_atomic"]) / SCALE)
                                                    if cash_audit["status"] == "MATCH" else None),
                       "funding_adjusted_mtm_change_usd": adjusted,
+                      "funding_adjusted_mtm_lower_bound_usd": adjusted_lower,
+                      "funding_adjusted_mtm_upper_bound_usd": adjusted_upper,
+                      "interval_available_for_expanded_scope": interval_available,
                       "explicit_rewards_in_window_usd": _decimal_text(Decimal(rewards_atomic) / SCALE),
                       "calculation_available_for_expanded_scope": calculation_available,
                       "interpretation": "Portfolio mark-to-market change, not independently reconstructed realized PnL."},
@@ -866,7 +945,8 @@ def value_wallet_capture(*, capture: Path, output: Path, wallet: str, deployment
                          "max_mark_age_seconds": uint(max_mark_age_seconds), "safety": SAFETY}
     _save(partial / "configuration.json", configuration_out)
     _save(partial / "universe.json", {"token_ids": [str(token) for token in token_ids],
-                                      "source_counts": summary["universe"]})
+                                      "source_counts": summary["universe"],
+                                      "historical_metadata_conflicts_excluded": historical_metadata_conflicts})
     _save(partial / "current_positions.json", current_positions)
     _save(partial / "current_position_pages.json", current_pages)
     _save(partial / "redeemable_positions.json", redeemable_positions)
