@@ -165,3 +165,19 @@ un reporte independiente. Salida `COMPLETE` con `basis_gate: BLOCKED` significa
 que el motor interno cerró pero falta el segundo pipeline; no es aprobación P0.
 Formato, fórmulas y bloqueos:
 `docs/architecture/POLYLEDGER_INVENTORY_BASIS_V1.md`.
+
+## Backfill histórico de `car`
+
+La ruta RPC desde bloque 1 requiere un nodo de archivo. Los RPC públicos
+probados están podados; el error es un bloqueo de fuente, no un rango vacío.
+La ruta pública sin clave ya iniciada se reanuda así:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger backfill-wallet-blockscout --wallet 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b --identity data/car_forensics/car_wallet_identity.json --max-transfer-pages 100 --max-log-shards 25 --output data/polyledger-sentinel/p0/car_lifetime_blockscout_20260913
+```
+
+No cambie `--scope`, `--first-block`, proveedor, confirmaciones ni tamaño de
+shard durante la reanudación. Los presupuestos `--max-*` sí pueden variar. Un
+resultado `IN_PROGRESS` es progreso retenido; `CAPTURED_BLOCKED` significa que
+la descarga terminó pero el indexador no acreditó cobertura completa. Ninguno
+autoriza ejecutar `car`, conectar wallet o usar capital.

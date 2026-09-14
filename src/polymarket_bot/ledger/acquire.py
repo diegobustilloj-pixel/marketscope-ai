@@ -70,8 +70,18 @@ class ReadOnlyRPC:
     def call(self, method: str, params: list):
         self._validate(method, params)
         self.sequence += 1
-        response = self.transport({"jsonrpc": "2.0", "id": self.sequence, "method": method, "params": params})
-        if (not isinstance(response, dict) or response.get("id") != self.sequence or response.get("error")
+        try:
+            response = self.transport(
+                {"jsonrpc": "2.0", "id": self.sequence, "method": method, "params": params}
+            )
+        except (OSError, RuntimeError, TimeoutError, ValueError) as exc:
+            raise EvidenceError(f"Read-only RPC transport failed: {method}") from exc
+        if isinstance(response, dict) and response.get("error"):
+            error = response["error"]
+            code = error.get("code") if isinstance(error, dict) else "unknown"
+            message = error.get("message") if isinstance(error, dict) else str(error)
+            raise EvidenceError(f"Read-only RPC {method} failed ({code}): {str(message)[:300]}")
+        if (not isinstance(response, dict) or response.get("id") != self.sequence
                 or "result" not in response or response["result"] is None):
             raise EvidenceError(f"Invalid read-only RPC response: {method}")
         return response["result"]
@@ -94,10 +104,19 @@ class ReadOnlyRPC:
             self._validate(method, params)
             self.sequence += 1
             payload.append({"jsonrpc": "2.0", "id": self.sequence, "method": method, "params": params})
-        response = self.transport(payload)
+        try:
+            response = self.transport(payload)
+        except (OSError, RuntimeError, TimeoutError, ValueError) as exc:
+            raise EvidenceError("Read-only RPC batch transport failed") from exc
         if not isinstance(response, list) or len(response) != len(payload):
             raise EvidenceError("Incomplete RPC batch")
-        if any(not isinstance(r, dict) or r.get("error") or r.get("result") is None for r in response):
+        failures = [r.get("error") for r in response if isinstance(r, dict) and r.get("error")]
+        if failures:
+            error = failures[0]
+            code = error.get("code") if isinstance(error, dict) else "unknown"
+            message = error.get("message") if isinstance(error, dict) else str(error)
+            raise EvidenceError(f"Read-only RPC batch failed ({code}): {str(message)[:300]}")
+        if any(not isinstance(r, dict) or r.get("result") is None for r in response):
             raise EvidenceError("Failed RPC batch entry")
         by_id = {r.get("id"): r["result"] for r in response}
         if set(by_id) != {p["id"] for p in payload}:

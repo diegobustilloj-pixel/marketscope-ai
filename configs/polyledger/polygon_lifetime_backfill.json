@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "chain": 137,
+  "scope": "All wallet balance changes in the declared historical Polymarket ERC-20/ERC-1155 contract universe; every seed transaction is closed over its full Polygon receipt",
+  "balance_contracts": [
+    {
+      "label": "Conditional Tokens",
+      "address": "0x4d97dcd97ec945f40cf65f87097ace5ea0476045",
+      "token_standard": "erc1155",
+      "source": "https://docs.polymarket.com/resources/contracts"
+    },
+    {
+      "label": "Combo PositionManager",
+      "address": "0x006f54f7f9a22e0000cc2ab60031000000ae9fef",
+      "token_standard": "erc1155",
+      "source": "https://docs.polymarket.com/resources/contracts"
+    },
+    {
+      "label": "USDC.e",
+      "address": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+      "token_standard": "erc20",
+      "source": "https://docs.polymarket.com/resources/contracts"
+    },
+    {
+      "label": "Native USDC",
+      "address": "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359",
+      "token_standard": "erc20",
+      "source": "https://docs.polymarket.com/resources/contracts"
+    },
+    {
+      "label": "pUSD",
+      "address": "0xc011a7e12a19f7b1f670d46f03b03f3342e82dfb",
+      "token_standard": "erc20",
+      "source": "https://github.com/Polymarket/ctf-exchange-v2/blob/main/README.md"
+    },
+    {
+      "label": "NegRisk Wrapped Collateral",
+      "address": "0x3a3bd7bb9528e159577f7c2e685cc81a765002e2",
+      "token_standard": "erc20",
+      "source": "https://github.com/Polymarket/neg-risk-ctf-adapter/blob/main/addresses.json"
+    }
+  ],
+  "settlement_contracts": [
+    {
+      "label": "CTF Exchange V1",
+      "address": "0x4bfb41d5b3570defd03c39a9a4d8de6bd8b8982e",
+      "family": "clob_v1",
+      "source": "https://github.com/Polymarket/ctf-exchange/blob/main/README.md"
+    },
+    {
+      "label": "NegRisk Exchange V1",
+      "address": "0xc5d563a36ae78145c45a50134d48a1215220f80a",
+      "family": "clob_v1",
+      "source": "https://github.com/Polymarket/neg-risk-ctf-adapter/blob/main/addresses.json"
+    },
+    {
+      "label": "CTF Exchange V2",
+      "address": "0xe111180000d2663c0091e4f400237545b87b996b",
+      "family": "clob_v2_ctf",
+      "source": "https://github.com/Polymarket/ctf-exchange-v2/blob/main/README.md"
+    },
+    {
+      "label": "NegRisk Exchange V2",
+      "address": "0xe2222d279d744050d28e00520010520000310f59",
+      "family": "clob_v2_ctf",
+      "source": "https://github.com/Polymarket/ctf-exchange-v2/blob/main/README.md"
+    },
+    {
+      "label": "NegRisk Adapter V1",
+      "address": "0xd91e80cf2e7be2e162c6513ced06f1dd0da35296",
+      "family": "negrisk",
+      "source": "https://github.com/Polymarket/neg-risk-ctf-adapter/blob/main/addresses.json"
+    }
+  ],
+  "approval": "RAW_CAPTURE_ONLY",
+  "real_money": false,
+  "automatic_orders": false
+}

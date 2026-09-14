@@ -6,9 +6,11 @@ from pathlib import Path
 
 from . import SAFETY
 from .acquire import ReadOnlyRPC, capture_range
+from .blockscout_backfill import BlockscoutClient, backfill_wallet_blockscout
 from .deployments import verify_deployment
 from .common import EvidenceError, canonical
 from .fixtures import sample_bundle
+from .history_backfill import backfill_wallet_history
 from .inventory_basis import build_inventory_basis_file
 from .readiness import audit_archived_pilot
 from .replay import replay_file
@@ -93,6 +95,40 @@ def main(argv=None):
     )
     basis.add_argument("--bundle", type=Path, required=True)
     basis.add_argument("--output", type=Path, required=True)
+    history = commands.add_parser(
+        "backfill-wallet-history",
+        help="Resume a lifetime public Polygon wallet capture; no basis or execution",
+    )
+    history.add_argument("--wallet", required=True)
+    history.add_argument("--identity", type=Path, required=True)
+    history.add_argument("--scope", type=Path,
+                         default=Path("configs/polyledger/polygon_lifetime_backfill.json"))
+    history.add_argument("--first-block", type=int, default=1)
+    history.add_argument("--last-block", type=int)
+    history.add_argument("--confirmations", type=int, default=200)
+    history.add_argument("--segment-blocks", type=int, default=100000)
+    history.add_argument("--min-query-blocks", type=int, default=1000)
+    history.add_argument("--receipt-shard-size", type=int, default=100)
+    history.add_argument("--max-segments", type=int)
+    history.add_argument("--max-receipt-shards", type=int)
+    history.add_argument("--rpc-url")
+    history.add_argument("--output", type=Path, required=True)
+    explorer = commands.add_parser(
+        "backfill-wallet-blockscout",
+        help="Resume a no-key Polygon Blockscout lifetime capture; no execution",
+    )
+    explorer.add_argument("--wallet", required=True)
+    explorer.add_argument("--identity", type=Path, required=True)
+    explorer.add_argument("--scope", type=Path,
+                          default=Path("configs/polyledger/polygon_lifetime_backfill.json"))
+    explorer.add_argument("--first-block", type=int, default=1)
+    explorer.add_argument("--last-block", type=int)
+    explorer.add_argument("--confirmations", type=int, default=200)
+    explorer.add_argument("--log-shard-size", type=int, default=25)
+    explorer.add_argument("--max-transfer-pages", type=int)
+    explorer.add_argument("--max-log-shards", type=int)
+    explorer.add_argument("--rpc-url")
+    explorer.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -143,6 +179,30 @@ def main(argv=None):
             )
         elif args.command == "inventory-basis":
             result = build_inventory_basis_file(args.bundle, args.output)
+        elif args.command == "backfill-wallet-history":
+            rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
+            result = backfill_wallet_history(
+                output=args.output, wallet=args.wallet, identity_path=args.identity,
+                scope_path=args.scope, rpc=rpc, first_block=args.first_block,
+                last_block=args.last_block, confirmations=args.confirmations,
+                segment_blocks=args.segment_blocks,
+                min_query_blocks=args.min_query_blocks,
+                receipt_shard_size=args.receipt_shard_size,
+                max_segments=args.max_segments,
+                max_receipt_shards=args.max_receipt_shards,
+                progress=lambda row: print(json.dumps(row), flush=True),
+            )
+        elif args.command == "backfill-wallet-blockscout":
+            rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
+            result = backfill_wallet_blockscout(
+                output=args.output, wallet=args.wallet, identity_path=args.identity,
+                scope_path=args.scope, rpc=rpc, client=BlockscoutClient(),
+                first_block=args.first_block, last_block=args.last_block,
+                confirmations=args.confirmations, log_shard_size=args.log_shard_size,
+                max_transfer_pages=args.max_transfer_pages,
+                max_log_shards=args.max_log_shards,
+                progress=lambda row: print(json.dumps(row), flush=True),
+            )
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -157,7 +217,8 @@ def main(argv=None):
             return 0 if result["status"] == "VERIFIED_AT_BLOCK" else 2
         if args.command == "pilot-readiness":
             return 2  # A legacy census can diagnose readiness, never approve P0.
-        if args.command in {"capture-wallet-24h", "value-wallet-24h"}:
+        if args.command in {"capture-wallet-24h", "value-wallet-24h", "backfill-wallet-history",
+                            "backfill-wallet-blockscout"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2

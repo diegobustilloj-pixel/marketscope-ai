@@ -30,6 +30,23 @@ def test_rpc_never_signs_or_submits_and_checks_response_identity():
         rpc.call("eth_chainId", [])
 
 
+def test_transport_runtime_error_is_normalized_to_evidence_error():
+    def transport(_):
+        raise RuntimeError("HTTP 400")
+
+    with pytest.raises(EvidenceError, match="transport failed"):
+        ReadOnlyRPC(transport=transport).call("eth_chainId", [])
+
+
+def test_rpc_error_message_is_preserved_without_accepting_the_result():
+    rpc = ReadOnlyRPC(transport=lambda payload: {
+        "id": payload["id"],
+        "error": {"code": -32701, "message": "History has been pruned"},
+    })
+    with pytest.raises(EvidenceError, match="-32701.*pruned"):
+        rpc.call("eth_getLogs", [{"fromBlock": "0x1", "toBlock": "0x2"}])
+
+
 def test_two_acquisition_paths_and_reorg_during_read():
     def transport(p):
         method = p["method"]

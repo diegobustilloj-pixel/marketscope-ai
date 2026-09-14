@@ -37,6 +37,11 @@ No se habilitaron órdenes automáticas ni dinero real.
   evidenciado para ingresos, valor de frontera de transferencias, inventario
   agregado, PnL del periodo por dos identidades internas, conciliación total del
   universo declarado y contrato estricto para un segundo pipeline independiente.
+- Backfill lifetime reanudable desde bloque 1: ruta RPC con partición adaptativa
+  y recibos completos, más fallback Blockscout sin clave con cursores inmutables,
+  cierre de logs por transacción, anclaje cruzado y gate de completitud del
+  indexador. El primer backfill real de `car` quedó iniciado y bloqueado por
+  cobertura aún incompleta; no se publicó basis ni PnL.
 
 ### Backlog de investigación
 

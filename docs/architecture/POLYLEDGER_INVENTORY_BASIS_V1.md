@@ -124,8 +124,9 @@ sin pipeline independiente se sella como `BLOCKED`, no se convierte en éxito.
 
 ## Lo que aún falta para aplicarlo a `car`
 
-- compilar un bundle desde el origen de la wallet o producir un snapshot inicial
-  con basis independiente y completo;
+- completar el backfill ya iniciado desde el bloque 1 y demostrar la completitud
+  del indexador mediante su propio estado o una segunda fuente de archivo;
+- compilar sus transferencias y logs V1/V2 en el bundle de acciones;
 - completar los mapeos revisados de transacciones mixtas y Combo;
 - capturar marcas y balances al mismo corte;
 - ejecutar un segundo cálculo contable independiente y comparar su contrato.

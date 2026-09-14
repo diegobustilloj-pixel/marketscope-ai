@@ -48,13 +48,18 @@ reconciliación CLOB/ledger/onchain. Incluye captura RPC y replay determinista.
 El motor `inventory-basis` reconstruye lotes FIFO y PnL del periodo, concilia el
 universo completo declarado y exige coincidencia con un segundo cálculo antes de
 aprobar su gate contable.
+El backfill histórico reanudable puede partir del bloque 1 mediante RPC de
+archivo o mediante la API pública de Blockscout. La ruta Blockscout ya recuperó
+el origen observable de `car`, pero su índice declara solo 98% y por eso el gate
+de completitud sigue cerrado.
 El PositionManager de Combo ya tiene despliegue/implementación calificados,
 transferencias ERC-1155 e IDs estructurales; no se infiere todavía la economía
 de sus módulos. La aprobación P0 continúa bloqueada por esos mapeos y por la
 evidencia independiente del piloto de 24 horas. Operación y comandos:
 `docs/operations/POLYLEDGER_P0_RUNBOOK.md`; diseño y límites:
 `docs/architecture/POLYLEDGER_P0.md` y
-`docs/architecture/POLYLEDGER_INVENTORY_BASIS_V1.md`. El Sentinel histórico
+`docs/architecture/POLYLEDGER_INVENTORY_BASIS_V1.md` y
+`docs/architecture/POLYLEDGER_LIFETIME_BACKFILL_V1.md`. El Sentinel histórico
 sigue compatible.
 
 La siguiente fase acordada es **Copiado por reconstrucción**: observar una wallet,

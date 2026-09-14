@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "wallet": "0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b",
+  "local_date": "2026-09-13",
+  "status": "IN_PROGRESS_BLOCKED_ON_COMPLETENESS",
+  "rpc_archive_preflight": {
+    "polygon-bor-rpc.publicnode.com": {
+      "status": "BLOCKED",
+      "error_code": -32701,
+      "reason": "History has been pruned for this block"
+    },
+    "polygon.drpc.org": {
+      "status": "BLOCKED",
+      "reason": "HTTP 400 on historical eth_getLogs"
+    }
+  },
+  "blockscout_preflight": {
+    "base_url": "https://polygon.blockscout.com/api/v2",
+    "first_ctf_transfer": {
+      "block_number": 53293431,
+      "timestamp": "2024-02-09T01:20:08Z",
+      "transaction_hash": "0x933373731aa368aa726f1c74f5dd24e52e09f0b2e8bd0df8718136f01a50154f",
+      "transaction_logs": 9
+    },
+    "indexing_status": {
+      "finished_indexing": false,
+      "finished_indexing_blocks": false,
+      "indexed_blocks_ratio": "0.98"
+    }
+  },
+  "accounting_snapshot_preflight": {
+    "valuation_time": "2026-09-14T01:15:31Z",
+    "cash_balance_usd": "61808.822593",
+    "positions_value_usd": "705732.789204",
+    "equity_usd": "767541.611797",
+    "basis_fields_present": false,
+    "decision": "CLOSING_VALUE_CROSSCHECK_ONLY"
+  },
+  "retained_run": {
+    "path": "data/polyledger-sentinel/p0/car_lifetime_blockscout_20260913.partial",
+    "first_block": 1,
+    "last_block": 93762690,
+    "contracts_total": 6,
+    "contracts_complete": 0,
+    "transfer_pages": 3,
+    "transfers": 150,
+    "transactions_discovered": 127,
+    "transactions_closed": 0
+  },
+  "gate": {
+    "ledger_approval": false,
+    "basis_available": false,
+    "pnl_available": false,
+    "blockers": [
+      "TRANSFER_PAGINATION_INCOMPLETE",
+      "TRANSACTION_LOG_CLOSURE_INCOMPLETE",
+      "INDEXER_COMPLETENESS_NOT_ATTESTED",
+      "ACTION_MAPPING_PENDING",
+      "INDEPENDENT_ACCOUNTING_PENDING"
+    ]
+  },
+  "safety": {
+    "read_only": true,
+    "real_money": false,
+    "automatic_orders": false,
+    "signing": false,
+    "wallet_connection": false,
+    "withdrawals": false
+  }
+}
