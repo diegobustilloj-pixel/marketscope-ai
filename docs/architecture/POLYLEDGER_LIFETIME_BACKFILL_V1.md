@@ -96,6 +96,12 @@ estado, bloque e índice con Blockscout; se conserva su hash de respuesta y la
 fuente exacta dentro del cierre. Si ambas fuentes carecen del recibo, el proceso
 se detiene sin sustituirlo por una lista vacía.
 
+Para una captura grande, `--receipt-batch-size 10` convierte el RPC de recibos
+en fuente primaria y reduce hasta diez transacciones a una solicitud JSON-RPC.
+`--receipt-batch-workers` permite 1–8 lotes simultáneos. Cada recibo conserva su
+fuente y hash, valida estado e identidad, y los archivos continúan publicándose
+en shards atómicos de 25 siguiendo exactamente el índice congelado.
+
 ## Por qué el snapshot contable no reemplaza el backfill
 
 El endpoint oficial `/v1/accounting/snapshot` entregó `positions.csv` y

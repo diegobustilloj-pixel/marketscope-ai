@@ -131,8 +131,13 @@ def main(argv=None):
     explorer.add_argument("--rpc-url")
     explorer.add_argument(
         "--receipt-rpc-url",
-        help="Independent public HTTPS RPC used only when Blockscout omits receipt logs",
+        help="Independent public HTTPS RPC for missing logs or primary receipt batching",
     )
+    explorer.add_argument(
+        "--receipt-batch-size", type=int, default=0,
+        help="Use the receipt RPC as the primary log source in read-only batches of 1..10",
+    )
+    explorer.add_argument("--receipt-batch-workers", type=int, default=4)
     explorer.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
@@ -208,6 +213,8 @@ def main(argv=None):
                 max_log_shards=args.max_log_shards,
                 log_workers=args.log_workers,
                 receipt_rpc_url=args.receipt_rpc_url,
+                receipt_batch_size=args.receipt_batch_size,
+                receipt_batch_workers=args.receipt_batch_workers,
                 progress=lambda row: print(json.dumps(row), flush=True),
             )
         else:

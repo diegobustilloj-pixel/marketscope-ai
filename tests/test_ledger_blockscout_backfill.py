@@ -169,3 +169,49 @@ def test_empty_blockscout_logs_use_validated_rpc_receipt(tmp_path, monkeypatch):
     closure = json.loads(shard.read_text(encoding="utf-8"))["closures"][0]
     assert closure["log_source"] == "rpc:archive.example.invalid"
     assert closure["logs"][0]["transactionHash"] == TX
+
+
+def test_rpc_receipt_batch_can_be_primary_log_source(tmp_path, monkeypatch):
+    identity, scope = inputs(tmp_path)
+
+    class ReceiptOnlyClient(Client):
+        def get(self, path, params=None):
+            if path.startswith("/transactions/"):
+                raise AssertionError("Primary receipt batching must not query transaction endpoints")
+            return super().get(path, params)
+
+    class BatchRPC:
+        url = "https://archive.example.invalid"
+
+        def __init__(self, *, url=None):
+            self.url = url or self.url
+
+        def batch(self, calls):
+            assert calls == [("eth_getTransactionReceipt", [TX])]
+            return [{
+                "transactionHash": TX, "status": "0x1",
+                "blockNumber": "0x9", "blockHash": h(9),
+                "transactionIndex": "0x4",
+                "logs": [{
+                    "address": CONTRACT, "blockNumber": "0x9",
+                    "blockHash": h(9), "transactionHash": TX,
+                    "transactionIndex": "0x4", "logIndex": "0x7",
+                    "topics": [TRANSFER, "0x" + "00" * 12 + WALLET[2:],
+                               "0x" + "00" * 32],
+                    "data": "0x" + "00" * 32, "removed": False,
+                }],
+            }]
+
+    monkeypatch.setattr(blockscout_backfill, "ReadOnlyRPC", BatchRPC)
+    result = backfill_wallet_blockscout(
+        output=tmp_path / "capture", wallet=WALLET, identity_path=identity,
+        scope_path=scope, rpc=RPC(), client=ReceiptOnlyClient(), last_block=9,
+        confirmations=1, log_shard_size=1,
+        receipt_rpc_url="https://archive.example.invalid",
+        receipt_batch_size=1, receipt_batch_workers=1,
+    )
+    assert result["coverage"]["full_transaction_log_closure"] is True
+    shard = next((tmp_path / "capture" / "transaction_log_shards").glob("*.json"))
+    closure = json.loads(shard.read_text(encoding="utf-8"))["closures"][0]
+    assert closure["log_source"] == "rpc:archive.example.invalid"
+    assert "transaction_response_hash" not in closure

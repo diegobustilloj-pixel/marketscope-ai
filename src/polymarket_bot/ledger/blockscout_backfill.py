@@ -261,13 +261,11 @@ def _compact_log(item: dict, transaction_hash: str, position: int) -> dict:
     }
 
 
-def _rpc_receipt_closure(
-    receipt_rpc_url: str, info: dict, transaction_hash: str,
+def _closure_from_rpc_receipt(
+    receipt_rpc_url: str, receipt: dict, transaction_hash: str,
+    info: dict | None = None,
 ) -> dict:
-    """Recover a complete receipt when Blockscout exposes a transfer but no logs."""
-    receipt = ReadOnlyRPC(url=receipt_rpc_url).call(
-        "eth_getTransactionReceipt", [transaction_hash]
-    )
+    """Validate one full receipt and normalize its logs as immutable evidence."""
     if (
         hex_bytes(receipt["transactionHash"], 32) != transaction_hash
         or uint(receipt["status"]) != 1
@@ -275,12 +273,16 @@ def _rpc_receipt_closure(
         raise EvidenceError("Fallback RPC transaction identity/status mismatch")
     block_number = uint(receipt["blockNumber"])
     position = uint(receipt["transactionIndex"])
-    if block_number != uint(info["block_number"]) or position != uint(info["position"]):
+    receipt_block_hash = hex_bytes(receipt["blockHash"], 32)
+    if info is not None and (
+        block_number != uint(info["block_number"])
+        or position != uint(info["position"])
+    ):
         raise EvidenceError("Fallback RPC receipt conflicts with Blockscout transaction")
     raw_logs = receipt.get("logs")
     if not isinstance(raw_logs, list) or not raw_logs:
         raise EvidenceError("Seed transaction has no Blockscout or fallback RPC logs")
-    logs = []
+    logs, log_indexes = [], set()
     for item in raw_logs:
         if item.get("removed") is True:
             raise EvidenceError("Fallback RPC receipt contains a removed log")
@@ -288,34 +290,67 @@ def _rpc_receipt_closure(
             hex_bytes(item["transactionHash"], 32) != transaction_hash
             or uint(item["blockNumber"]) != block_number
             or uint(item["transactionIndex"]) != position
+            or hex_bytes(item["blockHash"], 32) != receipt_block_hash
         ):
             raise EvidenceError("Fallback RPC receipt log identity mismatch")
+        log_index = uint(item["logIndex"])
+        if log_index in log_indexes:
+            raise EvidenceError("Fallback RPC receipt contains a duplicate log index")
+        log_indexes.add(log_index)
         logs.append({
             "address": address(item["address"]),
             "blockNumber": hex(block_number),
             "blockHash": hex_bytes(item["blockHash"], 32),
             "transactionHash": transaction_hash,
             "transactionIndex": hex(position),
-            "logIndex": hex(uint(item["logIndex"])),
+            "logIndex": hex(log_index),
             "topics": [hex_bytes(value, 32) for value in item["topics"]],
             "data": hex_bytes(item["data"]),
             "removed": False,
         })
     if len({row["blockHash"] for row in logs}) != 1:
         raise EvidenceError("Fallback RPC receipt spans multiple block hashes")
-    return {
+    result = {
         "transaction_hash": transaction_hash,
         "block_number": block_number,
-        "block_hash": logs[0]["blockHash"],
+        "block_hash": receipt_block_hash,
         "transaction_index": position,
-        "timestamp": info.get("timestamp"),
-        "method": info.get("method"),
+        "timestamp": info.get("timestamp") if info else None,
+        "method": info.get("method") if info else None,
         "logs": logs,
-        "transaction_response_hash": digest(info),
         "log_page_response_hashes": [],
         "log_source": "rpc:" + str(urlsplit(receipt_rpc_url).hostname),
         "receipt_response_hash": digest(receipt),
     }
+    if info is not None:
+        result["transaction_response_hash"] = digest(info)
+    return result
+
+
+def _rpc_receipt_closure(
+    receipt_rpc_url: str, info: dict, transaction_hash: str,
+) -> dict:
+    """Recover a complete receipt when Blockscout exposes a transfer but no logs."""
+    receipt = ReadOnlyRPC(url=receipt_rpc_url).call(
+        "eth_getTransactionReceipt", [transaction_hash]
+    )
+    return _closure_from_rpc_receipt(
+        receipt_rpc_url, receipt, transaction_hash, info
+    )
+
+
+def _rpc_receipt_batch(receipt_rpc_url: str, transactions: list[str]) -> list[dict]:
+    """Fetch up to ten complete receipts in one read-only JSON-RPC request."""
+    if not 1 <= len(transactions) <= 10:
+        raise EvidenceError("Receipt RPC batch must contain 1..10 transactions")
+    receipts = ReadOnlyRPC(url=receipt_rpc_url).batch([
+        ("eth_getTransactionReceipt", [transaction_hash])
+        for transaction_hash in transactions
+    ])
+    return [
+        _closure_from_rpc_receipt(receipt_rpc_url, receipt, transaction_hash)
+        for transaction_hash, receipt in zip(transactions, receipts, strict=True)
+    ]
 
 
 def _transaction_closure(
@@ -413,18 +448,28 @@ def backfill_wallet_blockscout(
     max_transfer_pages: int | None = None, max_log_shards: int | None = None,
     log_workers: int = DEFAULT_LOG_WORKERS,
     receipt_rpc_url: str | None = None,
+    receipt_batch_size: int = 0,
+    receipt_batch_workers: int = 4,
     progress=None,
 ) -> dict:
     """Advance a no-key archive-indexer capture without inferring accounting."""
     wallet, first_block = address(wallet), uint(first_block)
     confirmations, log_shard_size = uint(confirmations), uint(log_shard_size)
     log_workers = uint(log_workers)
+    receipt_batch_size = uint(receipt_batch_size)
+    receipt_batch_workers = uint(receipt_batch_workers)
     if first_block != CHAIN_ORIGIN_FIRST_BLOCK:
         raise EvidenceError("Blockscout lifetime capture must begin at Polygon block 1")
     if not 1 <= log_shard_size <= 100:
         raise EvidenceError("Blockscout log shard size must be 1..100")
     if not 1 <= log_workers <= 32:
         raise EvidenceError("Blockscout log workers must be 1..32")
+    if not 0 <= receipt_batch_size <= 10:
+        raise EvidenceError("Receipt RPC batch size must be 0..10")
+    if not 1 <= receipt_batch_workers <= 8:
+        raise EvidenceError("Receipt RPC batch workers must be 1..8")
+    if receipt_batch_size and not receipt_rpc_url:
+        raise EvidenceError("Receipt RPC batching requires an explicit public RPC URL")
     if max_transfer_pages is not None:
         max_transfer_pages = uint(max_transfer_pages)
     if max_log_shards is not None:
@@ -487,39 +532,94 @@ def backfill_wallet_blockscout(
     if transfer_complete:
         _write_once(partial / "transactions.json", transactions)
         shards_now = 0
-        with ThreadPoolExecutor(
-            max_workers=log_workers,
-            thread_name_prefix="polyledger-blockscout",
-        ) as executor:
-            for offset in range(captured_logs, len(transactions), log_shard_size):
-                if max_log_shards is not None and shards_now >= max_log_shards:
-                    break
-                stop = min(len(transactions), offset + log_shard_size)
-                group = transactions[offset:stop]
-                closures = []
-                # executor.map preserves the frozen transaction order even though
-                # the public GET requests run concurrently.
-                for closure in executor.map(
-                    lambda tx: _transaction_closure(
-                        client, tx, receipt_rpc_url=receipt_rpc_url
-                    ),
-                    group,
-                ):
-                    closures.append(closure)
-                    if progress:
-                        progress({
-                            "status": "BLOCKSCOUT_TRANSACTION_LOGS",
-                            "transactions": offset + len(closures),
-                            "transactions_total": len(transactions),
+        if receipt_batch_size:
+            with ThreadPoolExecutor(
+                max_workers=receipt_batch_workers,
+                thread_name_prefix="polyledger-receipt-batch",
+            ) as executor:
+                offset = captured_logs
+                while offset < len(transactions):
+                    if max_log_shards is not None and shards_now >= max_log_shards:
+                        break
+                    available_shards = receipt_batch_workers * 4
+                    if max_log_shards is not None:
+                        available_shards = min(
+                            available_shards, max_log_shards - shards_now
+                        )
+                    window_stop = min(
+                        len(transactions),
+                        offset + available_shards * log_shard_size,
+                    )
+                    window = transactions[offset:window_stop]
+                    batches = [
+                        window[start:start + receipt_batch_size]
+                        for start in range(0, len(window), receipt_batch_size)
+                    ]
+                    closures = [
+                        closure
+                        for batch_closures in executor.map(
+                            lambda batch: _rpc_receipt_batch(receipt_rpc_url, batch),
+                            batches,
+                        )
+                        for closure in batch_closures
+                    ]
+                    if len(closures) != len(window):
+                        raise EvidenceError("Receipt RPC batch closure is incomplete")
+                    for start in range(0, len(window), log_shard_size):
+                        group = window[start:start + log_shard_size]
+                        group_closures = closures[start:start + len(group)]
+                        group_offset = offset + start
+                        stop = group_offset + len(group)
+                        for completed in range(1, len(group_closures) + 1):
+                            if progress:
+                                progress({
+                                    "status": "RPC_TRANSACTION_RECEIPTS",
+                                    "transactions": group_offset + completed,
+                                    "transactions_total": len(transactions),
+                                })
+                        path = _closure_path(closure_dir, group_offset, stop)
+                        _write_once(path, {
+                            "schema": 1, "configuration_hash": configuration_hash,
+                            "transactions": group, "closures": group_closures,
                         })
-                path = _closure_path(closure_dir, offset, stop)
-                _write_once(path, {
-                    "schema": 1, "configuration_hash": configuration_hash,
-                    "transactions": group, "closures": closures,
-                })
-                closure_paths.append(path)
-                captured_logs += len(group)
-                shards_now += 1
+                        closure_paths.append(path)
+                        captured_logs += len(group)
+                        shards_now += 1
+                    offset = window_stop
+        else:
+            with ThreadPoolExecutor(
+                max_workers=log_workers,
+                thread_name_prefix="polyledger-blockscout",
+            ) as executor:
+                for offset in range(captured_logs, len(transactions), log_shard_size):
+                    if max_log_shards is not None and shards_now >= max_log_shards:
+                        break
+                    stop = min(len(transactions), offset + log_shard_size)
+                    group = transactions[offset:stop]
+                    closures = []
+                    # executor.map preserves the frozen transaction order even though
+                    # the public GET requests run concurrently.
+                    for closure in executor.map(
+                        lambda tx: _transaction_closure(
+                            client, tx, receipt_rpc_url=receipt_rpc_url
+                        ),
+                        group,
+                    ):
+                        closures.append(closure)
+                        if progress:
+                            progress({
+                                "status": "BLOCKSCOUT_TRANSACTION_LOGS",
+                                "transactions": offset + len(closures),
+                                "transactions_total": len(transactions),
+                            })
+                    path = _closure_path(closure_dir, offset, stop)
+                    _write_once(path, {
+                        "schema": 1, "configuration_hash": configuration_hash,
+                        "transactions": group, "closures": closures,
+                    })
+                    closure_paths.append(path)
+                    captured_logs += len(group)
+                    shards_now += 1
     closure_complete = transfer_complete and captured_logs == len(transactions)
     result = {
         "version": VERSION,
