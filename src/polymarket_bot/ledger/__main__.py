@@ -125,9 +125,14 @@ def main(argv=None):
     explorer.add_argument("--last-block", type=int)
     explorer.add_argument("--confirmations", type=int, default=200)
     explorer.add_argument("--log-shard-size", type=int, default=25)
+    explorer.add_argument("--log-workers", type=int, default=8)
     explorer.add_argument("--max-transfer-pages", type=int)
     explorer.add_argument("--max-log-shards", type=int)
     explorer.add_argument("--rpc-url")
+    explorer.add_argument(
+        "--receipt-rpc-url",
+        help="Independent public HTTPS RPC used only when Blockscout omits receipt logs",
+    )
     explorer.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
@@ -201,6 +206,8 @@ def main(argv=None):
                 confirmations=args.confirmations, log_shard_size=args.log_shard_size,
                 max_transfer_pages=args.max_transfer_pages,
                 max_log_shards=args.max_log_shards,
+                log_workers=args.log_workers,
+                receipt_rpc_url=args.receipt_rpc_url,
                 progress=lambda row: print(json.dumps(row), flush=True),
             )
         else:

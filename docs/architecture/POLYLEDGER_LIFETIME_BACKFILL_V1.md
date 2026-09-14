@@ -82,6 +82,20 @@ páginas, 150 transferencias y 127 transacciones únicas. Todavía no cerraron n
 ni descargó shards de transacciones, porque el sistema termina primero la
 paginación de transferencias para congelar el índice de transacciones.
 
+El cierre de transacciones acepta `--log-workers` (1–32, 8 por defecto). Las
+consultas HTTP de cada shard pueden ejecutarse en paralelo, pero
+`executor.map` conserva el orden congelado de transacciones y cada shard se
+publica atómicamente solo después de validar todas sus respuestas. El número de
+workers es un parámetro operativo y no altera el hash de la evidencia ni la
+capacidad de reanudar.
+
+Si Blockscout publica una transferencia semilla pero devuelve una lista vacía
+para los logs de su transacción, `--receipt-rpc-url` permite recuperar y validar
+el recibo desde un RPC público independiente. El recibo debe coincidir en hash,
+estado, bloque e índice con Blockscout; se conserva su hash de respuesta y la
+fuente exacta dentro del cierre. Si ambas fuentes carecen del recibo, el proceso
+se detiene sin sustituirlo por una lista vacía.
+
 ## Por qué el snapshot contable no reemplaza el backfill
 
 El endpoint oficial `/v1/accounting/snapshot` entregó `positions.csv` y
