@@ -203,3 +203,39 @@ CTF con 1.632.690,661352 shares; y 627 tokens Combo con 516.179,139838 shares.
 Las shares agregadas no son dólares ni PnL. La conciliación acredita inventario
 final; el basis continúa bloqueado hasta cerrar los recibos omitidos y revisar
 la semántica económica de las transacciones.
+
+## Cierre del gap y bundle histórico de basis
+
+Los recibos omitidos por Blockscout se recuperan sin repetir la captura fuente:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger close-lifetime-receipt-gap `
+  --crosscheck data/polyledger-sentinel/p0/car_lifetime_rpc_crosscheck_20260914 `
+  --source-capture data/polyledger-sentinel/p0/car_lifetime_blockscout_20260913 `
+  --wallet 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b `
+  --rpc-url https://polygon.drpc.org --shard-size 1000 --batch-size 10 --workers 16 `
+  --output data/polyledger-sentinel/p0/car_lifetime_receipt_gap_20260915
+```
+
+El cierre final recuperó 26.783/26.783 recibos en 27 shards, con 811.213 logs
+completos. Cada uno de los 61.601 logs wallet que faltaban se reprodujo
+exactamente. La unión sellada contiene 251.078 transacciones únicas.
+
+El bundle conservador se construye después, sin red:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger build-lifetime-basis-bundle `
+  --crosscheck data/polyledger-sentinel/p0/car_lifetime_rpc_crosscheck_20260914 `
+  --source-capture data/polyledger-sentinel/p0/car_lifetime_blockscout_20260913 `
+  --gap-closure data/polyledger-sentinel/p0/car_lifetime_receipt_gap_20260915 `
+  --inventory-capture data/polyledger-sentinel/p0/car_lifetime_inventory_20260914_v2 `
+  --wallet 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b `
+  --output data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915
+```
+
+Se mapearon 227.020 transacciones y se preservaron 24.051 como no resueltas:
+23.119 contienen al menos un evento de contrato relevante aún ausente/ambiguo
+en el ABI, 815 son intercambios de saldo sin explicación suficiente y 117 son
+fills mixtos o multi-activo. El resultado correcto es `BUNDLE_REVIEW_REQUIRED`;
+no se debe ejecutar `inventory-basis` como informe final ni declarar basis/PnL
+hasta revisar esas operaciones.

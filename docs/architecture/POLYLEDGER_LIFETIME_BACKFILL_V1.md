@@ -176,3 +176,18 @@ La ejecución de `car` al bloque 93.762.690 produjo `INVENTORY_RECONCILED`:
 positivos. Este gate demuestra el inventario puntual, pero no eleva
 `raw_actions_complete`: el costo FIFO y el PnL requieren recibos completos y
 mapeos semánticos revisados para las transacciones que el indexador omitió.
+
+## Cierre de recibos y construcción del bundle
+
+`close-lifetime-receipt-gap` deriva el índice de transacciones ausentes desde la
+diferencia sellada, descarga recibos completos en lotes reanudables y exige que
+cada recibo reproduzca byte por byte sus logs wallet del cruce. No modifica la
+captura Blockscout. Para `car` cerró 26.783 transacciones y 811.213 logs; la
+unión final es de 251.078 transacciones.
+
+`build-lifetime-basis-bundle` valida los manifiestos de ambas capturas, une los
+recibos sin solapamiento, pliega deltas por transacción y decodifica los eventos
+de contratos registrados. Solo emite acciones cuando forma, colateral y evento
+son consistentes; el resto se conserva en `unresolved_actions`. El primer bundle
+real mapeó 227.020 transacciones y dejó 24.051 para revisión, por lo que su estado
+es `BUNDLE_REVIEW_REQUIRED`, no una aprobación contable.
