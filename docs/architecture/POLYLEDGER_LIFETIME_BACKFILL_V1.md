@@ -132,3 +132,31 @@ Terminar la descarga no basta. Antes de alimentar `inventory-basis` se requiere:
 - un cálculo contable independiente.
 
 Hasta entonces, `ledger_approval=false` y el P0 global permanece bloqueado.
+
+## Cruce continuo independiente desde el origen de la proxy
+
+La dirección verificada de `car` es una proxy EIP-1167. Blockscout ubica su
+creación en el bloque 53.293.114 y la lectura histórica de Polygon confirma que
+su código era vacío en el padre y aparece en ese bloque. Por ello, una apertura
+cero puede probarse desde la creación de la proxy sin volver a consultar los
+53 millones de bloques anteriores.
+
+`crosscheck-lifetime-wallet` recorre cada bloque desde ese origen hasta el corte
+congelado mediante `eth_getLogs`, en ventanas máximas de 100 bloques compatibles
+con el RPC público. Agrupa contratos y eventos en cuatro filtros, conserva hash
+de cada respuesta, publica shards atómicos y reanudables, y al finalizar compara
+cada log de saldo por `transactionHash/logIndex` y contenido completo contra los
+recibos cerrados. Solo una coincidencia exacta puede elevar
+`raw_actions_complete=true`; la aprobación contable sigue bloqueada hasta
+decodificar, normalizar y conciliar.
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger crosscheck-lifetime-wallet `
+  --capture data/polyledger-sentinel/p0/car_lifetime_blockscout_20260913 `
+  --wallet 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b `
+  --identity data/car_forensics/car_wallet_identity.json `
+  --origin-block 53293114 `
+  --origin-transaction 0xd167cf1a3f584489722985e61e29bc9a60bc8af2b11548c352c6c0524ad9b1a9 `
+  --rpc-url https://polygon.drpc.org `
+  --output data/polyledger-sentinel/p0/car_lifetime_rpc_crosscheck_20260914
+```

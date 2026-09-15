@@ -12,6 +12,7 @@ from .common import EvidenceError, canonical
 from .fixtures import sample_bundle
 from .history_backfill import backfill_wallet_history
 from .inventory_basis import build_inventory_basis_file
+from .lifetime_crosscheck import crosscheck_lifetime_capture
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
@@ -139,6 +140,25 @@ def main(argv=None):
     )
     explorer.add_argument("--receipt-batch-workers", type=int, default=4)
     explorer.add_argument("--output", type=Path, required=True)
+    crosscheck = commands.add_parser(
+        "crosscheck-lifetime-wallet",
+        help="Continuously crosscheck a sealed lifetime capture through read-only Polygon logs",
+    )
+    crosscheck.add_argument("--capture", type=Path, required=True)
+    crosscheck.add_argument("--wallet", required=True)
+    crosscheck.add_argument("--identity", type=Path, required=True)
+    crosscheck.add_argument("--scope", type=Path,
+                            default=Path("configs/polyledger/polygon_lifetime_backfill.json"))
+    crosscheck.add_argument("--origin-block", type=int, required=True)
+    crosscheck.add_argument("--origin-transaction", required=True)
+    crosscheck.add_argument("--rpc-url", required=True)
+    crosscheck.add_argument("--range-blocks", type=int, default=100)
+    crosscheck.add_argument("--shard-ranges", type=int, default=100)
+    crosscheck.add_argument("--batch-size", type=int, default=10)
+    crosscheck.add_argument("--workers", type=int, default=8)
+    crosscheck.add_argument("--retries", type=int, default=5)
+    crosscheck.add_argument("--max-shards", type=int)
+    crosscheck.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -217,6 +237,18 @@ def main(argv=None):
                 receipt_batch_workers=args.receipt_batch_workers,
                 progress=lambda row: print(json.dumps(row), flush=True),
             )
+        elif args.command == "crosscheck-lifetime-wallet":
+            result = crosscheck_lifetime_capture(
+                capture=args.capture, output=args.output, wallet=args.wallet,
+                identity_path=args.identity, scope_path=args.scope,
+                origin_block=args.origin_block,
+                origin_transaction=args.origin_transaction,
+                rpc_url=args.rpc_url, range_blocks=args.range_blocks,
+                shard_ranges=args.shard_ranges, batch_size=args.batch_size,
+                workers=args.workers, retries=args.retries,
+                max_shards=args.max_shards,
+                progress=lambda row: print(json.dumps(row), flush=True),
+            )
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -232,7 +264,7 @@ def main(argv=None):
         if args.command == "pilot-readiness":
             return 2  # A legacy census can diagnose readiness, never approve P0.
         if args.command in {"capture-wallet-24h", "value-wallet-24h", "backfill-wallet-history",
-                            "backfill-wallet-blockscout"}:
+                            "backfill-wallet-blockscout", "crosscheck-lifetime-wallet"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
