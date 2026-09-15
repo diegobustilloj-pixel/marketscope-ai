@@ -13,6 +13,7 @@ from .fixtures import sample_bundle
 from .history_backfill import backfill_wallet_history
 from .inventory_basis import build_inventory_basis_file
 from .lifetime_inventory import build_lifetime_inventory_file
+from .lifetime_receipt_closure import close_lifetime_receipt_gap
 from .lifetime_crosscheck import crosscheck_lifetime_capture
 from .readiness import audit_archived_pilot
 from .replay import replay_file
@@ -170,6 +171,22 @@ def main(argv=None):
                                     default=Path("configs/polyledger/polygon_lifetime_backfill.json"))
     lifetime_inventory.add_argument("--state-rpc-url", required=True)
     lifetime_inventory.add_argument("--output", type=Path, required=True)
+    gap_receipts = commands.add_parser(
+        "close-lifetime-receipt-gap",
+        help="Resume and seal only full receipts omitted by the source indexer",
+    )
+    gap_receipts.add_argument("--crosscheck", type=Path, required=True)
+    gap_receipts.add_argument("--source-capture", type=Path, required=True)
+    gap_receipts.add_argument("--wallet", required=True)
+    gap_receipts.add_argument("--scope", type=Path,
+                              default=Path("configs/polyledger/polygon_lifetime_backfill.json"))
+    gap_receipts.add_argument("--rpc-url", required=True)
+    gap_receipts.add_argument("--shard-size", type=int, default=100)
+    gap_receipts.add_argument("--batch-size", type=int, default=10)
+    gap_receipts.add_argument("--workers", type=int, default=8)
+    gap_receipts.add_argument("--retries", type=int, default=5)
+    gap_receipts.add_argument("--max-shards", type=int)
+    gap_receipts.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -265,6 +282,15 @@ def main(argv=None):
                 crosscheck=args.crosscheck, scope_path=args.scope, wallet=args.wallet,
                 state_rpc=ReadOnlyRPC(url=args.state_rpc_url), output=args.output,
             )
+        elif args.command == "close-lifetime-receipt-gap":
+            result = close_lifetime_receipt_gap(
+                crosscheck=args.crosscheck, source_capture=args.source_capture,
+                scope_path=args.scope, wallet=args.wallet, rpc_url=args.rpc_url,
+                output=args.output, shard_size=args.shard_size,
+                batch_size=args.batch_size, workers=args.workers,
+                retries=args.retries, max_shards=args.max_shards,
+                progress=lambda row: print(json.dumps(row), flush=True),
+            )
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -281,7 +307,7 @@ def main(argv=None):
             return 2  # A legacy census can diagnose readiness, never approve P0.
         if args.command in {"capture-wallet-24h", "value-wallet-24h", "backfill-wallet-history",
                             "backfill-wallet-blockscout", "crosscheck-lifetime-wallet",
-                            "recalculate-lifetime-inventory"}:
+                            "recalculate-lifetime-inventory", "close-lifetime-receipt-gap"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
