@@ -23,8 +23,11 @@ from .common import EvidenceError, address, canonical, digest, hex_bytes, now_ut
 from .decoders import decode_event, semantics
 from .lifetime_inventory import _load_source
 
-BUNDLE_VERSION = "lifetime-basis-bundle/2"
+BUNDLE_VERSION = "lifetime-basis-bundle/3"
 QUOTE_CONTRACT = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
+PUSD_CONTRACT = "0xc011a7e12a19f7b1f670d46f03b03f3342e82dfb"
+CTF_CONTRACT = "0x4d97dcd97ec945f40cf65f87097ace5ea0476045"
+PUSD_WRAP_SOURCE_SHA256 = "05a82b0702ef65e1327b517d9273e2f343cf61791d2bf787bc08e734bfe2ad87"
 TRANSFER = "0x" + keccak(b"Transfer(address,address,uint256)").hex()
 TRANSFER_SINGLE = "0x" + keccak(
     b"TransferSingle(address,address,address,uint256,uint256)"
@@ -209,7 +212,8 @@ def _semantic_features(*, source_capture: Path, gap_closure: Path,
             abis[family] = catalog["families"][family]["abi"]
         except KeyError as exc:
             raise EvidenceError(f"ABI catalog omits {family}") from exc
-    features = defaultdict(lambda: {"names": [], "action_kinds": [], "fills": [],
+    features = defaultdict(lambda: {"names": [], "action_kinds": [],
+                                    "inventory_actions": [], "fills": [],
                                     "decode_failures": [], "raw_ids": []})
     names, seen, receipt_logs = Counter(), set(), 0
     unknown_relevant, unknown_ignored = Counter(), Counter()
@@ -243,11 +247,18 @@ def _semantic_features(*, source_capture: Path, gap_closure: Path,
                     ):
                         relevant = True
                         item = features[transaction]
-                        item["fills"].append(economic)
+                        item["fills"].append({**economic, "family": family,
+                                              "contract": contract, "raw_id": raw_id,
+                                              "log_index": uint(raw["logIndex"])})
                     elif economic["kind"] == "inventory_action" and _contains_wallet(args, wallet):
                         relevant = True
                         item = features[transaction]
                         item["action_kinds"].append(economic["action"])
+                        item["inventory_actions"].append({
+                            "action": economic["action"], "args": args,
+                            "family": family, "contract": contract,
+                            "raw_id": raw_id, "log_index": uint(raw["logIndex"]),
+                        })
                     elif _contains_wallet(args, wallet):
                         relevant = True
                         item = features[transaction]
@@ -318,6 +329,114 @@ def _aggregate_exchange_kind(inputs: list[dict], outputs: list[dict], cash: int,
     return None
 
 
+def _action(base: dict, kind: str, *, subindex: int = 0,
+            extra: dict | None = None, normalizer: str = BUNDLE_VERSION) -> dict:
+    payload = {**base, "order": [base["order"][0], base["order"][1], subindex]}
+    extra = extra or {}
+    return {"id": digest([normalizer, kind, payload, extra]), **payload, "kind": kind,
+            **extra, "normalizer": normalizer}
+
+
+def _wallet_fill_side(fill: dict, wallet: str) -> str:
+    if address(fill["maker"]) == wallet:
+        return fill["side"]
+    if address(fill["taker"]) == wallet:
+        return "SELL" if fill["side"] == "BUY" else "BUY"
+    raise EvidenceError("Fill does not name the audited wallet")
+
+
+def _split_two_sided_v2_fills(delta: dict, features: dict, wallet: str,
+                              quote_asset: str) -> list[dict] | None:
+    fills = features.get("fills", [])
+    if (features.get("decode_failures") or features.get("action_kinds")
+            or len(fills) != 2 or any(fill.get("family") != "clob_v2_ctf" for fill in fills)
+            or any(uint(fill.get("fee", 0)) != 0 for fill in fills)):
+        return None
+    sided = [(fill, _wallet_fill_side(fill, wallet)) for fill in fills]
+    buys = [fill for fill, side in sided if side == "BUY"]
+    sells = [fill for fill, side in sided if side == "SELL"]
+    if len(buys) != 1 or len(sells) != 1:
+        return None
+    buy, sell = buys[0], sells[0]
+    bought = _asset(CTF_CONTRACT, buy["token_id"])
+    sold = _asset(CTF_CONTRACT, sell["token_id"])
+    collateral = _asset(PUSD_CONTRACT, "erc20")
+    expected = {
+        sold: -uint(sell["quantity"]),
+        bought: uint(buy["quantity"]),
+        collateral: uint(sell["quote"]) - uint(buy["quote"]),
+    }
+    expected = {asset: quantity for asset, quantity in expected.items() if quantity}
+    if sold == bought or delta["deltas"] != expected or delta["deltas"].get(quote_asset):
+        return None
+    raw_ids = sorted(set(delta["raw_ids"] + features.get("raw_ids", [])))
+    base = {"order": [delta["block"], delta["tx_index"], 0], "tx": delta["tx"],
+            "wallet": wallet, "cash_delta": 0, "raw_ids": raw_ids}
+    actions = []
+    for subindex, fill in enumerate(sorted(fills, key=lambda row: row["log_index"])):
+        side = _wallet_fill_side(fill, wallet)
+        token = _asset(CTF_CONTRACT, fill["token_id"])
+        if side == "SELL":
+            inputs = [{"asset": token, "quantity": uint(fill["quantity"])}]
+            outputs = [{"asset": collateral, "quantity": uint(fill["quote"])}]
+        else:
+            inputs = [{"asset": collateral, "quantity": uint(fill["quote"])}]
+            outputs = [{"asset": token, "quantity": uint(fill["quantity"])}]
+        actions.append(_action(
+            {**base, "inputs": inputs, "outputs": outputs}, "convert",
+            subindex=subindex,
+            extra={"fill_side": side, "order_hash": fill["order_hash"]},
+            normalizer=BUNDLE_VERSION + "/two-sided-v2-fill",
+        ))
+    reconstructed = defaultdict(int)
+    for action in actions:
+        reconstructed[quote_asset] += action["cash_delta"]
+        for leg in action["inputs"]:
+            reconstructed[leg["asset"]] -= leg["quantity"]
+        for leg in action["outputs"]:
+            reconstructed[leg["asset"]] += leg["quantity"]
+    if {asset: quantity for asset, quantity in reconstructed.items() if quantity} != delta["deltas"]:
+        raise EvidenceError("Split V2 fills do not reconstruct the wallet delta")
+    return actions
+
+
+def classify_transaction_actions(delta: dict, features: dict, wallet: str,
+                                 quote_asset: str,
+                                 collateral_assets: set[str] | None = None,
+                                 ) -> tuple[list[dict], dict | None]:
+    """Return one or more exact ordered actions for a wallet transaction."""
+    split = _split_two_sided_v2_fills(delta, features, wallet, quote_asset)
+    if split is not None:
+        return split, None
+    values = dict(delta["deltas"])
+    cash = values.pop(quote_asset, 0)
+    inputs, outputs = _legs(values)
+    collateral_assets = collateral_assets or set()
+    if (not features.get("decode_failures") and not features.get("fills")
+            and not features.get("action_kinds") and inputs and not outputs and cash < 0
+            and all(leg["asset"] in collateral_assets for leg in inputs)):
+        raw_ids = sorted(set(delta["raw_ids"] + features.get("raw_ids", [])))
+        base = {"order": [delta["block"], delta["tx_index"], 0], "tx": delta["tx"],
+                "wallet": wallet, "raw_ids": raw_ids}
+        cash_action = _action(
+            {**base, "inputs": [], "outputs": [], "cash_delta": cash}, "cash",
+            normalizer=BUNDLE_VERSION + "/stablecoin-external-outflow",
+        )
+        value = sum(leg["quantity"] for leg in inputs)
+        transfer = _action(
+            {**base, "inputs": inputs, "outputs": [], "cash_delta": 0}, "transfer",
+            subindex=1,
+            extra={"external_flow_value": -value,
+                   "external_flow_evidence": raw_ids + ["stablecoin-par-atomic-units"]},
+            normalizer=BUNDLE_VERSION + "/stablecoin-external-outflow",
+        )
+        return [cash_action, transfer], None
+    action, failure = classify_transaction(
+        delta, features, wallet, quote_asset, collateral_assets
+    )
+    return ([] if action is None else [action]), failure
+
+
 def classify_transaction(delta: dict, features: dict, wallet: str,
                          quote_asset: str,
                          collateral_assets: set[str] | None = None,
@@ -380,6 +499,8 @@ def classify_transaction(delta: dict, features: dict, wallet: str,
                 # One side is the designated quote cash, so represent the exact
                 # 1:1 wrapper exchange as a buy/sell in the lot engine.
                 kind = "buy" if outputs and cash < 0 else "sell" if inputs and cash > 0 else None
+            elif candidate == "wrap" and not inputs and len(outputs) == 1 and cash == 0:
+                kind = "receive"
             if kind is None:
                 kind = _aggregate_exchange_kind(inputs, outputs, cash,
                                                 allow_zero_cash_sale=True)
@@ -416,8 +537,24 @@ def classify_transaction(delta: dict, features: dict, wallet: str,
                       "semantic_names": sorted(set(features.get("names", []))),
                       "decode_failures": features.get("decode_failures", [])}
         return None, unresolved
-    action = {"id": digest([BUNDLE_VERSION, kind, base]), **base, "kind": kind,
-              "normalizer": BUNDLE_VERSION}
+    extra = {}
+    if kind == "receive" and action_kinds == ["wrap"]:
+        wraps = [row for row in features.get("inventory_actions", [])
+                 if row["action"] == "wrap"]
+        pusd = _asset(PUSD_CONTRACT, "erc20")
+        if (len(wraps) != 1 or len(outputs) != 1 or outputs[0]["asset"] != pusd
+                or address(wraps[0]["args"]["asset"]) != QUOTE_CONTRACT
+                or address(wraps[0]["args"]["to"]) != wallet
+                or uint(wraps[0]["args"]["amount"]) != outputs[0]["quantity"]):
+            unresolved = {**base, "codes": ["PUSD_EXTERNAL_WRAP_EVIDENCE_MISMATCH"],
+                          "semantic_names": sorted(set(features.get("names", []))),
+                          "decode_failures": []}
+            return None, unresolved
+        value = outputs[0]["quantity"]
+        evidence = [wraps[0]["raw_id"], "verified-pusd-source:" + PUSD_WRAP_SOURCE_SHA256]
+        extra = {"received_basis": value, "basis_evidence": evidence,
+                 "external_flow_value": value, "external_flow_evidence": evidence}
+    action = _action(base, kind, extra=extra)
     return action, None
 
 
@@ -491,13 +628,13 @@ def build_lifetime_basis_bundle(
     for transaction in sorted(transactions, key=lambda tx: (
         deltas[tx]["block"], deltas[tx]["tx_index"], tx
     )):
-        action, failure = classify_transaction(
+        transaction_actions, failure = classify_transaction_actions(
             deltas[transaction], features.get(transaction, {}), wallet, quote_asset,
             collateral_assets,
         )
-        if action is not None:
-            actions.append(action)
-            action_counts[action["kind"]] += 1
+        if transaction_actions:
+            actions.extend(transaction_actions)
+            action_counts.update(action["kind"] for action in transaction_actions)
         elif failure is not None:
             unresolved.append(failure)
             unresolved_counts.update(failure["codes"])
@@ -549,7 +686,9 @@ def build_lifetime_basis_bundle(
         "schema": 1, "version": BUNDLE_VERSION,
         "status": "BUNDLE_COMPLETE" if not unresolved else "BUNDLE_REVIEW_REQUIRED",
         "wallet": wallet, "range": cross_summary["range"],
-        "transactions": {"total": len(transactions), "mapped": len(actions),
+        "transactions": {"total": len(transactions),
+                         "mapped": len(transactions) - len(unresolved) - noops,
+                         "action_records": len(actions),
                          "unresolved": len(unresolved), "zero_net": noops},
         "actions_by_kind": dict(sorted(action_counts.items())),
         "unresolved_by_code": dict(sorted(unresolved_counts.items())),

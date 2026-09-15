@@ -4,8 +4,12 @@ from pathlib import Path
 from eth_hash.auto import keccak
 
 from polymarket_bot.ledger.lifetime_basis_bundle import (
+    CTF_CONTRACT,
+    PUSD_CONTRACT,
+    QUOTE_CONTRACT,
     _raw_mentions_wallet,
     classify_transaction,
+    classify_transaction_actions,
 )
 
 
@@ -21,8 +25,9 @@ def delta(values):
             "deltas": values, "raw_ids": ["raw:balance"]}
 
 
-def features(*, fills=(), actions=(), failures=()):
+def features(*, fills=(), actions=(), failures=(), inventory_actions=()):
     return {"fills": list(fills), "action_kinds": list(actions),
+            "inventory_actions": list(inventory_actions),
             "decode_failures": list(failures), "names": [], "raw_ids": ["raw:event"]}
 
 
@@ -114,3 +119,48 @@ def test_catalog_contains_verified_pusd_wrap_events():
     }.items():
         signature = name + "(" + ",".join(row["type"] for row in events[name]["inputs"]) + ")"
         assert keccak(signature.encode()).hex() == topic
+
+
+def test_splits_two_sided_v2_fill_into_exact_ordered_actions():
+    sold, bought = f"137:{CTF_CONTRACT}:1", f"137:{CTF_CONTRACT}:2"
+    pusd = f"137:{PUSD_CONTRACT}:erc20"
+    common = {"family": "clob_v2_ctf", "maker": WALLET,
+              "taker": "0x" + "66" * 20, "fee": 0}
+    fills = [
+        {**common, "side": "SELL", "token_id": "1", "quantity": 10,
+         "quote": 8, "order_hash": "0x" + "77" * 32,
+         "raw_id": "raw:sell", "log_index": 20},
+        {**common, "side": "BUY", "token_id": "2", "quantity": 20,
+         "quote": 5, "order_hash": "0x" + "88" * 32,
+         "raw_id": "raw:buy", "log_index": 21},
+    ]
+    actions, failure = classify_transaction_actions(
+        delta({sold: -10, bought: 20, pusd: 3}), features(fills=fills),
+        WALLET, QUOTE,
+    )
+    assert failure is None and [row["kind"] for row in actions] == ["convert", "convert"]
+    assert actions[0]["outputs"] == [{"asset": pusd, "quantity": 8}]
+    assert actions[1]["inputs"] == [{"asset": pusd, "quantity": 5}]
+    assert [row["order"][2] for row in actions] == [0, 1]
+
+
+def test_splits_stablecoin_external_outflow_and_values_dust():
+    actions, failure = classify_transaction_actions(
+        delta({QUOTE: -100, PUSD: -2}), features(), WALLET, QUOTE, {PUSD},
+    )
+    assert failure is None and [row["kind"] for row in actions] == ["cash", "transfer"]
+    assert actions[1]["external_flow_value"] == -2
+
+
+def test_values_third_party_pusd_wrap_as_external_receipt():
+    pusd = f"137:{PUSD_CONTRACT}:erc20"
+    wrap = {"action": "wrap", "raw_id": "raw:wrap", "args": {
+        "caller": "0x" + "99" * 20, "asset": QUOTE_CONTRACT,
+        "to": WALLET, "amount": 25,
+    }}
+    action, failure = classify_transaction(
+        delta({pusd: 25}), features(actions=["wrap"], inventory_actions=[wrap]),
+        WALLET, QUOTE,
+    )
+    assert failure is None and action["kind"] == "receive"
+    assert action["received_basis"] == action["external_flow_value"] == 25
