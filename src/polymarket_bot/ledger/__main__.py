@@ -12,6 +12,7 @@ from .common import EvidenceError, canonical
 from .fixtures import sample_bundle
 from .history_backfill import backfill_wallet_history
 from .inventory_basis import build_inventory_basis_file
+from .lifetime_basis_bundle import build_lifetime_basis_bundle
 from .lifetime_inventory import build_lifetime_inventory_file
 from .lifetime_receipt_closure import close_lifetime_receipt_gap
 from .lifetime_crosscheck import crosscheck_lifetime_capture
@@ -187,6 +188,20 @@ def main(argv=None):
     gap_receipts.add_argument("--retries", type=int, default=5)
     gap_receipts.add_argument("--max-shards", type=int)
     gap_receipts.add_argument("--output", type=Path, required=True)
+    lifetime_bundle = commands.add_parser(
+        "build-lifetime-basis-bundle",
+        help="Join closed lifetime receipts and conservatively map a basis bundle",
+    )
+    lifetime_bundle.add_argument("--crosscheck", type=Path, required=True)
+    lifetime_bundle.add_argument("--source-capture", type=Path, required=True)
+    lifetime_bundle.add_argument("--gap-closure", type=Path, required=True)
+    lifetime_bundle.add_argument("--inventory-capture", type=Path, required=True)
+    lifetime_bundle.add_argument("--wallet", required=True)
+    lifetime_bundle.add_argument("--scope", type=Path,
+                                 default=Path("configs/polyledger/polygon_lifetime_backfill.json"))
+    lifetime_bundle.add_argument("--catalog", type=Path,
+                                 default=Path("configs/polyledger/abi_catalog.json"))
+    lifetime_bundle.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -291,6 +306,14 @@ def main(argv=None):
                 retries=args.retries, max_shards=args.max_shards,
                 progress=lambda row: print(json.dumps(row), flush=True),
             )
+        elif args.command == "build-lifetime-basis-bundle":
+            result = build_lifetime_basis_bundle(
+                crosscheck=args.crosscheck, source_capture=args.source_capture,
+                gap_closure=args.gap_closure, inventory_capture=args.inventory_capture,
+                scope_path=args.scope, catalog_path=args.catalog, wallet=args.wallet,
+                output=args.output,
+                progress=lambda row: print(json.dumps(row), flush=True),
+            )
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -307,7 +330,8 @@ def main(argv=None):
             return 2  # A legacy census can diagnose readiness, never approve P0.
         if args.command in {"capture-wallet-24h", "value-wallet-24h", "backfill-wallet-history",
                             "backfill-wallet-blockscout", "crosscheck-lifetime-wallet",
-                            "recalculate-lifetime-inventory", "close-lifetime-receipt-gap"}:
+                            "recalculate-lifetime-inventory", "close-lifetime-receipt-gap",
+                            "build-lifetime-basis-bundle"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
