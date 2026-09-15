@@ -160,3 +160,19 @@ decodificar, normalizar y conciliar.
   --rpc-url https://polygon.drpc.org `
   --output data/polyledger-sentinel/p0/car_lifetime_rpc_crosscheck_20260914
 ```
+
+## Inventario final desde el cruce continuo
+
+`recalculate-lifetime-inventory` consume únicamente un cruce sellado que cubra
+todos los bloques desde un origen cero probado. Valida hashes y continuidad de
+cada shard, deduplica por identidad canónica, pliega `Transfer`,
+`TransferSingle` y `TransferBatch`, y obtiene un inventario atómico por
+contrato/token. Después consulta `balanceOf` y `balanceOfBatch` fijados al hash
+del corte con EIP-1898. Cualquier lectura ausente o diferencia bloquea el
+resultado.
+
+La ejecución de `car` al bloque 93.762.690 produjo `INVENTORY_RECONCILED`:
+12.211 activos comparados, cero errores y cero diferencias; 3.498 saldos
+positivos. Este gate demuestra el inventario puntual, pero no eleva
+`raw_actions_complete`: el costo FIFO y el PnL requieren recibos completos y
+mapeos semánticos revisados para las transacciones que el indexador omitió.

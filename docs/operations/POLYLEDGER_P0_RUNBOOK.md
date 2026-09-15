@@ -181,3 +181,25 @@ shard durante la reanudación. Los presupuestos `--max-*` sí pueden variar. Un
 resultado `IN_PROGRESS` es progreso retenido; `CAPTURED_BLOCKED` significa que
 la descarga terminó pero el indexador no acreditó cobertura completa. Ninguno
 autoriza ejecutar `car`, conectar wallet o usar capital.
+
+## Inventario histórico conciliado de `car`
+
+La exploración continua independiente encontró 541.101 logs de saldo, incluidos
+61.601 que Blockscout había omitido. El inventario final se reconstruye desde el
+origen cero y se compara con `balanceOf`/`balanceOfBatch` en el hash exacto del
+bloque de cierre:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger recalculate-lifetime-inventory `
+  --crosscheck data/polyledger-sentinel/p0/car_lifetime_rpc_crosscheck_20260914 `
+  --wallet 0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b `
+  --state-rpc-url https://polygon.drpc.org `
+  --output data/polyledger-sentinel/p0/car_lifetime_inventory_20260914_v2
+```
+
+La ejecución sellada verificó 12.211 activos tocados con cero errores y cero
+diferencias. Quedaron 3.498 activos positivos: pUSD 61.808,822593; 2.870 tokens
+CTF con 1.632.690,661352 shares; y 627 tokens Combo con 516.179,139838 shares.
+Las shares agregadas no son dólares ni PnL. La conciliación acredita inventario
+final; el basis continúa bloqueado hasta cerrar los recibos omitidos y revisar
+la semántica económica de las transacciones.
