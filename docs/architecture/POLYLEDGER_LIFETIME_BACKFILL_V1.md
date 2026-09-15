@@ -142,8 +142,8 @@ cero puede probarse desde la creación de la proxy sin volver a consultar los
 53 millones de bloques anteriores.
 
 `crosscheck-lifetime-wallet` recorre cada bloque desde ese origen hasta el corte
-congelado mediante `eth_getLogs`, en ventanas máximas de 100 bloques compatibles
-con el RPC público. Agrupa contratos y eventos en cuatro filtros, conserva hash
+congelado mediante `eth_getLogs`, en ventanas máximas de 10.000 bloques cuando
+el RPC público lo permite. Agrupa contratos y eventos en cuatro filtros, conserva hash
 de cada respuesta, publica shards atómicos y reanudables, y al finalizar compara
 cada log de saldo por `transactionHash/logIndex` y contenido completo contra los
 recibos cerrados. Solo una coincidencia exacta puede elevar

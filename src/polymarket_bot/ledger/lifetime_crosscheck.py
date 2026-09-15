@@ -175,7 +175,9 @@ def _fetch_batch(rpc_url: str, work: list[dict], retries: int) -> list[dict]:
             last_error = exc
             if attempt + 1 < retries:
                 time.sleep(min(8, 2 ** attempt))
-    raise EvidenceError("Historical RPC batch remained unavailable after retries") from last_error
+    raise EvidenceError(
+        "Historical RPC batch remained unavailable after retries: " + str(last_error)
+    ) from last_error
 
 
 def _ranges(first: int, last: int, width: int) -> list[tuple[int, int]]:
@@ -289,8 +291,8 @@ def crosscheck_lifetime_capture(
     origin_transaction = hex_bytes(origin_transaction, 32)
     range_blocks, shard_ranges = uint(range_blocks), uint(shard_ranges)
     batch_size, workers, retries = uint(batch_size), uint(workers), uint(retries)
-    if not 1 <= range_blocks <= 100:
-        raise EvidenceError("Historical public RPC range must be 1..100 blocks")
+    if not 1 <= range_blocks <= 10_000:
+        raise EvidenceError("Historical public RPC range must be 1..10000 blocks")
     if not 1 <= shard_ranges <= 1000 or not 1 <= batch_size <= 10:
         raise EvidenceError("Invalid crosscheck shard or RPC batch size")
     if not 1 <= workers <= 16 or not 1 <= retries <= 10:
