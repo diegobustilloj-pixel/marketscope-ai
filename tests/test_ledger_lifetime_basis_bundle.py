@@ -1,3 +1,8 @@
+import json
+from pathlib import Path
+
+from eth_hash.auto import keccak
+
 from polymarket_bot.ledger.lifetime_basis_bundle import (
     _raw_mentions_wallet,
     classify_transaction,
@@ -81,3 +86,31 @@ def test_classifies_exact_nonquote_collateral_exchange():
         WALLET, QUOTE, {PUSD},
     )
     assert failure is None and action["kind"] == "buy"
+
+
+def test_compound_fill_and_unannotated_exchange_preserve_net_basis():
+    action, failure = classify_transaction(
+        delta({YES: -10, NO: 20, QUOTE: 3}),
+        features(fills=[{"side": "SELL"}]), WALLET, QUOTE,
+    )
+    assert failure is None and action["kind"] == "convert"
+    action, failure = classify_transaction(
+        delta({YES: -10, NO: 10}), features(), WALLET, QUOTE,
+    )
+    assert failure is None and action["kind"] == "convert"
+    action, failure = classify_transaction(
+        delta({YES: -10, NO: -10, QUOTE: 10}), features(), WALLET, QUOTE,
+    )
+    assert failure is None and action["kind"] == "sell"
+
+
+def test_catalog_contains_verified_pusd_wrap_events():
+    catalog = json.loads((Path(__file__).parents[1]
+                          / "configs/polyledger/abi_catalog.json").read_text())
+    events = {row["name"]: row for row in catalog["families"]["collateral"]["abi"]}
+    for name, topic in {
+        "Wrapped": "c00a5c84859ae82a7f5e6a2773283fb525335d5b3195f61174aa1ecc7e15dd84",
+        "Unwrapped": "18b42b684d0b621cc609f4d888916e5ed9e934a476259ec1c11ec116f2b9aa7f",
+    }.items():
+        signature = name + "(" + ",".join(row["type"] for row in events[name]["inputs"]) + ")"
+        assert keccak(signature.encode()).hex() == topic

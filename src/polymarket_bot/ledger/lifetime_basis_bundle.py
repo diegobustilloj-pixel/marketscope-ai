@@ -300,6 +300,24 @@ def _legs(deltas: dict[str, int]) -> tuple[list[dict], list[dict]]:
     return inputs, outputs
 
 
+def _aggregate_exchange_kind(inputs: list[dict], outputs: list[dict], cash: int,
+                             *, allow_zero_cash_sale: bool = False,
+                             allow_multiple_outputs: bool = True) -> str | None:
+    """Represent a compound transaction by its exact net economic shape.
+
+    A receipt can atomically merge, redeem, wrap, or fill several positions.
+    When the intermediate legs net to zero at the wallet boundary, one aggregate
+    conversion is more faithful than inventing unobserved intermediate lots.
+    """
+    if inputs and outputs and (allow_multiple_outputs or len(outputs) == 1):
+        return "convert"
+    if len(outputs) == 1 and not inputs and cash < 0:
+        return "buy"
+    if inputs and not outputs and (cash > 0 or allow_zero_cash_sale and cash == 0):
+        return "sell"
+    return None
+
+
 def classify_transaction(delta: dict, features: dict, wallet: str,
                          quote_asset: str,
                          collateral_assets: set[str] | None = None,
@@ -319,10 +337,15 @@ def classify_transaction(delta: dict, features: dict, wallet: str,
     fills = features.get("fills", [])
     if features.get("decode_failures"):
         reasons.append("RELEVANT_EVENT_DECODE_FAILURE")
-    if fills and action_kinds:
-        reasons.append("MIXED_FILL_AND_INVENTORY_ACTION")
     kind = None
-    if not reasons and fills:
+    if not reasons and fills and action_kinds:
+        kind = _aggregate_exchange_kind(
+            inputs, outputs, cash, allow_zero_cash_sale=True,
+            allow_multiple_outputs=False,
+        )
+        if kind is None:
+            reasons.append("MIXED_FILL_AND_INVENTORY_ACTION")
+    elif not reasons and fills:
         if not inputs and len(outputs) == 1 and cash < 0:
             kind = "buy"
         elif len(inputs) == 1 and not outputs and cash >= 0:
@@ -330,10 +353,17 @@ def classify_transaction(delta: dict, features: dict, wallet: str,
         elif len(inputs) == 1 and len(outputs) == 1 and cash == 0:
             kind = "convert"
         else:
-            reasons.append("MIXED_OR_MULTI_ASSET_FILL")
+            kind = _aggregate_exchange_kind(inputs, outputs, cash,
+                                            allow_zero_cash_sale=True,
+                                            allow_multiple_outputs=False)
+            if kind is None:
+                reasons.append("MIXED_OR_MULTI_ASSET_FILL")
     elif not reasons and action_kinds:
         if len(action_kinds) != 1:
-            reasons.append("MIXED_INVENTORY_ACTION_FAMILIES")
+            kind = _aggregate_exchange_kind(inputs, outputs, cash,
+                                            allow_zero_cash_sale=True)
+            if kind is None:
+                reasons.append("MIXED_INVENTORY_ACTION_FAMILIES")
         else:
             candidate = action_kinds[0]
             valid = {
@@ -351,7 +381,10 @@ def classify_transaction(delta: dict, features: dict, wallet: str,
                 # 1:1 wrapper exchange as a buy/sell in the lot engine.
                 kind = "buy" if outputs and cash < 0 else "sell" if inputs and cash > 0 else None
             if kind is None:
-                reasons.append("INVENTORY_ACTION_DELTA_SHAPE_UNSUPPORTED")
+                kind = _aggregate_exchange_kind(inputs, outputs, cash,
+                                                allow_zero_cash_sale=True)
+                if kind is None:
+                    reasons.append("INVENTORY_ACTION_DELTA_SHAPE_UNSUPPORTED")
     elif not reasons:
         collateral_assets = collateral_assets or set()
         if not inputs and not outputs and cash:
@@ -366,6 +399,12 @@ def classify_transaction(delta: dict, features: dict, wallet: str,
               and inputs[0]["asset"] in collateral_assets
               and outputs[0]["asset"] in collateral_assets):
             kind = "convert"
+        elif inputs and outputs:
+            kind = "convert"
+        elif inputs and not outputs and cash > 0:
+            kind = "sell"
+        elif outputs and not inputs and cash < 0:
+            kind = "buy"
         elif outputs and not inputs and cash == 0:
             kind = "receive"
         elif inputs and not outputs and cash == 0:

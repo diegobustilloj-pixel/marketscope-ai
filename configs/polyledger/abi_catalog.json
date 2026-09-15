@@ -806,9 +806,9 @@
             }
           ]
         },
-        {
-          "type": "event",
-          "name": "Transfer",
+      {
+        "type": "event",
+        "name": "Transfer",
           "anonymous": false,
           "inputs": [
             {
@@ -825,16 +825,75 @@
               "name": "amount",
               "type": "uint256",
               "indexed": false
-            }
-          ]
-        }
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "Wrapped",
+        "anonymous": false,
+        "inputs": [
+          {
+            "name": "caller",
+            "type": "address",
+            "indexed": true
+          },
+          {
+            "name": "asset",
+            "type": "address",
+            "indexed": true
+          },
+          {
+            "name": "to",
+            "type": "address",
+            "indexed": true
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "indexed": false
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "name": "Unwrapped",
+        "anonymous": false,
+        "inputs": [
+          {
+            "name": "caller",
+            "type": "address",
+            "indexed": true
+          },
+          {
+            "name": "asset",
+            "type": "address",
+            "indexed": true
+          },
+          {
+            "name": "to",
+            "type": "address",
+            "indexed": true
+          },
+          {
+            "name": "amount",
+            "type": "uint256",
+            "indexed": false
+          }
+        ]
+      }
       ],
       "sources": [
-        {
-          "url": "https://github.com/Polymarket/polymarket-subgraph/blob/7a92ba026a9466c07381e0d245a323ba23ee8701/abis/ERC20.json",
-          "sha256": "c83c22887b3d44c95b7d746c5c34b8cd14a2c054c0a904d64563122e4c3942e4",
-          "license_note": "LGPL-3.0; event interface facts only"
-        }
+      {
+        "url": "https://github.com/Polymarket/polymarket-subgraph/blob/7a92ba026a9466c07381e0d245a323ba23ee8701/abis/ERC20.json",
+        "sha256": "c83c22887b3d44c95b7d746c5c34b8cd14a2c054c0a904d64563122e4c3942e4",
+        "license_note": "LGPL-3.0; event interface facts only"
+      },
+      {
+        "url": "https://polygon.blockscout.com/address/0xCe84E053301A82937F90ee2C2c1889cAb1db25dE?tab=contract",
+        "sha256": "05a82b0702ef65e1327b517d9273e2f343cf61791d2bf787bc08e734bfe2ad87",
+        "license_note": "Verified CollateralToken implementation source; Wrapped/Unwrapped event interface facts only"
+      }
       ]
     },
     "clob_v2_ctf": {
