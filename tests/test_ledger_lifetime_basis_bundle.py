@@ -1,4 +1,7 @@
-from polymarket_bot.ledger.lifetime_basis_bundle import classify_transaction
+from polymarket_bot.ledger.lifetime_basis_bundle import (
+    _raw_mentions_wallet,
+    classify_transaction,
+)
 
 
 WALLET = "0x" + "11" * 20
@@ -55,3 +58,26 @@ def test_quarantines_mixed_or_unknown_economics():
     )
     assert action is None
     assert "RELEVANT_EVENT_DECODE_FAILURE" in failure["codes"]
+
+
+def test_unknown_event_is_relevant_only_when_raw_log_names_wallet():
+    padded = "0x" + "00" * 12 + WALLET[2:]
+    raw = {"topics": ["0x" + "aa" * 32, padded], "data": "0x"}
+    assert _raw_mentions_wallet(raw, WALLET)
+    raw = {"topics": ["0x" + "aa" * 32], "data": padded}
+    assert _raw_mentions_wallet(raw, WALLET)
+    raw = {"topics": ["0x" + "aa" * 32], "data": "0x" + "00" * 32}
+    assert not _raw_mentions_wallet(raw, WALLET)
+
+
+def test_classifies_exact_nonquote_collateral_exchange():
+    action, failure = classify_transaction(
+        delta({PUSD: -1_000_000, QUOTE: 999_900}), features(),
+        WALLET, QUOTE, {PUSD},
+    )
+    assert failure is None and action["kind"] == "sell"
+    action, failure = classify_transaction(
+        delta({QUOTE: -999_900, PUSD: 1_000_000}), features(),
+        WALLET, QUOTE, {PUSD},
+    )
+    assert failure is None and action["kind"] == "buy"

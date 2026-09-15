@@ -23,7 +23,7 @@ from .common import EvidenceError, address, canonical, digest, hex_bytes, now_ut
 from .decoders import decode_event, semantics
 from .lifetime_inventory import _load_source
 
-BUNDLE_VERSION = "lifetime-basis-bundle/1"
+BUNDLE_VERSION = "lifetime-basis-bundle/2"
 QUOTE_CONTRACT = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
 TRANSFER = "0x" + keccak(b"Transfer(address,address,uint256)").hex()
 TRANSFER_SINGLE = "0x" + keccak(
@@ -142,6 +142,39 @@ def _contains_wallet(value, wallet: str) -> bool:
     return False
 
 
+def _raw_mentions_wallet(raw: dict, wallet: str) -> bool:
+    """Return true only for an ABI-aligned address word naming ``wallet``.
+
+    Full receipts can contain hundreds of logs for users other than the wallet
+    under study.  An undecodable log from a registered contract is relevant to
+    this wallet only when its indexed topics or ABI data explicitly contain the
+    wallet address.  Requiring the canonical 32-byte address representation
+    avoids substring matches against hashes and quantities.
+    """
+    needle = "0" * 24 + address(wallet)[2:]
+    for topic in (raw.get("topics") or [])[1:]:
+        try:
+            if hex_bytes(topic, 32)[2:] == needle:
+                return True
+        except EvidenceError:
+            continue
+    try:
+        data = hex_bytes(raw.get("data", "0x"))[2:]
+    except EvidenceError:
+        return False
+    return any(data[offset:offset + 64] == needle
+               for offset in range(0, len(data) - 63, 64))
+
+
+def _signature_rows(counter: Counter) -> list[dict]:
+    return [
+        {"family": family, "contract": contract, "topic0": topic0, "count": count}
+        for (family, contract, topic0), count in sorted(
+            counter.items(), key=lambda item: (-item[1], item[0])
+        )
+    ]
+
+
 def _manifest_closures(directory: Path, manifest: list[dict], folder: str):
     shard_dir = directory / folder
     actual = {path.name for path in shard_dir.glob("*.json")}
@@ -179,6 +212,7 @@ def _semantic_features(*, source_capture: Path, gap_closure: Path,
     features = defaultdict(lambda: {"names": [], "action_kinds": [], "fills": [],
                                     "decode_failures": [], "raw_ids": []})
     names, seen, receipt_logs = Counter(), set(), 0
+    unknown_relevant, unknown_ignored = Counter(), Counter()
     sources = [(source_capture, source_rows, "transaction_log_shards"),
                (gap_closure, gap_rows, "receipt_shards")]
     closures_done = 0
@@ -198,31 +232,64 @@ def _semantic_features(*, source_capture: Path, gap_closure: Path,
                 if topics and hex_bytes(topics[0], 32) in BALANCE_TOPICS:
                     continue
                 raw_id = _raw_id(raw)
-                item = features[transaction]
-                item["raw_ids"].append(raw_id)
                 try:
                     name, args = decode_event(raw, abis[family])
                     economic = semantics(family, name, args)
                     names[name] += 1
-                    item["names"].append(name)
+                    relevant = False
                     if economic["kind"] == "fill" and (
                         address(economic["maker"]) == wallet
                         or address(economic["taker"]) == wallet
                     ):
+                        relevant = True
+                        item = features[transaction]
                         item["fills"].append(economic)
                     elif economic["kind"] == "inventory_action" and _contains_wallet(args, wallet):
+                        relevant = True
+                        item = features[transaction]
                         item["action_kinds"].append(economic["action"])
+                    elif _contains_wallet(args, wallet):
+                        relevant = True
+                        item = features[transaction]
+                    if relevant:
+                        item["names"].append(name)
+                        item["raw_ids"].append(raw_id)
                 except Exception as exc:
-                    item["decode_failures"].append({"raw_id": raw_id,
-                                                    "error": str(exc)[:300]})
+                    topics = raw.get("topics") or []
+                    topic0 = hex_bytes(topics[0], 32) if topics else "0x"
+                    signature = (family, contract, topic0)
+                    if _raw_mentions_wallet(raw, wallet):
+                        unknown_relevant[signature] += 1
+                        item = features[transaction]
+                        failures = item.setdefault("_failures", {})
+                        key = "|".join(signature) + "|" + str(exc)[:300]
+                        failure = failures.setdefault(key, {
+                            "family": family, "contract": contract, "topic0": topic0,
+                            "error": str(exc)[:300], "count": 0, "raw_ids_sample": [],
+                        })
+                        failure["count"] += 1
+                        if len(failure["raw_ids_sample"]) < 3:
+                            failure["raw_ids_sample"].append(raw_id)
+                        item["raw_ids"].append(raw_id)
+                    else:
+                        unknown_ignored[signature] += 1
             closures_done += 1
             if progress and closures_done % 25_000 == 0:
                 progress({"stage": "semantic_receipts", "transactions": closures_done,
                           "transactions_total": len(transactions)})
     if seen != transactions:
         raise EvidenceError("Receipt closure union does not cover every wallet transaction")
+    for item in features.values():
+        failures = item.pop("_failures", {})
+        item["decode_failures"] = sorted(
+            failures.values(), key=lambda row: (row["family"], row["contract"], row["topic0"])
+        )
     return dict(features), {"transactions": len(seen), "receipt_logs": receipt_logs,
-                            "decoded_event_names": dict(sorted(names.items()))}
+                            "decoded_event_names": dict(sorted(names.items())),
+                            "unknown_events_wallet_referenced": sum(unknown_relevant.values()),
+                            "unknown_events_ignored_not_wallet_referenced": sum(unknown_ignored.values()),
+                            "unknown_signatures_wallet_referenced": _signature_rows(unknown_relevant),
+                            "unknown_signatures_ignored": _signature_rows(unknown_ignored)}
 
 
 def _legs(deltas: dict[str, int]) -> tuple[list[dict], list[dict]]:
@@ -234,7 +301,9 @@ def _legs(deltas: dict[str, int]) -> tuple[list[dict], list[dict]]:
 
 
 def classify_transaction(delta: dict, features: dict, wallet: str,
-                         quote_asset: str) -> tuple[dict | None, dict | None]:
+                         quote_asset: str,
+                         collateral_assets: set[str] | None = None,
+                         ) -> tuple[dict | None, dict | None]:
     """Map an exact wallet delta to one conservative lot action or quarantine it."""
     values = dict(delta["deltas"])
     cash = values.pop(quote_asset, 0)
@@ -284,8 +353,19 @@ def classify_transaction(delta: dict, features: dict, wallet: str,
             if kind is None:
                 reasons.append("INVENTORY_ACTION_DELTA_SHAPE_UNSUPPORTED")
     elif not reasons:
+        collateral_assets = collateral_assets or set()
         if not inputs and not outputs and cash:
             kind = "cash"
+        elif (len(inputs) == 1 and not outputs and cash > 0
+              and inputs[0]["asset"] in collateral_assets):
+            kind = "sell"
+        elif (not inputs and len(outputs) == 1 and cash < 0
+              and outputs[0]["asset"] in collateral_assets):
+            kind = "buy"
+        elif (len(inputs) == 1 and len(outputs) == 1 and cash == 0
+              and inputs[0]["asset"] in collateral_assets
+              and outputs[0]["asset"] in collateral_assets):
+            kind = "convert"
         elif outputs and not inputs and cash == 0:
             kind = "receive"
         elif inputs and not outputs and cash == 0:
@@ -356,19 +436,25 @@ def build_lifetime_basis_bundle(
                   "transactions_total": len(transactions)})
 
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    families = _family_map(scope)
     features, receipt_audit = _semantic_features(
         source_capture=source_capture, gap_closure=gap_closure,
-        transactions=transactions, families=_family_map(scope), catalog=catalog,
+        transactions=transactions, families=families, catalog=catalog,
         wallet=wallet, progress=progress,
     )
     quote_asset = _asset(QUOTE_CONTRACT, "erc20")
+    collateral_assets = {
+        _asset(contract, "erc20") for contract, family in families.items()
+        if family == "collateral"
+    }
     actions, unresolved, noops = [], [], 0
     action_counts, unresolved_counts = Counter(), Counter()
     for transaction in sorted(transactions, key=lambda tx: (
         deltas[tx]["block"], deltas[tx]["tx_index"], tx
     )):
         action, failure = classify_transaction(
-            deltas[transaction], features.get(transaction, {}), wallet, quote_asset
+            deltas[transaction], features.get(transaction, {}), wallet, quote_asset,
+            collateral_assets,
         )
         if action is not None:
             actions.append(action)
