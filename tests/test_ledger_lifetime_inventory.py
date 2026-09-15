@@ -121,7 +121,8 @@ def test_state_mismatch_blocks_inventory(tmp_path):
         state_rpc=StateRPC({f"137:{CASH}:erc20": 999_999, f"137:{CTF}:7": 600_000}),
     )
     assert report["status"] == "INVENTORY_BLOCKED"
-    assert report["reconciliation"]["mismatches"]
+    assert report["reconciliation"]["mismatch_count"] == 1
+    assert report["reconciliation"]["mismatch_sample"]
 
 
 def test_tampered_shard_is_rejected(tmp_path):

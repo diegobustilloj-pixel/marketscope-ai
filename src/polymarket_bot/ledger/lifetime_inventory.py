@@ -261,7 +261,8 @@ def reconstruct_lifetime_inventory(*, crosscheck: Path, scope_path: Path,
         {"asset": asset, "folded_atomic": folded.get(asset, 0),
          "state_atomic": state["balances"].get(asset)}
         for asset in sorted(assets)
-        if folded.get(asset, 0) != state["balances"].get(asset)
+        if (asset not in state["errors"]
+            and folded.get(asset, 0) != state["balances"].get(asset))
     ]
     inventory = []
     by_contract = defaultdict(lambda: {"assets": 0, "quantity_atomic": 0})
@@ -308,7 +309,11 @@ def reconstruct_lifetime_inventory(*, crosscheck: Path, scope_path: Path,
                            "assets_checked": len(assets), "state_calls": state["calls"],
                            "state_source": state["source"],
                            "pinning_methods": state["pinning_methods"],
-                           "read_errors": state["errors"], "mismatches": mismatches},
+                           "read_error_count": len(state["errors"]),
+                           "read_error_sample": state["errors"][:20],
+                           "mismatch_count": len(mismatches),
+                           "mismatch_sample": mismatches[:20],
+                           "mismatch_hash": digest(mismatches)},
         "cost_basis": {"available": False,
                        "reason": "Full transaction receipts and reviewed semantic action mappings are still required"},
         "blockers": blockers, "ledger_approval": False,
