@@ -345,29 +345,27 @@ def _wallet_fill_side(fill: dict, wallet: str) -> str:
     raise EvidenceError("Fill does not name the audited wallet")
 
 
-def _split_two_sided_v2_fills(delta: dict, features: dict, wallet: str,
-                              quote_asset: str) -> list[dict] | None:
+def _split_crossed_v2_fills(delta: dict, features: dict, wallet: str,
+                            quote_asset: str) -> list[dict] | None:
     fills = features.get("fills", [])
     if (features.get("decode_failures") or features.get("action_kinds")
-            or len(fills) != 2 or any(fill.get("family") != "clob_v2_ctf" for fill in fills)
+            or len(fills) < 2 or any(fill.get("family") != "clob_v2_ctf" for fill in fills)
             or any(uint(fill.get("fee", 0)) != 0 for fill in fills)):
         return None
     sided = [(fill, _wallet_fill_side(fill, wallet)) for fill in fills]
     buys = [fill for fill, side in sided if side == "BUY"]
     sells = [fill for fill, side in sided if side == "SELL"]
-    if len(buys) != 1 or len(sells) != 1:
+    if not buys or not sells:
         return None
-    buy, sell = buys[0], sells[0]
-    bought = _asset(CTF_CONTRACT, buy["token_id"])
-    sold = _asset(CTF_CONTRACT, sell["token_id"])
     collateral = _asset(PUSD_CONTRACT, "erc20")
-    expected = {
-        sold: -uint(sell["quantity"]),
-        bought: uint(buy["quantity"]),
-        collateral: uint(sell["quote"]) - uint(buy["quote"]),
-    }
+    expected = defaultdict(int)
+    for fill, side in sided:
+        token = _asset(CTF_CONTRACT, fill["token_id"])
+        sign = 1 if side == "BUY" else -1
+        expected[token] += sign * uint(fill["quantity"])
+        expected[collateral] -= sign * uint(fill["quote"])
     expected = {asset: quantity for asset, quantity in expected.items() if quantity}
-    if sold == bought or delta["deltas"] != expected or delta["deltas"].get(quote_asset):
+    if delta["deltas"] != expected or delta["deltas"].get(quote_asset):
         return None
     raw_ids = sorted(set(delta["raw_ids"] + features.get("raw_ids", [])))
     base = {"order": [delta["block"], delta["tx_index"], 0], "tx": delta["tx"],
@@ -386,7 +384,7 @@ def _split_two_sided_v2_fills(delta: dict, features: dict, wallet: str,
             {**base, "inputs": inputs, "outputs": outputs}, "convert",
             subindex=subindex,
             extra={"fill_side": side, "order_hash": fill["order_hash"]},
-            normalizer=BUNDLE_VERSION + "/two-sided-v2-fill",
+            normalizer=BUNDLE_VERSION + "/crossed-v2-fills",
         ))
     reconstructed = defaultdict(int)
     for action in actions:
@@ -405,7 +403,7 @@ def classify_transaction_actions(delta: dict, features: dict, wallet: str,
                                  collateral_assets: set[str] | None = None,
                                  ) -> tuple[list[dict], dict | None]:
     """Return one or more exact ordered actions for a wallet transaction."""
-    split = _split_two_sided_v2_fills(delta, features, wallet, quote_asset)
+    split = _split_crossed_v2_fills(delta, features, wallet, quote_asset)
     if split is not None:
         return split, None
     values = dict(delta["deltas"])

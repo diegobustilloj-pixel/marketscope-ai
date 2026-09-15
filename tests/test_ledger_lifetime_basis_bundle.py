@@ -143,6 +143,15 @@ def test_splits_two_sided_v2_fill_into_exact_ordered_actions():
     assert actions[1]["inputs"] == [{"asset": pusd, "quantity": 5}]
     assert [row["order"][2] for row in actions] == [0, 1]
 
+    second_buy = {**fills[1], "quote": 4, "quantity": 10,
+                  "order_hash": "0x" + "aa" * 32, "log_index": 22}
+    actions, failure = classify_transaction_actions(
+        delta({sold: -10, bought: 30, pusd: -1}),
+        features(fills=[*fills, second_buy]), WALLET, QUOTE,
+    )
+    assert failure is None and len(actions) == 3
+    assert [row["order"][2] for row in actions] == [0, 1, 2]
+
 
 def test_splits_stablecoin_external_outflow_and_values_dust():
     actions, failure = classify_transaction_actions(
