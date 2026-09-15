@@ -12,6 +12,7 @@ from .common import EvidenceError, canonical
 from .fixtures import sample_bundle
 from .history_backfill import backfill_wallet_history
 from .inventory_basis import build_inventory_basis_file
+from .lifetime_inventory import build_lifetime_inventory_file
 from .lifetime_crosscheck import crosscheck_lifetime_capture
 from .readiness import audit_archived_pilot
 from .replay import replay_file
@@ -159,6 +160,16 @@ def main(argv=None):
     crosscheck.add_argument("--retries", type=int, default=5)
     crosscheck.add_argument("--max-shards", type=int)
     crosscheck.add_argument("--output", type=Path, required=True)
+    lifetime_inventory = commands.add_parser(
+        "recalculate-lifetime-inventory",
+        help="Fold a zero-origin lifetime wallet scan and reconcile exact-block balances",
+    )
+    lifetime_inventory.add_argument("--crosscheck", type=Path, required=True)
+    lifetime_inventory.add_argument("--wallet", required=True)
+    lifetime_inventory.add_argument("--scope", type=Path,
+                                    default=Path("configs/polyledger/polygon_lifetime_backfill.json"))
+    lifetime_inventory.add_argument("--state-rpc-url", required=True)
+    lifetime_inventory.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "fixture":
@@ -249,6 +260,11 @@ def main(argv=None):
                 max_shards=args.max_shards,
                 progress=lambda row: print(json.dumps(row), flush=True),
             )
+        elif args.command == "recalculate-lifetime-inventory":
+            result = build_lifetime_inventory_file(
+                crosscheck=args.crosscheck, scope_path=args.scope, wallet=args.wallet,
+                state_rpc=ReadOnlyRPC(url=args.state_rpc_url), output=args.output,
+            )
         else:
             with EvidenceStore(args.database, read_only=True) as store:
                 result = {"integrity": store.verify(),
@@ -264,7 +280,8 @@ def main(argv=None):
         if args.command == "pilot-readiness":
             return 2  # A legacy census can diagnose readiness, never approve P0.
         if args.command in {"capture-wallet-24h", "value-wallet-24h", "backfill-wallet-history",
-                            "backfill-wallet-blockscout", "crosscheck-lifetime-wallet"}:
+                            "backfill-wallet-blockscout", "crosscheck-lifetime-wallet",
+                            "recalculate-lifetime-inventory"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
