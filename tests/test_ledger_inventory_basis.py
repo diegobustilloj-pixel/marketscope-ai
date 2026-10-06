@@ -9,6 +9,7 @@ from polymarket_bot.ledger.inventory_basis import (
     build_inventory_basis,
     build_inventory_basis_file,
 )
+from polymarket_bot.ledger.__main__ import main as ledger_main
 
 
 WALLET = "0x" + "11" * 20
@@ -219,3 +220,17 @@ def test_inventory_basis_file_is_sealed_and_never_overwritten(tmp_path: Path):
 def test_streaming_digest_matches_canonical_sha256():
     value = {"z": [1, {"alpha": "ñ"}], "a": ("x", 2)}
     assert digest(value) == hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()
+
+
+def test_inventory_basis_cli_prints_a_compact_sealed_receipt(tmp_path: Path, capsys):
+    value = bundle()
+    value["independent_report"] = independent_from(build_inventory_basis(value))
+    source = tmp_path / "bundle.json"
+    source.write_text(canonical(value) + "\n", encoding="utf-8")
+    output = tmp_path / "result"
+    assert ledger_main(["inventory-basis", "--bundle", str(source), "--output", str(output)]) == 0
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["output"] == str(output.resolve())
+    assert receipt["actions"]["count"] == len(value["actions"])
+    assert receipt["basis_gate"]["status"] == "PASS"
+    assert "journal" not in receipt

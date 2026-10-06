@@ -21,6 +21,7 @@ La prioridad es terminar de forma verificable el cálculo de inventario y basis 
 - Su `summary.json` declara `BUNDLE_COMPLETE`, `basis_ready: true`, 251.078 transacciones, 251.107 acciones y cero acciones sin resolver.
 - El inventario reconciliado acredita cantidades observadas, pero no equivale a basis ni a PnL realizado.
 - Dos resultados de inventory-basis se conservan como `.partial` porque el proceso agotó memoria. Son evidencia de bloqueo, no basura temporal.
+- La corrida v2 ya existe localmente en `data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2`. Su manifiesto, hashes y archivo de configuración fueron verificados; la reconstrucción no tuvo error y la conciliación de cierre dio `MATCH`. El resultado sigue `BLOCKED` por evidencia de basis/PnL, no por un error de ejecución.
 
 ### Cambio WIP que debe tratarse con cuidado
 
@@ -40,7 +41,8 @@ Las 104 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real
 2. ejecutar la suite pertinente completa;
 3. medir memoria y consistencia frente a una muestra pequeña previamente sellada;
 4. guardar el cambio en una rama `wip/` separada, con un mensaje que diga claramente que aún requiere validación de escala;
-5. crear una salida nueva para la corrida grande. Nunca sobrescribir ni borrar los `.partial` existentes.
+5. conservar la salida v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
+6. recopilar las pruebas que faltan para los flujos externos y las marcas, y generar un cálculo independiente antes de reevaluar el gate. Nunca sobrescribir ni borrar los `.partial` existentes.
 
 No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batch` y los snapshots pueden copiar estructuras amplias. Si el problema persiste, perfilar primero y cambiar una sola fuente de duplicación por vez, manteniendo un replay determinista y la trazabilidad de cada lote.
 

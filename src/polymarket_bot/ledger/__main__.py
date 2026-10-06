@@ -23,6 +23,32 @@ from .wallet_capture import capture_wallet_24h
 from .valuation import value_wallet_capture
 
 
+def _terminal_result(args, result: dict) -> dict:
+    """Keep a large sealed basis report out of stdout.
+
+    The full report is already atomically written to the requested output
+    directory. Emitting its journal again can exceed a terminal's practical
+    capacity and has no audit benefit, so the CLI returns a compact receipt.
+    """
+    if args.command != "inventory-basis":
+        return result
+    return {
+        "status": result["status"],
+        "output": str(args.output.resolve()),
+        "actions": {
+            "count": result["actions"]["count"],
+            "reconstruction_error": result["actions"]["reconstruction_error"],
+            "journal_hash": result["actions"]["journal_hash"],
+        },
+        "reconciliation": {
+            "status": result["reconciliation"]["status"],
+            "reasons": result["reconciliation"]["reasons"],
+        },
+        "basis_gate": result["basis_gate"],
+        "safety": result["safety"],
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="PolyLedger P0 — read-only/replay; no signing or execution")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -323,7 +349,7 @@ def main(argv=None):
                           "current_runs": store.db.execute("SELECT COUNT(*) FROM current_runs").fetchone()[0],
                           "incidents": [dict(r) for r in store.db.execute("SELECT code,COUNT(*) AS count FROM incidents GROUP BY code")],
                           "safety": SAFETY}
-        print(json.dumps(result, indent=2))
+        print(json.dumps(_terminal_result(args, result), indent=2))
         if args.command == "verify-contract":
             return 0 if result["status"] == "VERIFIED_AT_BLOCK" else 2
         if args.command == "pilot-readiness":

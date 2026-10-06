@@ -12,7 +12,7 @@ La plataforma concentra investigaciones de Polymarket bajo un núcleo compartido
 
 | Línea | Estado verificable | Decisión actual |
 |---|---|---|
-| PolyLedger P0 | Bundle histórico de basis de `car` completo; cálculo final detenido por consumo de memoria | Prioridad técnica actual; reparar y verificar, sin trading |
+| PolyLedger P0 | Replay de basis de `car` completado, sellado y reconciliado; el gate sigue bloqueado por evidencia contable faltante | Completar evidencia y segundo cálculo; sin trading |
 | Deportes / wallets | Investigación y prueba cerradas; no surgió un ganador copiable | No construir ejecutor ni usar capital |
 | Clima | Investigación, backtest realista y ticket manual existen | Mantener manual/shadow hasta nueva evidencia |
 | Elon / conteo de tuits | Investigación y monitor forward separado existen | No olvidar esta línea; revisar su evidencia local antes de informar resultados |
@@ -51,11 +51,13 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 - el bundle contiene 251.078 transacciones, 251.107 acciones, 12.211 activos, cero transacciones sin resolver y `basis_ready: true`;
 - el bundle mantiene todas las salvaguardas desactivadas: solo lectura, sin firma, wallet, retiros, dinero real u órdenes.
 
-**Bloqueo actual:** el motor `inventory-basis` no debe presentarse como completado. Las salidas `car_lifetime_basis_result_20260915_v1.partial` y `car_lifetime_basis_result_20260918_v1.partial` documentan que la ejecución se detuvo por memoria durante la reconstrucción de lotes. No se deben borrar ni renombrar como resultados finales.
+**Resultado de ejecución actual:** el 6 de octubre se creó localmente `data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2/`, sin sobrescribir los `.partial` históricos. El manifiesto verifica los hashes de configuración, resumen e input, usa el commit `19bf5ac` con árbol limpio y el replay no tuvo error de reconstrucción. Conciliación de inventario: `MATCH` (3.498 activos de inventario al cierre; hash de balances `8e7c1d9de81461a7c4d6248a6440f336dcc0666380afdc8f31753ba64686cbf5`). El resumen local pesa ~122 MB y no se publica en Git.
+
+**Bloqueo actual:** el resultado anterior no convierte el motor en aprobado. La salida está `BLOCKED` por `UNKNOWN_COST_BASIS`, marcas de cierre incompletas/sin evidencia, valor faltante de flujos externos, accrual de transferencias externo desconocido y ausencia de informe contable independiente. Las salidas `car_lifetime_basis_result_20260915_v1.partial` y `car_lifetime_basis_result_20260918_v1.partial` documentan el fallo histórico de memoria y se conservan sin cambios.
 
 **Trabajo WIP preservado:** la optimización de memoria se conserva en la rama `wip/ledger-basis-memory`, separada de `main`. Indexa las colas FIFO por `(wallet, asset)`, sustituye la copia creciente de ancestros por vínculos de lotes, usa un diario compacto ligado por hash al bundle sellado, serializa y calcula hashes por streaming y permite `snapshot(copy_safe=False)` para una corrida única. El 6 de octubre pasaron 104 pruebas `test_ledger*`; una muestra real de 10.000 acciones produjo el mismo estado económico entre diario completo y compacto. En perfiles reales, cargar el bundle ocupó ~526 MB privados; el replay de 50.000 acciones llegó a ~588 MB y el de 100.000 a ~648 MB, sin duplicación material al generar la instantánea. Es evidencia favorable de escala, no un resultado final de basis.
 
-**Siguiente decisión técnica:** consolidar este WIP, ejecutar una corrida completa con salida nueva y verificar sus hashes, balances y cálculo independiente. Solo si la corrida completa y un cálculo independiente concilian, el gate podrá avanzar de `BLOCKED`; eso no autoriza capital ni copia automática.
+**Siguiente decisión técnica:** preservar el resultado v2 sellado y completar, con evidencia, los flujos externos, las marcas de cierre y el segundo cálculo independiente. Solo si esos elementos concilian podrá reevaluarse el gate; eso no autoriza capital ni copia automática.
 
 Lecturas obligatorias:
 
