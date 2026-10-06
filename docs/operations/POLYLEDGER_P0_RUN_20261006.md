@@ -49,3 +49,20 @@ el mismo bloque de cierre; hubo 4 candidatos dentro de la ventana explícita de
 una hora y 16 antiguos. No se escribió ninguna marca ni se alteró este bundle
 ni su resultado. Consulte `POLYLEDGER_P0_PRICE_PROBE_20261006.md` para los
 hashes, el corte temporal y los límites de esa evidencia candidata.
+
+## Auditoría posterior de candidatos
+
+La salida separada
+`car_lifetime_price_candidate_audit_20261006_v2/` verificó la sonda completa y
+realizó 16 consultas oficiales de identidad. Conservó las 16 respuestas raw,
+sin errores de transporte o interpretación, y confirmó para los cuatro
+candidatos el mismo par token–condición–outcome en las fuentes oficiales
+actuales entre CLOB y Gamma; dos también
+tienen corroboración local anterior al corte.
+
+El endpoint `markets-by-token` discrepó en tres casos del orden Yes/No que
+documenta. Esa diferencia quedó preservada y el auditor v2 no usa dicho orden
+como etiqueta: exige coincidencia del par completo en las otras fuentes. Los
+cuatro candidatos quedaron pendientes de una política de marcas. Se escribieron
+cero marcas, el bundle v5 siguió intacto y el gate continuó `BLOCKED`. Consulte
+`POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md` para decisiones y hashes.

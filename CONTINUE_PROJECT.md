@@ -7,7 +7,7 @@ Esta guía está pensada para la siguiente persona o agente que trabaje en la pl
 1. `PROJECT_STATE.md` — panorama, decisiones y evidencia disponible.
 2. `git status --short` y `git log --oneline -12` — identificar cambios no consolidados y el punto real de partida.
 3. `docs/architecture/PROJECT_ORGANIZATION.md` y `docs/operations/DATA_POLICY.md` — límites de estructura y datos.
-4. El documento del dominio que se vaya a tocar. Para el trabajo actual: los documentos PolyLedger enlazados en `PROJECT_STATE.md`, incluida la sonda de precio si se retoman marcas históricas.
+4. El documento del dominio que se vaya a tocar. Para el trabajo actual: los documentos PolyLedger enlazados en `PROJECT_STATE.md`, incluida la sonda y su auditoría de candidatos si se retoman marcas históricas.
 
 Si falta una fuente, un run ID o un hash, declararlo como ausencia de evidencia; no rellenarlo con una suposición.
 
@@ -21,7 +21,7 @@ La prioridad es terminar de forma verificable el cálculo de inventario y basis 
 - Su `summary.json` declara `BUNDLE_COMPLETE`, `basis_ready: true`, 251.078 transacciones, 251.107 acciones y cero acciones sin resolver.
 - El inventario reconciliado acredita cantidades observadas, pero no equivale a basis ni a PnL realizado.
 - Dos resultados de inventory-basis se conservan como `.partial` porque el proceso agotó memoria. Son evidencia de bloqueo, no basura temporal.
-- La corrida v2 ya existe localmente en `data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2`. Su manifiesto, hashes y archivo de configuración fueron verificados; la reconstrucción no tuvo error y la conciliación de cierre dio `MATCH`. El resultado sigue `BLOCKED` por evidencia de basis/PnL, no por un error de ejecución.
+- La corrida de basis v2 ya existe localmente en `data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2`. Su manifiesto, hashes y archivo de configuración fueron verificados; la reconstrucción no tuvo error y la conciliación de cierre dio `MATCH`. El resultado sigue `BLOCKED` por evidencia de basis/PnL, no por un error de ejecución.
 
 ### Cambio integrado y validado
 
@@ -36,18 +36,19 @@ traza de desarrollo. Toca:
 
 El cambio introduce un índice FIFO por wallet/activo y conserva una cadena de `lineage_lot_ids` en lugar de expandir toda la procedencia ancestral en cada lote descendiente. También evita copiar el bundle al validarlo/hashearlo, usa un diario contable compacto enlazado por hash al input sellado, no duplica el bundle de 200+ MB en `configuration.json` y serializa resultados por streaming. Busca reducir coste temporal y memoria sin cambiar el resultado contable.
 
-Las 112 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. La corrida completa v2 se selló sin error de reconstrucción y con conciliación `MATCH`. El próximo trabajo ya no es validar escala:
+Las 130 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. La corrida completa de basis v2 se selló sin error de reconstrucción y con conciliación `MATCH`. El próximo trabajo ya no es validar escala ni volver a auditar la identidad de la muestra:
 
-1. conservar la salida v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
-2. conservar la sonda local `car_lifetime_price_probe_20261006_v2`: verificó la cola, ancló el cierre con dos RPC y produjo 4 candidatos frescos / 16 antiguos de 20 CTF, sin escribir marcas; leer `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md` antes de cualquier ampliación;
-3. revisar la semántica y procedencia de esas marcas candidatas, completar 856 flujos externos y generar un cálculo independiente antes de reevaluar el gate. Nunca sobrescribir ni borrar los `.partial` existentes.
+1. conservar la salida de basis v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
+2. conservar la sonda `car_lifetime_price_probe_20261006_v2` y la auditoría autoritativa `car_lifetime_price_candidate_audit_20261006_v2`: la segunda guardó 16/16 respuestas oficiales, confirmó 4/4 identidades oficiales actuales —dos con corroboración local anterior al corte— y dejó los cuatro precios pendientes de política, con cero marcas integradas; leer `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md` y `POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md` antes de cualquier ampliación;
+3. definir con una prueba explícita la política de edad, resolución y rechazo para marcas; después ampliar la captura por tipo de activo, completar 856 flujos externos y generar un cálculo independiente antes de reevaluar el gate. Nunca sobrescribir ni borrar los `.partial` existentes.
 
 No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batch` y los snapshots pueden copiar estructuras amplias. Si el problema persiste, perfilar primero y cambiar una sola fuente de duplicación por vez, manteniendo un replay determinista y la trazabilidad de cada lote.
 
 ## Secuencia técnica recomendada
 
 ```text
-resultado v2 sellado y conciliado
+resultado de basis v2 sellado y conciliado
+    → fijar política de marcas y ampliar captura por fuente compatible
     → completar flujos externos y marcas de cierre con evidencia
     → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente

@@ -1,6 +1,6 @@
 # Auditoría de evidencia faltante — PolyLedger P0 / `car`
 
-**Corte:** 2026-10-06, a partir del bundle v5 sellado y del resultado v2.
+**Corte:** 2026-10-06, a partir del bundle v5 sellado y del resultado de basis v2.
 Este documento enumera ausencias comprobadas; no asigna precios, basis ni PnL
 por aproximación.
 
@@ -46,15 +46,17 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
 
 ## Orden seguro de resolución
 
-1. Crear un artefacto local sellado de solicitudes de valoración de frontera,
-   ligado por hash al bundle v5, para las 772 recepciones y 84 transferencias.
-   Cada respuesta debe conservar acción, `raw_ids`, fuente, bloque/tiempo,
-   valor atómico y explicación de la metodología.
+1. Usar la cola local sellada ya creada para capturar respuestas de valoración
+   de frontera de las 772 recepciones y 84 transferencias. Cada respuesta debe
+   enlazar la acción y su evidencia del bundle, y conservar fuente,
+   bloque/tiempo, valor atómico y explicación de la metodología.
 2. Capturar o respaldar marcas de los 3.498 activos al bloque de cierre
    `93.762.690`; cada marca debe ser un `Decimal` exacto, con fuente y corte
    comprobables. No inferir la marca actual para el corte histórico. La sonda
-   de 20 CTF ya existe como prueba de transporte y temporalidad, pero sus
-   cuatro candidatos frescos no se han integrado ni reducen este conteo.
+   de 20 CTF y su auditoría de identidad ya existen: los cuatro candidatos
+   frescos tienen mapeos oficiales actuales consistentes; sólo dos poseen
+   corroboración local anterior al corte. Siguen pendientes de una política de
+   aceptación, no se han integrado y no reducen este conteo.
 3. Recompilar un bundle nuevo con esa evidencia, sin cambiar ni sobrescribir el
    v5, y repetir `inventory-basis` en otro directorio nuevo.
 4. Construir un segundo cálculo con implementación y procedencia separadas que
@@ -67,8 +69,11 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
 - Bundle: `data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/`
 - Resultado sellado: `data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2/`
 - Sonda de precios sellada: `data/polyledger-sentinel/p0/car_lifetime_price_probe_20261006_v2/`
+- Auditoría de candidatos sellada: `data/polyledger-sentinel/p0/car_lifetime_price_candidate_audit_20261006_v2/`
 - Registro de corrida: `docs/operations/POLYLEDGER_P0_RUN_20261006.md`
 - Registro de sonda: `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md`
+- Registro de auditoría: `docs/operations/POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md`
 
-Los dos primeros se conservan solo localmente. Este diagnóstico puede
+Los cuatro primeros artefactos de datos y resultados se conservan solo
+localmente. Este diagnóstico puede
 versionarse porque contiene únicamente conteos, hashes y reglas de continuidad.

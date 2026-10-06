@@ -85,6 +85,26 @@ respuestas como no integrables y no escribió marcas. Se preserva como
 evidencia de compatibilidad; no se sobrescribió. El commit posterior añadió
 el parser estricto de `data`, y la v2 es la salida de interpretación vigente.
 
+## Auditoría posterior de identidad
+
+Los cuatro candidatos de la v2 ya fueron auditados en una salida separada:
+`car_lifetime_price_candidate_audit_20261006_v2/`. Se verificaron de nuevo el
+manifiesto, las cabeceras Polygon, el corte, las URLs y los bytes raw; después
+se hicieron 16 consultas oficiales a CLOB y Gamma. Las 16 respondieron y no
+hubo errores de transporte ni interpretación. Los cuatro tokens quedaron
+ligados de forma consistente a condición, outcome y mercado en las fuentes
+oficiales actuales; dos también
+tienen metadata local anterior al corte.
+
+La auditoría detectó una discrepancia real entre el orden Yes/No descrito por
+`markets-by-token` y tres respuestas vivas. El motor v2 conserva ese hallazgo,
+trata el par devuelto como no ordenado y exige coincidencia de etiquetas entre
+CLOB y Gamma. El detalle, tabla de mercados y hashes está en
+[`POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md`](POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md).
+
+Identidad consistente significa `PENDING_MARK_POLICY_REVIEW`, no marca
+aceptada: la auditoría escribió cero marcas y no cambió el bundle.
+
 ## Qué permanece bloqueado
 
 La sonda no cambia el estado de P0. Siguen abiertos, como mínimo:
@@ -95,7 +115,8 @@ La sonda no cambia el estado de P0. Siguen abiertos, como mínimo:
 - el cálculo contable independiente requerido por el gate.
 
 No se debe usar los cuatro candidatos frescos como PnL, señal de copia ni
-autorización de capital. El siguiente paso correcto es revisar la semántica y
-procedencia de la muestra, definir el contrato de frescura para una captura
-masiva y resolver las fronteras externas por separado. Cualquier escalado debe
-crear otra salida local sellada y nunca editar el bundle v5 ni esta sonda.
+autorización de capital. La semántica de identidad de la muestra ya fue
+auditada; el siguiente paso correcto es fijar y probar la política de edad,
+resolución, mercados cerrados y rechazo antes de una captura masiva, y resolver
+las fronteras externas por separado. Cualquier escalado debe crear otra salida
+local sellada y nunca editar el bundle v5 ni esta sonda.

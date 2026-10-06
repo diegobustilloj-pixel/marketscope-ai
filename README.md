@@ -64,16 +64,22 @@ fuentes se documentan en `docs/operations/POLYLEDGER_P0_RUN_20261006.md`,
 `POLYLEDGER_P0_OFFICIAL_SOURCE_PLAN_20261006.md`. La sonda local de 20
 outcomes CTF confirmó transporte y ancla temporal, pero dejó el gate bloqueado:
 hay cuatro candidatos frescos sin integrar, dieciséis antiguos y ninguna marca
-ni PnL nuevos. Véase `POLYLEDGER_P0_PRICE_PROBE_20261006.md`.
+ni PnL nuevos. Su auditoría posterior guardó 16/16 respuestas de identidad,
+confirmó los cuatro mapeos oficiales actuales token–mercado–outcome y encontró tres discrepancias
+entre el orden `primary/secondary` documentado y el observado. Los cuatro sólo
+quedaron pendientes de una política de marcas: se integraron cero. Véanse
+`POLYLEDGER_P0_PRICE_PROBE_20261006.md` y
+`POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md`.
 
 El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes
 automáticas ni dinero real habilitados.
 
-La siguiente fase acordada es **Copiado por reconstrucción**: observar una wallet,
-reconstruir la cesta completa y cotizar si todavía es replicable antes de mostrar
-un ticket manual. El diseño congelado y sus reglas de seguridad están en
-`docs\PLAN_COPIADO_POR_RECONSTRUCCION_V001.md`. Su estado es pendiente de
-construcción; no activa órdenes ni dinero real.
+**Copiado por reconstrucción** es un diseño posterior del roadmap, no el
+siguiente trabajo mientras P0 siga bloqueado. Propone observar una wallet,
+reconstruir la cesta completa y cotizar si todavía es replicable antes de
+mostrar un ticket manual. El diseño congelado y sus reglas de seguridad están
+en `docs\PLAN_COPIADO_POR_RECONSTRUCCION_V001.md`; no activa órdenes ni dinero
+real.
 
 ## Monitor Elon post-count V0.01
 

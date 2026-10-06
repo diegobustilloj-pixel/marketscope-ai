@@ -162,7 +162,8 @@ Cuando adquisición y normalización produzcan un bundle completo:
 El comando reconstruye lotes FIFO, basis, PnL realizado/no realizado, flujos
 externos y balances. Compara el PnL por patrimonio y por basis, y después exige
 un reporte independiente. Salida `COMPLETE` con `basis_gate: BLOCKED` significa
-que el motor interno cerró pero falta el segundo pipeline; no es aprobación P0.
+que el motor interno cerró pero uno o más gates de evidencia siguen abiertos,
+incluido —sin limitarse a— el segundo pipeline; no es aprobación P0.
 Formato, fórmulas y bloqueos:
 `docs/architecture/POLYLEDGER_INVENTORY_BASIS_V1.md`.
 
@@ -202,7 +203,8 @@ diferencias. Quedaron 3.498 activos positivos: pUSD 61.808,822593; 2.870 tokens
 CTF con 1.632.690,661352 shares; y 627 tokens Combo con 516.179,139838 shares.
 Las shares agregadas no son dólares ni PnL. La conciliación acredita inventario
 final; el basis continúa bloqueado hasta cerrar los recibos omitidos y revisar
-la semántica económica de las transacciones.
+la semántica económica de las transacciones. Esta frase describe el hito de
+inventario previo al cierre posterior de recibos; no es el estado vigente.
 
 ## Cierre del gap y bundle histórico de basis
 
@@ -233,9 +235,29 @@ El bundle conservador se construye después, sin red:
   --output data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915
 ```
 
-Se mapearon 227.020 transacciones y se preservaron 24.051 como no resueltas:
+**Hito histórico inicial, ya superado:** en esa primera versión se mapearon
+227.020 transacciones y se preservaron 24.051 como no resueltas:
 23.119 contienen al menos un evento de contrato relevante aún ausente/ambiguo
 en el ABI, 815 son intercambios de saldo sin explicación suficiente y 117 son
 fills mixtos o multi-activo. El resultado correcto es `BUNDLE_REVIEW_REQUIRED`;
-no se debe ejecutar `inventory-basis` como informe final ni declarar basis/PnL
-hasta revisar esas operaciones.
+esa salida no se debe usar como informe final.
+
+## Estado vigente posterior al hito inicial — 2026-10-06
+
+El trabajo posterior produjo el bundle sellado
+`car_lifetime_basis_bundle_20260915_v5/`: 251.078 transacciones, 251.107
+acciones y cero transacciones sin resolver, con `BUNDLE_COMPLETE`. No se debe
+repetir el backfill ni reconstruir las versiones iniciales.
+
+`inventory-basis` terminó después en
+`car_lifetime_basis_result_20261006_v2/`, sin error de reconstrucción y con
+conciliación de cierre `MATCH`. El resultado sigue `BLOCKED`, ahora por
+evidencia económica: basis de recepciones, flujos externos, marcas de cierre y
+un cálculo independiente. El detalle vigente está en
+`POLYLEDGER_P0_RUN_20261006.md` y `POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md`.
+
+La sonda `car_lifetime_price_probe_20261006_v2/` y la auditoría
+`car_lifetime_price_candidate_audit_20261006_v2/` confirmaron cuatro
+candidatos temporales con mapeo oficial actual consistente, pero integraron
+cero marcas. La continuidad correcta es fijar la política de aceptación y
+crear evidencia nueva; no volver al estado `BUNDLE_REVIEW_REQUIRED` histórico.
