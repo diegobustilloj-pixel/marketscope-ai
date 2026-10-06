@@ -38,7 +38,7 @@ from .price_history_probe import (
 
 
 AUDIT_SCHEMA = 1
-AUDIT_VERSION = "polyledger-price-candidate-audit/1"
+AUDIT_VERSION = "polyledger-price-candidate-audit/2"
 CLOB_BASE = "https://clob.polymarket.com"
 GAMMA_BASE = "https://gamma-api.polymarket.com"
 MAX_CANDIDATES = 20
@@ -110,9 +110,11 @@ class OfficialCandidateMetadataClient:
         if host == "gamma-api.polymarket.com" and parsed.path == "/markets":
             query = parse_qs(parsed.query, keep_blank_values=True)
             values = query.get("condition_ids")
-            if (set(query) == {"condition_ids", "limit"} and values is not None and len(values) == 1
+            if (set(query) == {"condition_ids", "limit", "closed"}
+                    and values is not None and len(values) == 1
                     and is_condition_id(values[0])
-                    and query.get("limit") == ["10"]):
+                    and query.get("limit") == ["10"]
+                    and query.get("closed") in (["false"], ["true"])):
                 return
         raise EvidenceError("Candidate-audit request is outside official endpoint allowlist")
 
@@ -334,13 +336,13 @@ def _parse_parent_market(raw: bytes, token_id: str) -> dict:
     if primary == secondary:
         raise EvidenceError("markets-by-token response has a duplicate token pair")
     if token_id == primary:
-        role = "YES"
+        position = "PRIMARY"
     elif token_id == secondary:
-        role = "NO"
+        position = "SECONDARY"
     else:
         raise EvidenceError("markets-by-token response does not contain requested token")
     return {"condition_id": condition, "primary_token_id": primary,
-            "secondary_token_id": secondary, "expected_outcome": role}
+            "secondary_token_id": secondary, "requested_token_position": position}
 
 
 def _parse_clob_market(raw: bytes, *, token_id: str, parent: dict) -> dict:
@@ -358,11 +360,13 @@ def _parse_clob_market(raw: bytes, *, token_id: str, parent: dict) -> dict:
         if outcome in mapping:
             raise EvidenceError("clob-markets outcome mapping is ambiguous")
         mapping[outcome] = row["t"]
-    expected_mapping = {"YES": parent["primary_token_id"], "NO": parent["secondary_token_id"]}
-    if mapping != expected_mapping or mapping.get(parent["expected_outcome"]) != token_id:
+    if set(mapping) != {"YES", "NO"} or set(mapping.values()) != {
+            parent["primary_token_id"], parent["secondary_token_id"]}:
         raise EvidenceError("clob-markets token pair conflicts with markets-by-token")
-    return {"outcome": parent["expected_outcome"], "token_count": len(rows),
-            "token_pair": expected_mapping}
+    outcomes = [outcome for outcome, mapped_token in mapping.items() if mapped_token == token_id]
+    if len(outcomes) != 1:
+        raise EvidenceError("clob-markets does not label requested token exactly once")
+    return {"outcome": outcomes[0], "token_count": len(rows), "token_pair": mapping}
 
 
 def _string_json_list(value, *, label: str) -> list[str]:
@@ -376,11 +380,15 @@ def _string_json_list(value, *, label: str) -> list[str]:
     return value
 
 
-def _parse_gamma_market(raw: bytes, *, token_id: str, parent: dict) -> dict:
-    payload = _json_payload(raw, label="Gamma markets")
-    if not isinstance(payload, list):
-        raise EvidenceError("Gamma markets response is not a list")
-    matches = [row for row in payload if isinstance(row, dict)
+def _parse_gamma_market(raw_responses: list[bytes], *, token_id: str,
+                        parent: dict, clob: dict) -> dict:
+    rows = []
+    for raw in raw_responses:
+        payload = _json_payload(raw, label="Gamma markets")
+        if not isinstance(payload, list):
+            raise EvidenceError("Gamma markets response is not a list")
+        rows.extend(payload)
+    matches = [row for row in rows if isinstance(row, dict)
                and isinstance(row.get("conditionId"), str)
                and hex_bytes(row["conditionId"], 32) == parent["condition_id"]]
     if len(matches) != 1:
@@ -398,12 +406,15 @@ def _parse_gamma_market(raw: bytes, *, token_id: str, parent: dict) -> dict:
         if outcome in mapping:
             raise EvidenceError("Gamma outcome mapping is ambiguous")
         mapping[outcome] = token
-    expected_mapping = {"YES": parent["primary_token_id"], "NO": parent["secondary_token_id"]}
-    if mapping != expected_mapping or mapping.get(parent["expected_outcome"]) != token_id:
+    if set(mapping) != {"YES", "NO"} or set(mapping.values()) != {
+            parent["primary_token_id"], parent["secondary_token_id"]}:
         raise EvidenceError("Gamma token pair conflicts with CLOB parent market")
+    outcomes_for_token = [outcome for outcome, mapped_token in mapping.items() if mapped_token == token_id]
+    if len(outcomes_for_token) != 1 or outcomes_for_token[0] != clob["outcome"]:
+        raise EvidenceError("Gamma outcome conflicts with CLOB outcome label")
     fields = ("id", "question", "slug", "startDate", "endDate", "closedTime", "active", "closed",
               "negRisk", "resolutionSource")
-    return {"outcome": parent["expected_outcome"], "token_pair": expected_mapping,
+    return {"outcome": outcomes_for_token[0], "token_pair": mapping,
             "market": {field: row.get(field) for field in fields}}
 
 
@@ -491,8 +502,12 @@ def _request_url(kind: str, value: str) -> str:
         return CLOB_BASE + "/markets-by-token/" + value
     if kind == "clob":
         return CLOB_BASE + "/clob-markets/" + value
-    if kind == "gamma":
-        return GAMMA_BASE + "/markets?" + urlencode({"condition_ids": value, "limit": "10"})
+    if kind in {"gamma_open", "gamma_closed"}:
+        return GAMMA_BASE + "/markets?" + urlencode({
+            "condition_ids": value,
+            "limit": "10",
+            "closed": "true" if kind == "gamma_closed" else "false",
+        })
     raise EvidenceError("Unknown candidate-audit request kind")
 
 
@@ -542,14 +557,22 @@ def _candidate_review(candidate: dict, *, parent: dict | None, clob: dict | None
         if local.get("mapping_status") != "UNIQUE":
             local_status = "AUXILIARY_MAPPING_CONFLICT"
             blockers.append("LOCAL_METADATA_MAPPING_CONFLICT")
-        elif (parent is not None and local["condition_id"] == parent["condition_id"]
-                and local["outcome"].strip().upper() == parent["expected_outcome"]):
+        elif (parent is not None and clob is not None and local["condition_id"] == parent["condition_id"]
+                and local["outcome"].strip().upper() == clob["outcome"]):
             local_status = ("AUXILIARY_MAPPING_BEFORE_CUTOFF" if local["fetched_at_or_before_cutoff"]
                             else "AUXILIARY_MAPPING_AFTER_CUTOFF")
         else:
             local_status = "AUXILIARY_MAPPING_CONFLICT"
             blockers.append("LOCAL_METADATA_MAPPING_CONFLICT")
     market = gamma.get("market") if gamma else {}
+    parent_label_order = None
+    if parent is not None and clob is not None:
+        parent_label_order = (
+            "MATCHES_DOCUMENTED_YES_NO_ORDER"
+            if (parent["primary_token_id"] == clob["token_pair"]["YES"]
+                and parent["secondary_token_id"] == clob["token_pair"]["NO"])
+            else "LIVE_ORDER_DISAGREES_WITH_DOCUMENTED_YES_NO_ORDER"
+        )
     return {
         "sequence": candidate["sequence"], "asset": candidate["asset"], "token_id": candidate["token_id"],
         "price_candidate": candidate["observation"],
@@ -557,7 +580,9 @@ def _candidate_review(candidate: dict, *, parent: dict | None, clob: dict | None
         "current_identity": {
             "status": identity_status,
             "condition_id": parent.get("condition_id") if parent else None,
-            "outcome": parent.get("expected_outcome") if parent else None,
+            "outcome": clob.get("outcome") if clob else None,
+            "parent_requested_token_position": parent.get("requested_token_position") if parent else None,
+            "parent_primary_secondary_label_order": parent_label_order,
             "market": market,
             "current_declared_window_at_cutoff": _current_window_status(market, cutoff_timestamp) if gamma else None,
         },
@@ -595,8 +620,17 @@ def audit_price_candidates_file(probe: Path, output: Path, *, client: OfficialCa
         "official_sources": {
             "parent_by_token": CLOB_BASE + "/markets-by-token/{token_id}",
             "clob_market": CLOB_BASE + "/clob-markets/{condition_id}",
-            "gamma_market": GAMMA_BASE + "/markets?condition_ids={condition_id}&limit=10",
+            "gamma_open_market": (
+                GAMMA_BASE + "/markets?condition_ids={condition_id}&limit=10&closed=false"
+            ),
+            "gamma_closed_market": (
+                GAMMA_BASE + "/markets?condition_ids={condition_id}&limit=10&closed=true"
+            ),
         },
+        "parent_token_order_policy": (
+            "Treat primary/secondary as an unordered pair because live responses can disagree "
+            "with the documented Yes/No order; derive labels from CLOB and Gamma agreement"
+        ),
         "integration": "NONE; audit cannot write closing_marks or modify a basis bundle",
         "safety": SAFETY,
     })
@@ -630,16 +664,24 @@ def audit_price_candidates_file(probe: Path, output: Path, *, client: OfficialCa
                 ) if clob_raw else None
             except EvidenceError as exc:
                 clob, clob_request["parse_error"] = None, _error_text(exc)
-            gamma_request, gamma_raw = _capture_request(
-                partial, client, request_id=prefix + "_gamma", kind="gamma", value=parent["condition_id"]
+            gamma_open_request, gamma_open_raw = _capture_request(
+                partial, client, request_id=prefix + "_gamma_open",
+                kind="gamma_open", value=parent["condition_id"]
             )
-            requests.append(gamma_request)
-            try:
-                gamma = _parse_gamma_market(
-                    gamma_raw, token_id=candidate["token_id"], parent=parent
-                ) if gamma_raw else None
-            except EvidenceError as exc:
-                gamma, gamma_request["parse_error"] = None, _error_text(exc)
+            requests.append(gamma_open_request)
+            gamma_closed_request, gamma_closed_raw = _capture_request(
+                partial, client, request_id=prefix + "_gamma_closed",
+                kind="gamma_closed", value=parent["condition_id"]
+            )
+            requests.append(gamma_closed_request)
+            if clob is not None and gamma_open_raw is not None and gamma_closed_raw is not None:
+                try:
+                    gamma = _parse_gamma_market(
+                        [gamma_open_raw, gamma_closed_raw], token_id=candidate["token_id"],
+                        parent=parent, clob=clob,
+                    )
+                except EvidenceError as exc:
+                    gamma, gamma_closed_request["parse_error"] = None, _error_text(exc)
         reviews.append(_candidate_review(
             candidate, parent=parent, clob=clob, gamma=gamma,
             local=local_metadata["rows"].get(candidate["token_id"]),
@@ -668,6 +710,10 @@ def audit_price_candidates_file(probe: Path, output: Path, *, client: OfficialCa
             "not_eligible": len(reviews) - eligible,
             "auxiliary_local_mapping_before_cutoff": sum(
                 row["auxiliary_local_metadata"]["status"] == "AUXILIARY_MAPPING_BEFORE_CUTOFF" for row in reviews
+            ),
+            "parent_primary_secondary_label_order_disagreements": sum(
+                row["current_identity"]["parent_primary_secondary_label_order"]
+                == "LIVE_ORDER_DISAGREES_WITH_DOCUMENTED_YES_NO_ORDER" for row in reviews
             ),
         },
         "integration": {"closing_marks_written": 0, "basis_bundle_modified": False,
