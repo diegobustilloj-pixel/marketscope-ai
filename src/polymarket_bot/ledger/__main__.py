@@ -9,6 +9,7 @@ from .acquire import ReadOnlyRPC, capture_range
 from .blockscout_backfill import BlockscoutClient, backfill_wallet_blockscout
 from .deployments import verify_deployment
 from .common import EvidenceError, canonical
+from .evidence_gaps import build_basis_evidence_gap_file
 from .fixtures import sample_bundle
 from .history_backfill import backfill_wallet_history
 from .inventory_basis import build_inventory_basis_file
@@ -30,6 +31,16 @@ def _terminal_result(args, result: dict) -> dict:
     directory. Emitting its journal again can exceed a terminal's practical
     capacity and has no audit benefit, so the CLI returns a compact receipt.
     """
+    if args.command == "audit-basis-evidence":
+        return {
+            "status": result["status"],
+            "output": str(args.output.resolve()),
+            "actions": result["actions"],
+            "closing_marks": result["closing_marks"],
+            "independent_accounting": result["independent_accounting"],
+            "request_hashes": result["request_hashes"],
+            "safety": result["safety"],
+        }
     if args.command != "inventory-basis":
         return result
     return {
@@ -125,6 +136,12 @@ def main(argv=None):
     )
     basis.add_argument("--bundle", type=Path, required=True)
     basis.add_argument("--output", type=Path, required=True)
+    gap_audit = commands.add_parser(
+        "audit-basis-evidence",
+        help="Seal offline requests for missing basis values, marks and independent accounting",
+    )
+    gap_audit.add_argument("--bundle", type=Path, required=True)
+    gap_audit.add_argument("--output", type=Path, required=True)
     history = commands.add_parser(
         "backfill-wallet-history",
         help="Resume a lifetime public Polygon wallet capture; no basis or execution",
@@ -278,6 +295,8 @@ def main(argv=None):
             )
         elif args.command == "inventory-basis":
             result = build_inventory_basis_file(args.bundle, args.output)
+        elif args.command == "audit-basis-evidence":
+            result = build_basis_evidence_gap_file(args.bundle, args.output)
         elif args.command == "backfill-wallet-history":
             rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
             result = backfill_wallet_history(
