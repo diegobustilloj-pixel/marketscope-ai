@@ -17,6 +17,7 @@ from .lifetime_basis_bundle import build_lifetime_basis_bundle
 from .lifetime_inventory import build_lifetime_inventory_file
 from .lifetime_receipt_closure import close_lifetime_receipt_gap
 from .lifetime_crosscheck import crosscheck_lifetime_capture
+from .price_history_probe import OfficialPriceHistoryClient, build_price_history_probe_file
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
@@ -39,6 +40,17 @@ def _terminal_result(args, result: dict) -> dict:
             "closing_marks": result["closing_marks"],
             "independent_accounting": result["independent_accounting"],
             "request_hashes": result["request_hashes"],
+            "safety": result["safety"],
+        }
+    if args.command == "probe-price-history":
+        return {
+            "status": result["status"],
+            "output": str(args.output.resolve()),
+            "closing_block": result["closing_block"],
+            "sample": result["sample"],
+            "responses": result["responses"],
+            "integration": result["integration"],
+            "review_gate": result["review_gate"],
             "safety": result["safety"],
         }
     if args.command != "inventory-basis":
@@ -142,6 +154,23 @@ def main(argv=None):
     )
     gap_audit.add_argument("--bundle", type=Path, required=True)
     gap_audit.add_argument("--output", type=Path, required=True)
+    price_probe = commands.add_parser(
+        "probe-price-history",
+        help="Seal a <=20 CTF historical-price probe; no mark, PnL, or execution",
+    )
+    price_probe.add_argument("--bundle", type=Path, required=True)
+    price_probe.add_argument("--evidence-gaps", type=Path, required=True)
+    price_probe.add_argument("--output", type=Path, required=True)
+    price_probe.add_argument("--rpc-url", help="Primary public HTTPS Polygon RPC; no inline credentials")
+    price_probe.add_argument(
+        "--secondary-rpc-url", default="https://polygon.drpc.org",
+        help="Independent public HTTPS Polygon RPC used only to cross-check the closing block",
+    )
+    price_probe.add_argument("--sample-size", type=int, default=20)
+    price_probe.add_argument(
+        "--max-age-seconds", type=int, required=True,
+        help="Explicit freshness bound used only to classify candidate observations",
+    )
     history = commands.add_parser(
         "backfill-wallet-history",
         help="Resume a lifetime public Polygon wallet capture; no basis or execution",
@@ -297,6 +326,15 @@ def main(argv=None):
             result = build_inventory_basis_file(args.bundle, args.output)
         elif args.command == "audit-basis-evidence":
             result = build_basis_evidence_gap_file(args.bundle, args.output)
+        elif args.command == "probe-price-history":
+            primary_rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
+            secondary_rpc = ReadOnlyRPC(url=args.secondary_rpc_url)
+            result = build_price_history_probe_file(
+                args.bundle, args.evidence_gaps, args.output,
+                rpc=primary_rpc, secondary_rpc=secondary_rpc,
+                client=OfficialPriceHistoryClient(), sample_size=args.sample_size,
+                max_age_seconds=args.max_age_seconds,
+            )
         elif args.command == "backfill-wallet-history":
             rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
             result = backfill_wallet_history(
@@ -376,7 +414,7 @@ def main(argv=None):
         if args.command in {"capture-wallet-24h", "value-wallet-24h", "backfill-wallet-history",
                             "backfill-wallet-blockscout", "crosscheck-lifetime-wallet",
                             "recalculate-lifetime-inventory", "close-lifetime-receipt-gap",
-                            "build-lifetime-basis-bundle"}:
+                            "build-lifetime-basis-bundle", "probe-price-history"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
