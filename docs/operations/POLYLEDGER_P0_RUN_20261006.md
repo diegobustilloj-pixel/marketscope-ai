@@ -40,3 +40,12 @@ La corrida terminó y se selló correctamente, pero el gate de basis permanece
 Por tanto, no hay PnL final aprobado ni permiso de copiar operaciones. El
 siguiente trabajo es completar esa evidencia y producir un cálculo contable
 independiente contra el mismo contrato de entrada.
+
+## Sonda posterior de fuente de precios
+
+Después de esta corrida se ejecutó una sonda local, separada y sellada de 20
+outcomes CTF contra el historial puntual oficial. Dos RPC de Polygon fijaron
+el mismo bloque de cierre; hubo 4 candidatos dentro de la ventana explícita de
+una hora y 16 antiguos. No se escribió ninguna marca ni se alteró este bundle
+ni su resultado. Consulte `POLYLEDGER_P0_PRICE_PROBE_20261006.md` para los
+hashes, el corte temporal y los límites de esa evidencia candidata.

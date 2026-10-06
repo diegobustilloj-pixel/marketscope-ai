@@ -7,7 +7,7 @@ Esta guía está pensada para la siguiente persona o agente que trabaje en la pl
 1. `PROJECT_STATE.md` — panorama, decisiones y evidencia disponible.
 2. `git status --short` y `git log --oneline -12` — identificar cambios no consolidados y el punto real de partida.
 3. `docs/architecture/PROJECT_ORGANIZATION.md` y `docs/operations/DATA_POLICY.md` — límites de estructura y datos.
-4. El documento del dominio que se vaya a tocar. Para el trabajo actual: los tres documentos PolyLedger enlazados en `PROJECT_STATE.md`.
+4. El documento del dominio que se vaya a tocar. Para el trabajo actual: los documentos PolyLedger enlazados en `PROJECT_STATE.md`, incluida la sonda de precio si se retoman marcas históricas.
 
 Si falta una fuente, un run ID o un hash, declararlo como ausencia de evidencia; no rellenarlo con una suposición.
 
@@ -36,11 +36,11 @@ traza de desarrollo. Toca:
 
 El cambio introduce un índice FIFO por wallet/activo y conserva una cadena de `lineage_lot_ids` en lugar de expandir toda la procedencia ancestral en cada lote descendiente. También evita copiar el bundle al validarlo/hashearlo, usa un diario contable compacto enlazado por hash al input sellado, no duplica el bundle de 200+ MB en `configuration.json` y serializa resultados por streaming. Busca reducir coste temporal y memoria sin cambiar el resultado contable.
 
-Las 106 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. La corrida completa v2 se selló sin error de reconstrucción y con conciliación `MATCH`. El próximo trabajo ya no es validar escala:
+Las 112 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. La corrida completa v2 se selló sin error de reconstrucción y con conciliación `MATCH`. El próximo trabajo ya no es validar escala:
 
 1. conservar la salida v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
-2. usar la cola local sellada `car_lifetime_basis_evidence_gaps_20261006_v1` y el plan de fuentes oficiales para realizar una sonda acotada de precios antes de cualquier captura masiva;
-3. generar un cálculo independiente antes de reevaluar el gate. Nunca sobrescribir ni borrar los `.partial` existentes.
+2. conservar la sonda local `car_lifetime_price_probe_20261006_v2`: verificó la cola, ancló el cierre con dos RPC y produjo 4 candidatos frescos / 16 antiguos de 20 CTF, sin escribir marcas; leer `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md` antes de cualquier ampliación;
+3. revisar la semántica y procedencia de esas marcas candidatas, completar 856 flujos externos y generar un cálculo independiente antes de reevaluar el gate. Nunca sobrescribir ni borrar los `.partial` existentes.
 
 No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batch` y los snapshots pueden copiar estructuras amplias. Si el problema persiste, perfilar primero y cambiar una sola fuente de duplicación por vez, manteniendo un replay determinista y la trazabilidad de cada lote.
 

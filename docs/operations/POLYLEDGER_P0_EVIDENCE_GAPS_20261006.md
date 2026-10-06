@@ -52,7 +52,9 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
    valor atómico y explicación de la metodología.
 2. Capturar o respaldar marcas de los 3.498 activos al bloque de cierre
    `93.762.690`; cada marca debe ser un `Decimal` exacto, con fuente y corte
-   comprobables. No inferir la marca actual para el corte histórico.
+   comprobables. No inferir la marca actual para el corte histórico. La sonda
+   de 20 CTF ya existe como prueba de transporte y temporalidad, pero sus
+   cuatro candidatos frescos no se han integrado ni reducen este conteo.
 3. Recompilar un bundle nuevo con esa evidencia, sin cambiar ni sobrescribir el
    v5, y repetir `inventory-basis` en otro directorio nuevo.
 4. Construir un segundo cálculo con implementación y procedencia separadas que
@@ -64,7 +66,9 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
 
 - Bundle: `data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/`
 - Resultado sellado: `data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2/`
+- Sonda de precios sellada: `data/polyledger-sentinel/p0/car_lifetime_price_probe_20261006_v2/`
 - Registro de corrida: `docs/operations/POLYLEDGER_P0_RUN_20261006.md`
+- Registro de sonda: `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md`
 
 Los dos primeros se conservan solo localmente. Este diagnóstico puede
 versionarse porque contiene únicamente conteos, hashes y reglas de continuidad.

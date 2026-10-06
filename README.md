@@ -61,7 +61,10 @@ inventar valores ni duplicar el bundle. La guía actual de continuidad es
 [`PROJECT_STATE.md`](PROJECT_STATE.md); el resultado, sus brechas y el plan de
 fuentes se documentan en `docs/operations/POLYLEDGER_P0_RUN_20261006.md`,
 `POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md` y
-`POLYLEDGER_P0_OFFICIAL_SOURCE_PLAN_20261006.md`.
+`POLYLEDGER_P0_OFFICIAL_SOURCE_PLAN_20261006.md`. La sonda local de 20
+outcomes CTF confirmó transporte y ancla temporal, pero dejó el gate bloqueado:
+hay cuatro candidatos frescos sin integrar, dieciséis antiguos y ninguna marca
+ni PnL nuevos. Véase `POLYLEDGER_P0_PRICE_PROBE_20261006.md`.
 
 El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes
 automáticas ni dinero real habilitados.
