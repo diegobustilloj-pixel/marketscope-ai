@@ -61,6 +61,8 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 
 **Inventario de brechas:** `docs/operations/POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md` fija los conteos y el orden de resolución. La cola sellada local `car_lifetime_basis_evidence_gaps_20261006_v1` referencia por hash las 856 acciones de flujo y 3.498 marcas pendientes, sin duplicar el bundle ni publicar datos. No se debe volver a descargar ni repetir el bundle v5 antes de cambiar la evidencia de entrada.
 
+**Plan de fuentes:** `docs/operations/POLYLEDGER_P0_OFFICIAL_SOURCE_PLAN_20261006.md` separa el uso posible de historial de precios, snapshot contable y segundo pipeline. Antes de una captura masiva se exige una sonda acotada y un manifiesto de fuente/frescura; ningún endpoint se interpreta como basis o PnL por sí solo.
+
 Lecturas obligatorias:
 
 - `docs/architecture/POLYLEDGER_P0.md`

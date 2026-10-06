@@ -39,7 +39,7 @@ El cambio introduce un índice FIFO por wallet/activo y conserva una cadena de `
 Las 106 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. La corrida completa v2 se selló sin error de reconstrucción y con conciliación `MATCH`. El próximo trabajo ya no es validar escala:
 
 1. conservar la salida v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
-2. usar la cola local sellada `car_lifetime_basis_evidence_gaps_20261006_v1` para recopilar las pruebas que faltan para los flujos externos y las marcas;
+2. usar la cola local sellada `car_lifetime_basis_evidence_gaps_20261006_v1` y el plan de fuentes oficiales para realizar una sonda acotada de precios antes de cualquier captura masiva;
 3. generar un cálculo independiente antes de reevaluar el gate. Nunca sobrescribir ni borrar los `.partial` existentes.
 
 No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batch` y los snapshots pueden copiar estructuras amplias. Si el problema persiste, perfilar primero y cambiar una sola fuente de duplicación por vez, manteniendo un replay determinista y la trazabilidad de cada lote.
