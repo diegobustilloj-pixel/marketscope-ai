@@ -16,7 +16,7 @@ from decimal import Decimal, localcontext
 from pathlib import Path
 
 from . import SAFETY, VERSION
-from .common import EvidenceError, address, canonical, digest, hex_bytes, now_utc, uint
+from .common import EvidenceError, address, digest, hex_bytes, now_utc, uint, validate_exact
 from .lots import LotLedger, POLICY
 
 ENGINE_SCHEMA = 1
@@ -84,10 +84,17 @@ def _inventory(snapshot: dict, wallet: str, marks: dict[str, str]) -> list[dict]
         asset = lot["asset"]
         row = grouped.setdefault(asset, {"asset": asset, "quantity_atomic": 0,
                                          "basis_atomic": 0, "basis_complete": True,
-                                         "lot_count": 0, "provenance": set()})
+                                         "lot_count": 0, "provenance_count": 0,
+                                         "_provenance_hasher": hashlib.sha256()})
         row["quantity_atomic"] += uint(lot["remaining"])
         row["lot_count"] += 1
-        row["provenance"].update(lot["provenance"])
+        # The sealed bundle and compact journal provide the source action IDs.
+        # Commit to the ordered direct evidence here instead of retaining a
+        # second global set/list of all raw IDs for the final report.
+        for raw_id in lot["provenance"]:
+            row["_provenance_hasher"].update(raw_id.encode("utf-8"))
+            row["_provenance_hasher"].update(b"\0")
+            row["provenance_count"] += 1
         if lot["remaining_cost"] is None:
             row["basis_complete"] = False
             row["basis_atomic"] = None
@@ -98,12 +105,15 @@ def _inventory(snapshot: dict, wallet: str, marks: dict[str, str]) -> list[dict]
         context.prec = 160
         for asset in sorted(grouped):
             row = grouped[asset]
+            provenance_hash = row.pop("_provenance_hasher").hexdigest()
             quantity = Decimal(row["quantity_atomic"])
             basis = None if row["basis_atomic"] is None else Decimal(row["basis_atomic"])
             mark = _decimal(marks[asset]) if asset in marks else None
             value = None if mark is None else quantity * mark
             pnl = None if value is None or basis is None else value - basis
-            result.append({**row, "provenance": sorted(row["provenance"]),
+            result.append({**row, "provenance_commitment": {
+                               "algorithm": "sha256-ordered-direct-provenance-v1",
+                               "count": row["provenance_count"], "hash": provenance_hash},
                            "average_basis_quote_atoms_per_token_atom":
                                None if basis is None else _decimal_text(basis / quantity),
                            "mark_quote_atoms_per_token_atom": None if mark is None else _decimal_text(mark),
@@ -181,7 +191,7 @@ def _independent_comparison(report: dict | None, expected: dict) -> dict:
 
 def build_inventory_basis(bundle: dict) -> dict:
     """Reconstruct exact FIFO basis and period PnL from one sealed action bundle."""
-    canonical(bundle)
+    validate_exact(bundle)
     if uint(bundle.get("schema")) != ENGINE_SCHEMA:
         raise EvidenceError("Unsupported inventory/basis bundle schema")
     chain, wallet = uint(bundle["chain"]), address(bundle["wallet"])
@@ -313,15 +323,17 @@ def build_inventory_basis(bundle: dict) -> dict:
         blockers.append("EXTERNAL_TOKEN_FLOW_VALUE_MISSING")
 
     ledger = LotLedger({"evidence": opening["evidence"], "quote_asset": quote_asset,
-                        "cash": opening_cash, "lots": opening_lots})
-    opening_snapshot = ledger.snapshot(opening_marks)
+                        "cash": opening_cash, "lots": opening_lots}, journal_mode="compact")
+    opening_snapshot = ledger.snapshot(opening_marks, copy_safe=False)
     action_error = None
     try:
         ledger.apply_batch(actions)
     except EvidenceError as exc:
         action_error = str(exc)
         blockers.append("LOT_RECONSTRUCTION_FAILURE")
-    closing_snapshot = ledger.snapshot(closing_marks)
+    # The ledger is no longer mutated after the replay, so this view is safe
+    # and avoids an additional full copy of all lots and journal rows.
+    closing_snapshot = ledger.snapshot(closing_marks, copy_safe=False)
     opening_inventory = _inventory(opening_snapshot, wallet, opening_marks)
     closing_inventory = _inventory(closing_snapshot, wallet, closing_marks)
     opening_equity, opening_missing_marks = _equity(
@@ -482,9 +494,13 @@ def _sha256(path: Path) -> str:
 
 
 def _write_new(path: Path, value) -> None:
-    content = canonical(value) + "\n"
+    validate_exact(value)
+    encoder = json.JSONEncoder(sort_keys=True, separators=(",", ":"),
+                               ensure_ascii=False, allow_nan=False)
     with path.open("x", encoding="utf-8") as target:
-        target.write(content)
+        for chunk in encoder.iterencode(value):
+            target.write(chunk)
+        target.write("\n")
         target.flush()
         os.fsync(target.fileno())
 
@@ -495,10 +511,22 @@ def build_inventory_basis_file(bundle_path: Path, output: Path) -> dict:
     partial = output.with_name(output.name + ".partial")
     if output.exists() or partial.exists():
         raise EvidenceError("Inventory/basis output or partial directory already exists")
+    input_sha256 = _sha256(bundle_path)
     bundle = json.loads(bundle_path.read_text(encoding="utf-8"))
     partial.mkdir(parents=True)
     report = build_inventory_basis(bundle)
-    _write_new(partial / "configuration.json", bundle)
+    # Keep a sealed reference to the immutable input rather than writing a
+    # second 200+ MB copy of its actions into every result directory.
+    _write_new(partial / "configuration.json", {
+        "schema": ENGINE_SCHEMA,
+        "engine": ENGINE_VERSION,
+        "input_path": str(bundle_path),
+        "input_sha256": input_sha256,
+        "input_digest": digest(bundle),
+        "input_action_count": len(bundle.get("actions", [])),
+        "serialization": "sealed-input-reference-v1",
+        "safety": SAFETY,
+    })
     _write_new(partial / "summary.json", report)
     project = Path(__file__).resolve().parents[3]
     try:
@@ -511,7 +539,7 @@ def build_inventory_basis_file(bundle_path: Path, output: Path) -> dict:
     manifest = {"schema": ENGINE_SCHEMA, "engine": ENGINE_VERSION,
                 "completed_at": now_utc(), "code_commit": commit,
                 "working_tree_clean": clean, "input_path": str(bundle_path),
-                "input_sha256": _sha256(bundle_path), "files": files,
+                "input_sha256": input_sha256, "files": files,
                 "summary_hash": digest(report), "basis_gate": report["basis_gate"],
                 "safety": SAFETY}
     _write_new(partial / "run_manifest.json", manifest)

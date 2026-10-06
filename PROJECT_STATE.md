@@ -1,6 +1,6 @@
 # Estado canónico — Plataforma cuantitativa Polymarket
 
-**Corte de contexto:** 5 de octubre de 2026 (America/La_Paz)
+**Corte de contexto:** 6 de octubre de 2026 (America/La_Paz)
 **Raíz canónica:** `C:\ProyectoBotV4\polymarket_quant_bot`
 **Regla de seguridad vigente:** no hay firma, conexión de wallet, retiros, dinero real ni órdenes automáticas habilitados.
 
@@ -53,9 +53,9 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 
 **Bloqueo actual:** el motor `inventory-basis` no debe presentarse como completado. Las salidas `car_lifetime_basis_result_20260915_v1.partial` y `car_lifetime_basis_result_20260918_v1.partial` documentan que la ejecución se detuvo por memoria durante la reconstrucción de lotes. No se deben borrar ni renombrar como resultados finales.
 
-**Trabajo WIP preservado:** la optimización de memoria se conserva en la rama `wip/ledger-basis-memory`, separada de `main`. Indexa las colas FIFO por `(wallet, asset)`, sustituye la copia creciente de ancestros por vínculos de lotes y permite `snapshot(copy_safe=False)` para una corrida única. Pasaron 10 pruebas focales de lotes y 102 pruebas del grupo `test_ledger*` el 5 de octubre de 2026; falta perfilar una muestra histórica representativa y confirmar el uso de memoria de punta antes de tratarla como solución definitiva.
+**Trabajo WIP preservado:** la optimización de memoria se conserva en la rama `wip/ledger-basis-memory`, separada de `main`. Indexa las colas FIFO por `(wallet, asset)`, sustituye la copia creciente de ancestros por vínculos de lotes, usa un diario compacto ligado por hash al bundle sellado, serializa y calcula hashes por streaming y permite `snapshot(copy_safe=False)` para una corrida única. El 6 de octubre pasaron 104 pruebas `test_ledger*`; una muestra real de 10.000 acciones produjo el mismo estado económico entre diario completo y compacto. En perfiles reales, cargar el bundle ocupó ~526 MB privados; el replay de 50.000 acciones llegó a ~588 MB y el de 100.000 a ~648 MB, sin duplicación material al generar la instantánea. Es evidencia favorable de escala, no un resultado final de basis.
 
-**Siguiente decisión técnica:** primero validar la semántica y memoria del cambio WIP; después ejecutar una corrida nueva con salida nueva. Solo si la corrida completa y un cálculo independiente concilian, el gate podrá avanzar de `BLOCKED`; eso no autoriza capital ni copia automática.
+**Siguiente decisión técnica:** consolidar este WIP, ejecutar una corrida completa con salida nueva y verificar sus hashes, balances y cálculo independiente. Solo si la corrida completa y un cálculo independiente concilian, el gate podrá avanzar de `BLOCKED`; eso no autoriza capital ni copia automática.
 
 Lecturas obligatorias:
 

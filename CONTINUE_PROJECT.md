@@ -26,12 +26,15 @@ La prioridad es terminar de forma verificable el cálculo de inventario y basis 
 
 La optimización se preserva en la rama `wip/ledger-basis-memory` y toca:
 
+- `src/polymarket_bot/ledger/common.py`
+- `src/polymarket_bot/ledger/inventory_basis.py`
 - `src/polymarket_bot/ledger/lots.py`
+- `tests/test_ledger_inventory_basis.py`
 - `tests/test_ledger_lots.py`
 
-El cambio introduce un índice FIFO por wallet/activo y conserva una cadena de `lineage_lot_ids` en lugar de expandir toda la procedencia ancestral en cada lote descendiente. Busca reducir coste temporal y memoria sin cambiar el resultado contable.
+El cambio introduce un índice FIFO por wallet/activo y conserva una cadena de `lineage_lot_ids` en lugar de expandir toda la procedencia ancestral en cada lote descendiente. También evita copiar el bundle al validarlo/hashearlo, usa un diario contable compacto enlazado por hash al input sellado, no duplica el bundle de 200+ MB en `configuration.json` y serializa resultados por streaming. Busca reducir coste temporal y memoria sin cambiar el resultado contable.
 
-Las 10 pruebas focales de lotes y las 102 pruebas `test_ledger*` pasaron el 5 de octubre de 2026. Antes de usarlo con la evidencia histórica:
+Las 104 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. Antes de usarlo con la evidencia histórica:
 
 1. revisar el diff y ejecutar las pruebas focales de lotes;
 2. ejecutar la suite pertinente completa;

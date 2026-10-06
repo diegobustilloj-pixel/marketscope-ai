@@ -12,15 +12,35 @@ class EvidenceError(PolyLedgerError):
     """Missing, contradictory or unsupported evidence; never substitute zero."""
 
 
-def exact(value: Any) -> Any:
+def validate_exact(value: Any) -> None:
+    """Reject values that cannot safely represent deterministic evidence.
+
+    Validation intentionally does not copy the supplied object graph.  Large
+    sealed evidence bundles can contain hundreds of thousands of actions, and
+    copying them merely to reject floats or non-string JSON keys doubles peak
+    memory without adding audit value.
+    """
     if isinstance(value, float):
         raise EvidenceError("float is not an accounting or evidence value")
     if isinstance(value, dict):
         if any(not isinstance(k, str) for k in value):
             raise EvidenceError("JSON keys must be strings")
-        return {k: exact(v) for k, v in value.items()}
+        for nested in value.values():
+            validate_exact(nested)
+        return
     if isinstance(value, (list, tuple)):
-        return [exact(v) for v in value]
+        for nested in value:
+            validate_exact(nested)
+
+
+def exact(value: Any) -> Any:
+    """Backward-compatible validator for exact JSON-compatible evidence.
+
+    ``json.dumps`` already serializes tuples as JSON lists, so returning the
+    original validated graph preserves canonical bytes while avoiding a second
+    in-memory copy of large evidence structures.
+    """
+    validate_exact(value)
     return value
 
 
@@ -30,7 +50,14 @@ def canonical(value: Any) -> str:
 
 
 def digest(value: Any) -> str:
-    return hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()
+    """Hash canonical JSON without materializing a second full JSON string."""
+    validate_exact(value)
+    encoder = json.JSONEncoder(sort_keys=True, separators=(",", ":"),
+                               ensure_ascii=False, allow_nan=False)
+    result = hashlib.sha256()
+    for chunk in encoder.iterencode(value):
+        result.update(chunk.encode("utf-8"))
+    return result.hexdigest()
 
 
 def uint(value: Any) -> int:

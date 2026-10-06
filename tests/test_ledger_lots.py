@@ -1,6 +1,6 @@
 import pytest
 
-from polymarket_bot.ledger.common import EvidenceError
+from polymarket_bot.ledger.common import EvidenceError, digest
 from polymarket_bot.ledger.lots import LotLedger
 from test_ledger_decoders import A, B
 
@@ -155,3 +155,36 @@ def test_indexed_fifo_rolls_back_partial_consumption_in_failed_batch():
             action(5, "sell", inputs=[leg(Y, 3)], cash=10),
         ])
     assert ledger.snapshot() == before
+
+
+def test_compact_journal_keeps_accounting_link_without_copying_full_action():
+    purchase = action(1, "buy", outputs=[leg(X, 3)], cash=-9)
+    sale = action(2, "sell", inputs=[leg(X, 2)], cash=8)
+    ledger = LotLedger(opening(), journal_mode="compact")
+    ledger.apply_batch([purchase, sale])
+    row = ledger.snapshot(copy_safe=False)["journal"][-1]
+    assert row["id"] == sale["id"]
+    assert row["action_hash"] == digest(sale)
+    assert row["kind"] == "sell"
+    assert row["consumed_lots"] == [{"lot_id": "1:0", "quantity": 2, "cost": 6}]
+    assert row["realized_pnl"] == 2
+    assert "inputs" not in row and "outputs" not in row and "raw_ids" not in row
+
+
+def test_compact_journal_preserves_economic_ledger_state():
+    actions = [
+        action(1, "buy", outputs=[leg(X, 5)], cash=-15),
+        action(2, "sell", inputs=[leg(X, 2)], cash=8),
+        action(3, "convert", inputs=[leg(X, 3)], outputs=[leg(Y, 3)], cash=0),
+    ]
+    full = LotLedger(opening(), journal_mode="full")
+    compact = LotLedger(opening(), journal_mode="compact")
+    full.apply_batch(actions)
+    compact.apply_batch(actions)
+    fields = ("balances", "cash", "lots", "known_realized_pnl",
+              "unknown_realizations", "unrealized_pnl", "complete_basis")
+    full_snapshot = full.snapshot(copy_safe=False)
+    compact_snapshot = compact.snapshot(copy_safe=False)
+    assert {field: full_snapshot[field] for field in fields} == {
+        field: compact_snapshot[field] for field in fields
+    }

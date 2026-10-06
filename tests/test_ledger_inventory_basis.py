@@ -1,9 +1,10 @@
+import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
-from polymarket_bot.ledger.common import EvidenceError, canonical
+from polymarket_bot.ledger.common import EvidenceError, canonical, digest
 from polymarket_bot.ledger.inventory_basis import (
     build_inventory_basis,
     build_inventory_basis_file,
@@ -106,6 +107,9 @@ def test_complete_inventory_basis_and_internal_pnl_identity():
     assert inventory[NO]["quantity_atomic"] == 35
     assert inventory[NO]["basis_atomic"] == 18
     assert result["reconciliation"]["status"] == "MATCH"
+    commitment = inventory[YES]["provenance_commitment"]
+    assert commitment["algorithm"] == "sha256-ordered-direct-provenance-v1"
+    assert commitment["count"] == 1
 
 
 def test_independent_report_must_match_exact_contract():
@@ -202,7 +206,16 @@ def test_inventory_basis_file_is_sealed_and_never_overwritten(tmp_path: Path):
     result = build_inventory_basis_file(source, output)
     assert result["basis_gate"]["status"] == "PASS"
     manifest = json.loads((output / "run_manifest.json").read_text(encoding="utf-8"))
+    configuration = json.loads((output / "configuration.json").read_text(encoding="utf-8"))
     assert manifest["summary_hash"]
     assert manifest["files"]["summary.json"]
+    assert configuration["serialization"] == "sealed-input-reference-v1"
+    assert configuration["input_action_count"] == len(value["actions"])
+    assert "actions" not in configuration
     with pytest.raises(EvidenceError, match="already exists"):
         build_inventory_basis_file(source, output)
+
+
+def test_streaming_digest_matches_canonical_sha256():
+    value = {"z": [1, {"alpha": "ñ"}], "a": ("x", 2)}
+    assert digest(value) == hashlib.sha256(canonical(value).encode("utf-8")).hexdigest()

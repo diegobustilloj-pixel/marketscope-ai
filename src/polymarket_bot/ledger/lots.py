@@ -3,7 +3,7 @@ from __future__ import annotations
 import copy
 from decimal import Decimal, localcontext
 
-from .common import EvidenceError, address, canonical, digest, uint
+from .common import EvidenceError, address, digest, uint, validate_exact
 
 POLICY = "fifo-atomic-proportional-remainder-v1"
 KINDS = {"buy", "sell", "split", "merge", "convert", "redeem", "wrap", "unwrap",
@@ -32,11 +32,13 @@ class LotLedger:
     not a market-value estimate or tax treatment.
     """
 
-    def __init__(self, opening: dict):
+    def __init__(self, opening: dict, *, journal_mode: str = "full"):
         self.opening = copy.deepcopy(opening)
-        canonical(opening)
+        validate_exact(opening)
         if not opening.get("evidence") or not opening.get("quote_asset"):
             raise EvidenceError("Opening snapshot must identify quote asset and evidence")
+        if journal_mode not in {"full", "compact"}:
+            raise EvidenceError("Journal mode must be full or compact")
         self.lots = []
         # ``lots`` remains the canonical, globally ordered audit record. The
         # companion index only avoids repeatedly scanning unrelated historical
@@ -45,6 +47,7 @@ class LotLedger:
         self._fifo_cursor = {}
         self.cash = {address(w): uint(v) for w, v in opening.get("cash", {}).items()}
         self.realized = {}
+        self.journal_mode = journal_mode
         self.journal = []
         self.seen = {}
         self.last_order = None
@@ -109,10 +112,11 @@ class LotLedger:
         self.__dict__ = candidate.__dict__
 
     def _apply(self, action):
-        canonical(action)
+        validate_exact(action)
         key = action["id"]
+        action_hash = digest(action)
         if key in self.seen:
-            if self.seen[key] != digest(action):
+            if self.seen[key] != action_hash:
                 raise EvidenceError("Conflicting economic action identity")
             return
         order = tuple(uint(x) for x in action["order"])
@@ -202,10 +206,30 @@ class LotLedger:
             self.unknown_realizations.append(key)
         else:
             self.realized[wallet] = self.realized.get(wallet, 0) + pnl
-        self.journal.append({**copy.deepcopy(action), "consumed_lots": consumed,
-                             "realized_pnl": pnl, "basis_policy": POLICY})
+        if self.journal_mode == "full":
+            journal_entry = {**copy.deepcopy(action), "consumed_lots": consumed,
+                             "realized_pnl": pnl, "basis_policy": POLICY}
+        else:
+            # The sealed input retains the complete action payload.  The
+            # compact journal keeps its deterministic ID/hash link plus every
+            # field used by the accounting and transfer-accrual checks, without
+            # duplicating inputs, outputs and raw evidence hundreds of
+            # thousands of times in memory and in the result file.
+            journal_entry = {
+                "id": key,
+                "order": list(order),
+                "kind": kind,
+                "wallet": wallet,
+                "action_hash": action_hash,
+                "consumed_lots": consumed,
+                "realized_pnl": pnl,
+                "basis_policy": POLICY,
+            }
+            if kind == "transfer":
+                journal_entry["external_flow_value"] = action.get("external_flow_value")
+        self.journal.append(journal_entry)
         self.last_order = order
-        self.seen[key] = digest(action)
+        self.seen[key] = action_hash
 
     def snapshot(self, marks: dict[str, str] | None = None, *, copy_safe: bool = True) -> dict:
         """Return a deterministic ledger snapshot.
