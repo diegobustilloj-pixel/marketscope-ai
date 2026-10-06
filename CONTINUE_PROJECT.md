@@ -23,9 +23,10 @@ La prioridad es terminar de forma verificable el cálculo de inventario y basis 
 - Dos resultados de inventory-basis se conservan como `.partial` porque el proceso agotó memoria. Son evidencia de bloqueo, no basura temporal.
 - La corrida v2 ya existe localmente en `data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2`. Su manifiesto, hashes y archivo de configuración fueron verificados; la reconstrucción no tuvo error y la conciliación de cierre dio `MATCH`. El resultado sigue `BLOCKED` por evidencia de basis/PnL, no por un error de ejecución.
 
-### Cambio WIP que debe tratarse con cuidado
+### Cambio integrado y validado
 
-La optimización se preserva en la rama `wip/ledger-basis-memory` y toca:
+La optimización ya está en `main`; `wip/ledger-basis-memory` permanece como
+traza de desarrollo. Toca:
 
 - `src/polymarket_bot/ledger/common.py`
 - `src/polymarket_bot/ledger/inventory_basis.py`
@@ -35,25 +36,21 @@ La optimización se preserva en la rama `wip/ledger-basis-memory` y toca:
 
 El cambio introduce un índice FIFO por wallet/activo y conserva una cadena de `lineage_lot_ids` en lugar de expandir toda la procedencia ancestral en cada lote descendiente. También evita copiar el bundle al validarlo/hashearlo, usa un diario contable compacto enlazado por hash al input sellado, no duplica el bundle de 200+ MB en `configuration.json` y serializa resultados por streaming. Busca reducir coste temporal y memoria sin cambiar el resultado contable.
 
-Las 104 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. Antes de usarlo con la evidencia histórica:
+Las 106 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. La corrida completa v2 se selló sin error de reconstrucción y con conciliación `MATCH`. El próximo trabajo ya no es validar escala:
 
-1. revisar el diff y ejecutar las pruebas focales de lotes;
-2. ejecutar la suite pertinente completa;
-3. medir memoria y consistencia frente a una muestra pequeña previamente sellada;
-4. guardar el cambio en una rama `wip/` separada, con un mensaje que diga claramente que aún requiere validación de escala;
-5. conservar la salida v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
-6. recopilar las pruebas que faltan para los flujos externos y las marcas, y generar un cálculo independiente antes de reevaluar el gate. Nunca sobrescribir ni borrar los `.partial` existentes.
+1. conservar la salida v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
+2. recopilar las pruebas que faltan para los flujos externos y las marcas;
+3. generar un cálculo independiente antes de reevaluar el gate. Nunca sobrescribir ni borrar los `.partial` existentes.
 
 No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batch` y los snapshots pueden copiar estructuras amplias. Si el problema persiste, perfilar primero y cambiar una sola fuente de duplicación por vez, manteniendo un replay determinista y la trazabilidad de cada lote.
 
 ## Secuencia técnica recomendada
 
 ```text
-validar cambio WIP
-    → perfilar una muestra representativa
-    → correr inventory-basis en una salida nueva
+resultado v2 sellado y conciliado
+    → completar flujos externos y marcas de cierre con evidencia
+    → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente
-    → documentar el resultado sellado
     → decidir si P0 sigue BLOCKED o avanza
 ```
 
