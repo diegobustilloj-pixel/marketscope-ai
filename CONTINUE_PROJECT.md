@@ -24,14 +24,14 @@ La prioridad es terminar de forma verificable el cálculo de inventario y basis 
 
 ### Cambio WIP que debe tratarse con cuidado
 
-Al inicio de este relevo hay modificaciones locales sin consolidar en:
+La optimización se preserva en la rama `wip/ledger-basis-memory` y toca:
 
 - `src/polymarket_bot/ledger/lots.py`
 - `tests/test_ledger_lots.py`
 
 El cambio introduce un índice FIFO por wallet/activo y conserva una cadena de `lineage_lot_ids` en lugar de expandir toda la procedencia ancestral en cada lote descendiente. Busca reducir coste temporal y memoria sin cambiar el resultado contable.
 
-Antes de usarlo con la evidencia histórica:
+Las 10 pruebas focales de lotes y las 102 pruebas `test_ledger*` pasaron el 5 de octubre de 2026. Antes de usarlo con la evidencia histórica:
 
 1. revisar el diff y ejecutar las pruebas focales de lotes;
 2. ejecutar la suite pertinente completa;

@@ -53,7 +53,7 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 
 **Bloqueo actual:** el motor `inventory-basis` no debe presentarse como completado. Las salidas `car_lifetime_basis_result_20260915_v1.partial` y `car_lifetime_basis_result_20260918_v1.partial` documentan que la ejecución se detuvo por memoria durante la reconstrucción de lotes. No se deben borrar ni renombrar como resultados finales.
 
-**Trabajo local aún no consolidado:** existen cambios sin commit en `src/polymarket_bot/ledger/lots.py` y `tests/test_ledger_lots.py`. Indexan las colas FIFO por `(wallet, asset)`, sustituyen la copia creciente de ancestros por vínculos de lotes y permiten `snapshot(copy_safe=False)` para una corrida única. Son una optimización en evaluación: deben pasar pruebas, perfilarse y publicarse en una rama WIP claramente marcada antes de tratarse como solución definitiva.
+**Trabajo WIP preservado:** la optimización de memoria se conserva en la rama `wip/ledger-basis-memory`, separada de `main`. Indexa las colas FIFO por `(wallet, asset)`, sustituye la copia creciente de ancestros por vínculos de lotes y permite `snapshot(copy_safe=False)` para una corrida única. Pasaron 10 pruebas focales de lotes y 102 pruebas del grupo `test_ledger*` el 5 de octubre de 2026; falta perfilar una muestra histórica representativa y confirmar el uso de memoria de punta antes de tratarla como solución definitiva.
 
 **Siguiente decisión técnica:** primero validar la semántica y memoria del cambio WIP; después ejecutar una corrida nueva con salida nueva. Solo si la corrida completa y un cálculo independiente concilian, el gate podrá avanzar de `BLOCKED`; eso no autoriza capital ni copia automática.
 
