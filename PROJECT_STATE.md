@@ -59,7 +59,7 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 
 **Siguiente decisión técnica:** preservar el resultado v2 sellado y completar, con evidencia, los flujos externos, las marcas de cierre y el segundo cálculo independiente. Solo si esos elementos concilian podrá reevaluarse el gate; eso no autoriza capital ni copia automática.
 
-**Inventario de brechas:** `docs/operations/POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md` fija los conteos y el orden de resolución. No se debe volver a descargar ni repetir el bundle v5 antes de cambiar la evidencia de entrada.
+**Inventario de brechas:** `docs/operations/POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md` fija los conteos y el orden de resolución. La cola sellada local `car_lifetime_basis_evidence_gaps_20261006_v1` referencia por hash las 856 acciones de flujo y 3.498 marcas pendientes, sin duplicar el bundle ni publicar datos. No se debe volver a descargar ni repetir el bundle v5 antes de cambiar la evidencia de entrada.
 
 Lecturas obligatorias:
 

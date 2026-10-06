@@ -122,6 +122,23 @@ El directorio de salida debe ser nuevo. Se escriben `configuration.json`,
 falla de ejecución conserva `.partial`; un diagnóstico contable completo pero
 sin pipeline independiente se sella como `BLOCKED`, no se convierte en éxito.
 
+## Auditoría de evidencia pendiente
+
+Antes de redescargar un historial ya cerrado, se puede generar una cola local y
+sellada de las pruebas aún necesarias:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger audit-basis-evidence `
+  --bundle data/polyledger-sentinel/p0/inventory_basis_input.json `
+  --output data/polyledger-sentinel/p0/basis_evidence_gaps
+```
+
+La utilidad es offline: no asigna precios, no consulta una wallet y no cambia
+el bundle. Produce solicitudes compactas de valores de frontera, marcas de
+cierre e informe independiente, enlazadas por hashes al input sellado. Los
+`raw_ids` originales permanecen en el bundle fuente; la cola no debe subirse a
+Git cuando derive de evidencia local.
+
 ## Lo que aún falta para aplicarlo a `car`
 
 - completar el backfill ya iniciado desde el bloque 1 y demostrar la completitud

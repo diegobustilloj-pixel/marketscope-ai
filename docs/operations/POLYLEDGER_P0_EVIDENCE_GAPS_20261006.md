@@ -28,6 +28,22 @@ Los otros 12 flujos externos sí llevaban valor y evidencia en el bundle. Esa
 diferencia confirma que el esquema admite pruebas de frontera; no se debe
 rellenar los 856 restantes con cero.
 
+## Cola sellada creada
+
+La utilidad offline `audit-basis-evidence` creó localmente
+`data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1/`
+con el commit `d0784dd`. El manifiesto y sus hashes fueron verificados con el
+árbol limpio. La cola contiene referencias compactas, no una copia del bundle:
+
+| Archivo local | Tamaño aproximado | Hash de contenido relevante |
+|---|---:|---|
+| `external_flow_requests.json` | 476 KB | `0b3b3e2d004af6f7e4ad73af312ec6ac5396d1f97759a719d925e2daeafd3b2b` |
+| `closing_mark_requests.json` | 802 KB | `f30c68a1210113b451823256da1a3707f2a3062c7b346f7642cc35b68103f880` |
+| `independent_report_request.json` | < 1 KB | sellado en el manifiesto |
+
+Las solicitudes enlazan cada acción por ID, orden y hash; los `raw_ids` siguen
+solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
+
 ## Orden seguro de resolución
 
 1. Crear un artefacto local sellado de solicitudes de valoración de frontera,
