@@ -118,3 +118,40 @@ def test_evidenced_external_receipt_starts_known_basis():
     assert result["lots"][-1]["remaining_cost"] == 3
     assert "external-mark:1" in result["lots"][-1]["provenance"]
     assert result["unrealized_pnl"][A] == "1"
+
+
+def test_indexed_fifo_matches_global_order_across_batches():
+    ledger = LotLedger(opening())
+    ledger.apply_batch([
+        action(1, "buy", outputs=[leg(X, 3)], cash=-9),
+        action(2, "buy", outputs=[leg(Y, 4)], cash=-8),
+        action(3, "buy", outputs=[leg(X, 5)], cash=-25),
+    ])
+    # A second batch exercises deepcopy while preserving the internal index's
+    # references to the canonical global lot records.
+    ledger.apply_batch([action(4, "sell", inputs=[leg(X, 4)], cash=20)])
+    result = ledger.snapshot()
+    sale = result["journal"][-1]
+    assert sale["consumed_lots"] == [
+        {"lot_id": "1:0", "quantity": 3, "cost": 9},
+        {"lot_id": "3:0", "quantity": 1, "cost": 5},
+    ]
+    assert sale["realized_pnl"] == 6
+    assert result["balances"][A][X] == 4
+    assert result["lots"][2]["remaining_cost"] == 20
+
+
+def test_indexed_fifo_rolls_back_partial_consumption_in_failed_batch():
+    ledger = LotLedger(opening())
+    ledger.apply_batch([
+        action(1, "buy", outputs=[leg(X, 2)], cash=-4),
+        action(2, "buy", outputs=[leg(Y, 2)], cash=-6),
+        action(3, "buy", outputs=[leg(X, 3)], cash=-9),
+    ])
+    before = ledger.snapshot()
+    with pytest.raises(EvidenceError, match="Insufficient"):
+        ledger.apply_batch([
+            action(4, "sell", inputs=[leg(X, 4)], cash=14),
+            action(5, "sell", inputs=[leg(Y, 3)], cash=10),
+        ])
+    assert ledger.snapshot() == before

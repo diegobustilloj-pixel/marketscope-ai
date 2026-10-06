@@ -38,6 +38,11 @@ class LotLedger:
         if not opening.get("evidence") or not opening.get("quote_asset"):
             raise EvidenceError("Opening snapshot must identify quote asset and evidence")
         self.lots = []
+        # ``lots`` remains the canonical, globally ordered audit record. The
+        # companion index only avoids repeatedly scanning unrelated historical
+        # lots while preserving FIFO order within each wallet/asset pair.
+        self._lots_by_wallet_asset = {}
+        self._fifo_cursor = {}
         self.cash = {address(w): uint(v) for w, v in opening.get("cash", {}).items()}
         self.realized = {}
         self.journal = []
@@ -48,17 +53,33 @@ class LotLedger:
             self._open("opening:" + str(i), address(lot["wallet"]), lot["asset"], uint(lot["quantity"]),
                        None if lot["cost"] is None else uint(lot["cost"]), [opening["evidence"]])
 
-    def _open(self, lot_id, wallet, asset, quantity, cost, provenance):
+    def _open(self, lot_id, wallet, asset, quantity, cost, provenance,
+              lineage_lot_ids=()):
         if not isinstance(asset, str) or asset.count(":") < 2 or not quantity:
             raise EvidenceError("Positive quantity and chain:contract:token asset required")
-        self.lots.append({"id": lot_id, "wallet": wallet, "asset": asset, "quantity": quantity,
-                          "remaining": quantity, "cost": cost, "remaining_cost": cost,
-                          "provenance": list(provenance)})
+        lot = {"id": lot_id, "wallet": wallet, "asset": asset, "quantity": quantity,
+               "remaining": quantity, "cost": cost, "remaining_cost": cost,
+               # Provenance is deliberately direct: the evidence created by the
+               # action that opened this lot.  Repeating every ancestor's raw ID
+               # on each conversion/split makes long-lived FIFO ledgers grow
+               # super-linearly.  The complete audit trail remains available
+               # through the stable parent lot IDs below.
+               "provenance": list(provenance),
+               "lineage_lot_ids": list(lineage_lot_ids)}
+        self.lots.append(lot)
+        key = (wallet, asset)
+        self._lots_by_wallet_asset.setdefault(key, []).append(lot)
+        self._fifo_cursor.setdefault(key, 0)
 
     def _consume(self, wallet, asset, quantity):
-        remaining, cost, provenance, parts = quantity, 0, [], []
-        for lot in self.lots:
-            if (lot["wallet"], lot["asset"]) != (wallet, asset) or lot["remaining"] == 0:
+        remaining, cost, parts = quantity, 0, []
+        key = (wallet, asset)
+        lots = self._lots_by_wallet_asset.get(key, [])
+        cursor = self._fifo_cursor.get(key, 0)
+        while cursor < len(lots):
+            lot = lots[cursor]
+            if lot["remaining"] == 0:
+                cursor += 1
                 continue
             take = min(remaining, lot["remaining"])
             basis = lot["remaining_cost"]
@@ -70,14 +91,16 @@ class LotLedger:
             lot["remaining"] -= take
             if basis is not None:
                 lot["remaining_cost"] -= consumed
-            provenance.extend(lot["provenance"])
             parts.append({"lot_id": lot["id"], "quantity": take, "cost": consumed})
             remaining -= take
+            if lot["remaining"] == 0:
+                cursor += 1
             if not remaining:
                 break
+        self._fifo_cursor[key] = cursor
         if remaining:
             raise EvidenceError(f"Insufficient observed inventory for {asset}; opening snapshot required")
-        return cost, provenance, parts
+        return cost, parts
 
     def apply_batch(self, actions: list[dict]):
         candidate = copy.deepcopy(self)
@@ -134,15 +157,18 @@ class LotLedger:
         if kind == "reward" and cash < 0:
             raise EvidenceError("Negative reward")
         cost = 0
+        # Keep only the action's own evidence on new lots.  Parent lots are
+        # linked by ID, so a verifier can walk the immutable lot record without
+        # copying an ever-growing ancestry list into every descendant lot.
         provenance = list(action["raw_ids"]) + list(action.get("basis_evidence", []))
         consumed = []
         transfer_parts = []
         for leg in inputs:
-            basis, origins, parts = self._consume(wallet, leg["asset"], uint(leg["quantity"]))
+            basis, parts = self._consume(wallet, leg["asset"], uint(leg["quantity"]))
             cost = None if cost is None or basis is None else cost + basis
-            provenance.extend(origins)
             consumed.extend(parts)
             transfer_parts.extend((leg["asset"], p) for p in parts)
+        lineage_lot_ids = list(dict.fromkeys(part["lot_id"] for part in consumed))
         self.cash[wallet] = self.cash.get(wallet, 0) + cash
         if self.cash[wallet] < 0:
             raise EvidenceError("Negative observed collateral; missing opening cash or transfer")
@@ -157,7 +183,8 @@ class LotLedger:
                 if target == wallet:
                     raise EvidenceError("Self transfer should be a zero net movement")
                 for i, (asset, part) in enumerate(transfer_parts):
-                    self._open(f"{key}:{i}", target, asset, part["quantity"], part["cost"], provenance)
+                    self._open(f"{key}:{i}", target, asset, part["quantity"], part["cost"], provenance,
+                               [part["lot_id"]])
         if outputs:
             if kind == "receive":
                 output_cost = received_basis
@@ -169,7 +196,8 @@ class LotLedger:
                     pnl, output_cost = -output_cost, 0
             weights = [uint(x["quantity"]) for x in outputs]
             for i, (leg, basis) in enumerate(zip(outputs, allocate(output_cost, weights))):
-                self._open(f"{key}:{i}", wallet, leg["asset"], uint(leg["quantity"]), basis, provenance)
+                self._open(f"{key}:{i}", wallet, leg["asset"], uint(leg["quantity"]), basis, provenance,
+                           lineage_lot_ids)
         if pnl is None:
             self.unknown_realizations.append(key)
         else:
@@ -179,7 +207,15 @@ class LotLedger:
         self.last_order = order
         self.seen[key] = digest(action)
 
-    def snapshot(self, marks: dict[str, str] | None = None) -> dict:
+    def snapshot(self, marks: dict[str, str] | None = None, *, copy_safe: bool = True) -> dict:
+        """Return a deterministic ledger snapshot.
+
+        The default is an isolated deep copy for callers that may retain or
+        mutate it.  A completed one-shot accounting run can request
+        ``copy_safe=False`` to return a read-only-by-convention view and avoid
+        duplicating the complete lots and journal in memory.  The ledger must
+        not be mutated while that view is in use.
+        """
         balances = {}
         unrealized = {}
         for lot in self.lots:
@@ -206,4 +242,5 @@ class LotLedger:
                   "known_realized_pnl": self.realized, "unknown_realizations": self.unknown_realizations,
                   "unrealized_pnl": {w: None if p is None else format(p, "f") for w, p in unrealized.items()},
                   "complete_basis": not self.unknown_realizations and all(l["cost"] is not None for l in self.lots)}
-        return {**copy.deepcopy(result), "ledger_hash": digest(result)}
+        result["ledger_hash"] = digest(result)
+        return copy.deepcopy(result) if copy_safe else result
