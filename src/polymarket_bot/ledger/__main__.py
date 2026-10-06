@@ -18,6 +18,7 @@ from .lifetime_inventory import build_lifetime_inventory_file
 from .lifetime_receipt_closure import close_lifetime_receipt_gap
 from .lifetime_crosscheck import crosscheck_lifetime_capture
 from .price_history_probe import OfficialPriceHistoryClient, build_price_history_probe_file
+from .price_candidate_audit import OfficialCandidateMetadataClient, audit_price_candidates_file
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
@@ -49,6 +50,17 @@ def _terminal_result(args, result: dict) -> dict:
             "closing_block": result["closing_block"],
             "sample": result["sample"],
             "responses": result["responses"],
+            "integration": result["integration"],
+            "review_gate": result["review_gate"],
+            "safety": result["safety"],
+        }
+    if args.command == "audit-price-candidates":
+        return {
+            "status": result["status"],
+            "output": str(args.output.resolve()),
+            "probe": result["probe"],
+            "requests": result["requests"],
+            "reviews": result["reviews"],
             "integration": result["integration"],
             "review_gate": result["review_gate"],
             "safety": result["safety"],
@@ -170,6 +182,16 @@ def main(argv=None):
     price_probe.add_argument(
         "--max-age-seconds", type=int, required=True,
         help="Explicit freshness bound used only to classify candidate observations",
+    )
+    price_audit = commands.add_parser(
+        "audit-price-candidates",
+        help="Audit fresh probe candidates against official market identity; never integrate marks",
+    )
+    price_audit.add_argument("--probe", type=Path, required=True)
+    price_audit.add_argument("--output", type=Path, required=True)
+    price_audit.add_argument(
+        "--metadata-db", type=Path, default=Path("data/car_forensics/car_metadata.db"),
+        help="Optional read-only local metadata cache used only as auxiliary corroboration",
     )
     history = commands.add_parser(
         "backfill-wallet-history",
@@ -335,6 +357,11 @@ def main(argv=None):
                 client=OfficialPriceHistoryClient(), sample_size=args.sample_size,
                 max_age_seconds=args.max_age_seconds,
             )
+        elif args.command == "audit-price-candidates":
+            result = audit_price_candidates_file(
+                args.probe, args.output,
+                client=OfficialCandidateMetadataClient(), metadata_db=args.metadata_db,
+            )
         elif args.command == "backfill-wallet-history":
             rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
             result = backfill_wallet_history(
@@ -414,7 +441,8 @@ def main(argv=None):
         if args.command in {"capture-wallet-24h", "value-wallet-24h", "backfill-wallet-history",
                             "backfill-wallet-blockscout", "crosscheck-lifetime-wallet",
                             "recalculate-lifetime-inventory", "close-lifetime-receipt-gap",
-                            "build-lifetime-basis-bundle", "probe-price-history"}:
+                            "build-lifetime-basis-bundle", "probe-price-history",
+                            "audit-price-candidates"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
