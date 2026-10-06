@@ -324,12 +324,18 @@ def parse_history_observation(raw: bytes, *, cutoff_timestamp: int) -> dict:
         )
     except (UnicodeDecodeError, json.JSONDecodeError, EvidenceError) as exc:
         return {"status": "MALFORMED_RESPONSE", "detail": _error_text(exc)}
-    if not isinstance(payload, dict) or not isinstance(payload.get("history"), list):
-        return {"status": "MALFORMED_RESPONSE", "detail": "history array is missing"}
+    if not isinstance(payload, dict):
+        return {"status": "MALFORMED_RESPONSE", "detail": "response is not an object"}
+    has_history, has_data = "history" in payload, "data" in payload
+    if has_history and has_data:
+        return {"status": "MALFORMED_RESPONSE", "detail": "response has conflicting history/data arrays"}
+    points = payload.get("history") if has_history else payload.get("data")
+    if not isinstance(points, list):
+        return {"status": "MALFORMED_RESPONSE", "detail": "history/data array is missing"}
 
-    by_time: dict[int, str] = {}
+    by_time: dict[int, tuple[str, int | None]] = {}
     future_points = 0
-    for item in payload["history"]:
+    for item in points:
         if not isinstance(item, dict):
             return {"status": "MALFORMED_RESPONSE", "detail": "history item is not an object"}
         try:
@@ -341,15 +347,19 @@ def parse_history_observation(raw: bytes, *, cutoff_timestamp: int) -> dict:
             if not price.is_finite() or not Decimal(0) <= price <= Decimal(1):
                 raise EvidenceError("Price-history price is outside [0,1]")
             price_text = _decimal_text(price)
+            resolution = item.get("resolution_seconds")
+            if resolution is not None:
+                resolution = uint(resolution)
         except (EvidenceError, InvalidOperation, ValueError) as exc:
             return {"status": "MALFORMED_RESPONSE", "detail": _error_text(exc)}
         if timestamp > cutoff_timestamp:
             future_points += 1
             continue
         prior = by_time.get(timestamp)
-        if prior is not None and prior != price_text:
-            return {"status": "MALFORMED_RESPONSE", "detail": "conflicting prices at one timestamp"}
-        by_time[timestamp] = price_text
+        current = (price_text, resolution)
+        if prior is not None and prior != current:
+            return {"status": "MALFORMED_RESPONSE", "detail": "conflicting points at one timestamp"}
+        by_time[timestamp] = current
 
     if future_points:
         return {
@@ -360,12 +370,14 @@ def parse_history_observation(raw: bytes, *, cutoff_timestamp: int) -> dict:
     if not by_time:
         return {"status": "NO_OBSERVATION", "eligible_points": 0}
     timestamp = max(by_time)
+    price, resolution = by_time[timestamp]
     return {
         "status": "OBSERVATION_AT_OR_BEFORE_CUT",
         "observation": {
             "timestamp": timestamp,
-            "price": by_time[timestamp],
+            "price": price,
             "age_seconds": cutoff_timestamp - timestamp,
+            "resolution_seconds": resolution,
         },
         "eligible_points": len(by_time),
     }

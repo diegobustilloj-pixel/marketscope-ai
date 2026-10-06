@@ -73,8 +73,8 @@ def test_price_probe_seals_raw_ctf_only_and_never_integrates_marks(tmp_path: Pat
     source, gaps, value, yes, no = _source_and_gaps(tmp_path)
     before_hash = hashlib.sha256(source.read_bytes()).hexdigest()
     client = FakePriceClient({
-        "1": b'{"history":[{"t":999,"p":"0.6"}]}',
-        "2": b'{"history":[]}',
+        "1": b'{"data":[{"timestamp":999,"price":0.6,"resolution_seconds":60}]}',
+        "2": b'{"data":[]}',
     })
     output = tmp_path / "probe"
 
@@ -109,6 +109,9 @@ def test_price_probe_seals_raw_ctf_only_and_never_integrates_marks(tmp_path: Pat
 
     rows = json.loads((output / "request_results.json").read_text(encoding="utf-8"))
     assert [row["asset"] for row in rows] == [yes, no]
+    assert rows[0]["observation"] == {
+        "timestamp": 999, "price": "0.6", "age_seconds": 0, "resolution_seconds": 60,
+    }
     assert (output / rows[0]["raw_response_file"]).read_bytes() == client.payloads["1"]
     manifest = json.loads((output / "run_manifest.json").read_text(encoding="utf-8"))
     assert rows[0]["raw_response_file"] in manifest["files"]
@@ -118,7 +121,7 @@ def test_price_probe_seals_raw_ctf_only_and_never_integrates_marks(tmp_path: Pat
 def test_price_probe_header_mismatch_preserves_partial_without_requests(tmp_path: Path):
     source, gaps, value, _, _ = _source_and_gaps(tmp_path)
     output = tmp_path / "probe"
-    client = FakePriceClient({"1": b'{"history":[]}', "2": b'{"history":[]}'})
+    client = FakePriceClient({"1": b'{"data":[]}', "2": b'{"data":[]}'})
 
     with pytest.raises(EvidenceError, match="hash differs"):
         build_price_history_probe_file(
@@ -137,7 +140,7 @@ def test_price_probe_header_mismatch_preserves_partial_without_requests(tmp_path
 
 def test_price_history_parser_rejects_future_point_even_if_other_point_exists():
     observed = parse_history_observation(
-        b'{"history":[{"t":98,"p":"0.5"},{"t":100,"p":"0.4"}]}',
+        b'{"data":[{"timestamp":98,"price":"0.5"},{"timestamp":100,"price":"0.4"}]}',
         cutoff_timestamp=99,
     )
     assert observed == {
