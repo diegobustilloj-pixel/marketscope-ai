@@ -3,6 +3,10 @@
 > **Proyecto canónico:** `C:\ProyectoBotV4\polymarket_quant_bot`  
 > **Política:** una plataforma, un núcleo compartido y múltiples bots declarados por configuración. Las rutas y lanzadores históricos permanecen compatibles durante la migración.
 
+> **Empieza aquí si retomas el trabajo:** [estado canónico del proyecto](PROJECT_STATE.md) y [guía de continuación](CONTINUE_PROJECT.md). Ambos distinguen evidencia confirmada, investigación y trabajo pendiente para que el relevo no dependa de conversaciones anteriores.
+
+> **Límite de seguridad:** el repositorio contiene código, configuraciones, pruebas y documentación. No contiene bases de datos, capturas raw, logs, resultados pesados, claves, wallets ni ejecución con dinero real. Todos los bots siguen deshabilitados, en modo de investigación, shadow o solo lectura.
+
 ## Centro de control
 
 ```powershell
