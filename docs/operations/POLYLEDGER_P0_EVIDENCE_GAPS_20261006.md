@@ -1,0 +1,54 @@
+# Auditoría de evidencia faltante — PolyLedger P0 / `car`
+
+**Corte:** 2026-10-06, a partir del bundle v5 sellado y del resultado v2.
+Este documento enumera ausencias comprobadas; no asigna precios, basis ni PnL
+por aproximación.
+
+## Estado que ya está resuelto
+
+- Se reprodujeron las 251.107 acciones sin error de reconstrucción.
+- La conciliación de balances de cierre es `MATCH`.
+- La cobertura declarada, el universo de activos y las acciones sin resolver
+  no son el bloqueo actual.
+
+No hace falta redescargar el historial ni rehacer el cierre de recibos para
+resolver los bloques siguientes.
+
+## Evidencia que falta
+
+| Bloque | Medición exacta | Consecuencia |
+|---|---:|---|
+| Valor/evidencia de flujos externos | 856 de 868 acciones (`receive`: 772; `transfer`: 84) | No se puede calcular el flujo externo neto ni el devengo de transferencias. |
+| Basis de recepciones | 772 `receive` sin `received_basis` ni `basis_evidence` | Propaga basis desconocido a 159 ventas y a 1.204 activos de inventario de cierre. |
+| Marcas de cierre | 0 marcas entregadas para 3.498 activos con inventario | No hay valoración de cierre ni PnL no realizado verificable. |
+| Evidencia de marcas de cierre | 0 fuentes declaradas | Incluso una marca numérica sin procedencia seguiría bloqueada. |
+| Pipeline independiente | no existe `independent_report` | El `basis_gate` no puede aprobarse aunque el primer cálculo sea completo. |
+
+Los otros 12 flujos externos sí llevaban valor y evidencia en el bundle. Esa
+diferencia confirma que el esquema admite pruebas de frontera; no se debe
+rellenar los 856 restantes con cero.
+
+## Orden seguro de resolución
+
+1. Crear un artefacto local sellado de solicitudes de valoración de frontera,
+   ligado por hash al bundle v5, para las 772 recepciones y 84 transferencias.
+   Cada respuesta debe conservar acción, `raw_ids`, fuente, bloque/tiempo,
+   valor atómico y explicación de la metodología.
+2. Capturar o respaldar marcas de los 3.498 activos al bloque de cierre
+   `93.762.690`; cada marca debe ser un `Decimal` exacto, con fuente y corte
+   comprobables. No inferir la marca actual para el corte histórico.
+3. Recompilar un bundle nuevo con esa evidencia, sin cambiar ni sobrescribir el
+   v5, y repetir `inventory-basis` en otro directorio nuevo.
+4. Construir un segundo cálculo con implementación y procedencia separadas que
+   produzca el contrato `independent_expected_contract`.
+5. Solo si ambos cálculos y la conciliación coinciden, reevaluar el gate. Esto
+   sigue sin autorizar capital, wallet ni copiado automático.
+
+## Artefactos de referencia local
+
+- Bundle: `data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/`
+- Resultado sellado: `data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2/`
+- Registro de corrida: `docs/operations/POLYLEDGER_P0_RUN_20261006.md`
+
+Los dos primeros se conservan solo localmente. Este diagnóstico puede
+versionarse porque contiene únicamente conteos, hashes y reglas de continuidad.
