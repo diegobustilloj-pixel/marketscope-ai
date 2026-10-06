@@ -46,25 +46,25 @@ wallet y sin dinero real**.
 
 Auditor separado y de solo lectura para wallets públicas de Polymarket. Conserva actividad incremental en SQLite, distingue conversiones internas de PnL, cruza posiciones con `/value` y leaderboard, detecta inconsistencias y exporta todas las posiciones a CSV. Inicie `ejecutar_polyledger_sentinel.bat` o consulte `docs\POLYLEDGER_SENTINEL_MVP_V001.md`.
 
-**P0 en construcción:** el núcleo `polymarket_bot.ledger` añade raw inmutable,
-cursores atómicos y reorgs, contratos/ABI versionados, lotes contables exactos y
-reconciliación CLOB/ledger/onchain. Incluye captura RPC y replay determinista.
-El motor `inventory-basis` reconstruye lotes FIFO y PnL del periodo, concilia el
-universo completo declarado y exige coincidencia con un segundo cálculo antes de
-aprobar su gate contable.
-El backfill histórico reanudable puede partir del bloque 1 mediante RPC de
-archivo o mediante la API pública de Blockscout. La ruta Blockscout ya recuperó
-el origen observable de `car`, pero su índice declara solo 98% y por eso el gate
-de completitud sigue cerrado.
-El PositionManager de Combo ya tiene despliegue/implementación calificados,
-transferencias ERC-1155 e IDs estructurales; no se infiere todavía la economía
-de sus módulos. La aprobación P0 continúa bloqueada por esos mapeos y por la
-evidencia independiente del piloto de 24 horas. Operación y comandos:
-`docs/operations/POLYLEDGER_P0_RUNBOOK.md`; diseño y límites:
-`docs/architecture/POLYLEDGER_P0.md` y
-`docs/architecture/POLYLEDGER_INVENTORY_BASIS_V1.md` y
-`docs/architecture/POLYLEDGER_LIFETIME_BACKFILL_V1.md`. El Sentinel histórico
-sigue compatible.
+**P0 — estado actual:** el núcleo `polymarket_bot.ledger` conserva evidencia
+raw inmutable, cursores reorg-safe, contratos/ABI versionados, lotes FIFO
+exactos, replay determinista y conciliación on-chain. El bundle histórico de
+`car` contiene 251.107 acciones, sin acciones sin resolver, y el replay de
+basis v2 terminó sin error de reconstrucción con conciliación de cierre
+`MATCH`.
+
+Eso **no** significa que P0 esté aprobado: el gate sigue bloqueado por basis
+desconocido de recepciones, valores de flujos externos, marcas históricas de
+cierre y un segundo cálculo independiente. La utilidad
+`audit-basis-evidence` deja una cola local sellada de esas ausencias, sin
+inventar valores ni duplicar el bundle. La guía actual de continuidad es
+[`PROJECT_STATE.md`](PROJECT_STATE.md); el resultado, sus brechas y el plan de
+fuentes se documentan en `docs/operations/POLYLEDGER_P0_RUN_20261006.md`,
+`POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md` y
+`POLYLEDGER_P0_OFFICIAL_SOURCE_PLAN_20261006.md`.
+
+El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes
+automáticas ni dinero real habilitados.
 
 La siguiente fase acordada es **Copiado por reconstrucción**: observar una wallet,
 reconstruir la cesta completa y cotizar si todavía es replicable antes de mostrar
