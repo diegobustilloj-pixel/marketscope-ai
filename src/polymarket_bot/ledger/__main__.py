@@ -215,10 +215,13 @@ def main(argv=None):
         default=Path("configs/polyledger/closing_mark_policy_v1.json"),
     )
     price_policy.add_argument("--output", type=Path, required=True)
-    price_policy.add_argument("--rpc-url", help="Primary public HTTPS Polygon RPC; no credentials")
     price_policy.add_argument(
-        "--secondary-rpc-url", default="https://polygon.drpc.org",
-        help="Independent public HTTPS Polygon RPC for exact-block settlement agreement",
+        "--rpc-url", default="https://polygon.drpc.org",
+        help="Primary approved archive HTTPS Polygon RPC; no credentials",
+    )
+    price_policy.add_argument(
+        "--secondary-rpc-url", default="https://tenderly.rpc.polygon.community",
+        help="Independent approved archive HTTPS Polygon RPC for exact-block settlement agreement",
     )
     history = commands.add_parser(
         "backfill-wallet-history",

@@ -41,8 +41,8 @@
     "settled_precedence": "CTF_PAYOUT_STATE_OVERRIDES_HISTORY",
     "state_anchor": "CLOSING_BLOCK_POST_STATE_MATCHING_INVENTORY",
     "approved_rpc_hosts": [
-      "polygon-bor-rpc.publicnode.com",
-      "polygon.drpc.org"
+      "polygon.drpc.org",
+      "tenderly.rpc.polygon.community"
     ]
   },
   "integration": {
