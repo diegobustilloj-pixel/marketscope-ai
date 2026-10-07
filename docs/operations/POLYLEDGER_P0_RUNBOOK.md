@@ -286,3 +286,27 @@ Tenderly. Su salida es nueva, sellada y separada: nunca modifica el bundle ni
 escribe `closing_marks.json`. Un candidato aceptado queda habilitado solo para
 una compilación posterior; un resultado todavía `BLOCKED` es el comportamiento
 correcto mientras falte cualquier evidencia del gate P0.
+
+### Captura reanudable de precios por lotes
+
+La sonda admite lotes de hasta 20 outcomes y un cursor estable sobre la cola
+ordenada. El lote siguiente al sondeo original se solicita así, siempre en un
+directorio nuevo:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger probe-price-history `
+  --bundle data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/bundle.json `
+  --evidence-gaps data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1 `
+  --output data/polyledger-sentinel/p0/car_lifetime_price_probe_20261007_batch_00021_00040_retry1 `
+  --rpc-url https://polygon.drpc.org `
+  --secondary-rpc-url https://tenderly.rpc.polygon.community `
+  --sample-size 20 --start-index 20 --max-age-seconds 900
+```
+
+La tentativa del 7 de octubre no pudo abrir `eth_chainId` por bloqueo del
+transporte de red del entorno. Conservó únicamente una configuración y
+`failure.json` en
+`car_lifetime_price_probe_20261007_batch_00021_00040.partial/`; no creó un
+resultado final ni consultó precios. No se debe borrar ese `.partial`: cuando
+la red esté disponible, usar otro sufijo de salida (`retry1`, `retry2`, etc.).
+Cada lote debe auditarse antes de considerarlo para una compilación posterior.

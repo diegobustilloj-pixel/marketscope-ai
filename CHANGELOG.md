@@ -47,6 +47,9 @@ No se habilitaron órdenes automáticas ni dinero real.
   al corte y estado EIP-1898 coincidente entre dRPC y Tenderly. La corrida real
   aceptó 2 de 4 candidatos solo para un bundle futuro, difirió 2 por identidad
   histórica faltante e integró 0; el bundle v5 y el bloqueo P0 no cambiaron.
+- La sonda histórica admite cursor reanudable por lotes de hasta 20 outcomes;
+  la primera tentativa del lote 21–40 quedó bloqueada por transporte RPC y
+  conservó su `.partial`, sin crear salida final ni consultar precios.
 
 ### Backlog de investigación
 
