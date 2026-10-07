@@ -19,6 +19,7 @@ from .lifetime_receipt_closure import close_lifetime_receipt_gap
 from .lifetime_crosscheck import crosscheck_lifetime_capture
 from .price_history_probe import OfficialPriceHistoryClient, build_price_history_probe_file
 from .price_candidate_audit import OfficialCandidateMetadataClient, audit_price_candidates_file
+from .price_mark_policy import evaluate_price_policy_file
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
@@ -61,6 +62,17 @@ def _terminal_result(args, result: dict) -> dict:
             "probe": result["probe"],
             "requests": result["requests"],
             "reviews": result["reviews"],
+            "integration": result["integration"],
+            "review_gate": result["review_gate"],
+            "safety": result["safety"],
+        }
+    if args.command == "evaluate-price-policy":
+        return {
+            "status": result["status"],
+            "output": str(args.output.resolve()),
+            "policy_id": result["policy_id"],
+            "settlement": result["settlement"],
+            "decisions": result["decisions"],
             "integration": result["integration"],
             "review_gate": result["review_gate"],
             "safety": result["safety"],
@@ -192,6 +204,21 @@ def main(argv=None):
     price_audit.add_argument(
         "--metadata-db", type=Path, default=Path("data/car_forensics/car_metadata.db"),
         help="Optional read-only local metadata cache used only as auxiliary corroboration",
+    )
+    price_policy = commands.add_parser(
+        "evaluate-price-policy",
+        help="Apply a sealed closing-mark acceptance policy; never integrate marks",
+    )
+    price_policy.add_argument("--audit", type=Path, required=True)
+    price_policy.add_argument(
+        "--policy", type=Path,
+        default=Path("configs/polyledger/closing_mark_policy_v1.json"),
+    )
+    price_policy.add_argument("--output", type=Path, required=True)
+    price_policy.add_argument("--rpc-url", help="Primary public HTTPS Polygon RPC; no credentials")
+    price_policy.add_argument(
+        "--secondary-rpc-url", default="https://polygon.drpc.org",
+        help="Independent public HTTPS Polygon RPC for exact-block settlement agreement",
     )
     history = commands.add_parser(
         "backfill-wallet-history",
@@ -362,6 +389,13 @@ def main(argv=None):
                 args.probe, args.output,
                 client=OfficialCandidateMetadataClient(), metadata_db=args.metadata_db,
             )
+        elif args.command == "evaluate-price-policy":
+            primary_rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
+            secondary_rpc = ReadOnlyRPC(url=args.secondary_rpc_url)
+            result = evaluate_price_policy_file(
+                args.audit, args.policy, args.output,
+                primary_rpc=primary_rpc, secondary_rpc=secondary_rpc,
+            )
         elif args.command == "backfill-wallet-history":
             rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
             result = backfill_wallet_history(
@@ -442,7 +476,7 @@ def main(argv=None):
                             "backfill-wallet-blockscout", "crosscheck-lifetime-wallet",
                             "recalculate-lifetime-inventory", "close-lifetime-receipt-gap",
                             "build-lifetime-basis-bundle", "probe-price-history",
-                            "audit-price-candidates"}:
+                            "audit-price-candidates", "evaluate-price-policy"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
