@@ -55,8 +55,9 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
    comprobables. No inferir la marca actual para el corte histórico. La sonda
    de 20 CTF y su auditoría de identidad ya existen: los cuatro candidatos
    frescos tienen mapeos oficiales actuales consistentes; sólo dos poseen
-   corroboración local anterior al corte. Siguen pendientes de una política de
-   aceptación, no se han integrado y no reducen este conteo.
+   corroboración local anterior al corte. La política v1 aceptó esos dos sólo
+   para un bundle futuro y aplazó los otros dos; integró cero marcas. Por tanto,
+   las 3.498 solicitudes siguen abiertas y no se reduce este conteo.
 3. Recompilar un bundle nuevo con esa evidencia, sin cambiar ni sobrescribir el
    v5, y repetir `inventory-basis` en otro directorio nuevo.
 4. Construir un segundo cálculo con implementación y procedencia separadas que
@@ -70,10 +71,17 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
 - Resultado sellado: `data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2/`
 - Sonda de precios sellada: `data/polyledger-sentinel/p0/car_lifetime_price_probe_20261006_v2/`
 - Auditoría de candidatos sellada: `data/polyledger-sentinel/p0/car_lifetime_price_candidate_audit_20261006_v2/`
+- Evaluación de política sellada: `data/polyledger-sentinel/p0/car_lifetime_closing_mark_policy_20261007_v1/`
 - Registro de corrida: `docs/operations/POLYLEDGER_P0_RUN_20261006.md`
 - Registro de sonda: `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md`
 - Registro de auditoría: `docs/operations/POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md`
+- Registro de política: `docs/operations/POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`
 
-Los cuatro primeros artefactos de datos y resultados se conservan solo
+La política posterior aceptó dos de los cuatro candidatos únicamente para una
+futura compilación y aplazó dos por falta de identidad histórica pre-corte.
+Como no escribió `closing_marks` ni recompiló el bundle, las 3.498 solicitudes
+siguen abiertas y sus conteos no se deben reducir todavía.
+
+Los artefactos de datos y resultados se conservan solo
 localmente. Este diagnóstico puede
 versionarse porque contiene únicamente conteos, hashes y reglas de continuidad.

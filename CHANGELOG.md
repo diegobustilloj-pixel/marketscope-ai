@@ -42,6 +42,11 @@ No se habilitaron órdenes automáticas ni dinero real.
   cierre de logs por transacción, anclaje cruzado y gate de completitud del
   indexador. El primer backfill real de `car` quedó iniciado y bloqueado por
   cobertura aún incompleta; no se publicó basis ni PnL.
+- Gate sellado para marcas de cierre: fija toda la raíz de evidencia, reinterpreta
+  los bytes oficiales raw, exige paginación cerrada, identidad histórica anterior
+  al corte y estado EIP-1898 coincidente entre dRPC y Tenderly. La corrida real
+  aceptó 2 de 4 candidatos solo para un bundle futuro, difirió 2 por identidad
+  histórica faltante e integró 0; el bundle v5 y el bloqueo P0 no cambiaron.
 
 ### Backlog de investigación
 

@@ -115,8 +115,10 @@ La sonda no cambia el estado de P0. Siguen abiertos, como mínimo:
 - el cálculo contable independiente requerido por el gate.
 
 No se debe usar los cuatro candidatos frescos como PnL, señal de copia ni
-autorización de capital. La semántica de identidad de la muestra ya fue
-auditada; el siguiente paso correcto es fijar y probar la política de edad,
-resolución, mercados cerrados y rechazo antes de una captura masiva, y resolver
-las fronteras externas por separado. Cualquier escalado debe crear otra salida
-local sellada y nunca editar el bundle v5 ni esta sonda.
+autorización de capital. La semántica de identidad ya fue auditada y la
+política de edad, resolución, mercados cerrados y rechazo ya fue ejecutada.
+Aceptó dos candidatos sólo para un bundle futuro y aplazó dos por falta de
+identidad histórica pre-corte. Véase
+`POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`. Cualquier escalado debe usar
+esa política, crear otra salida local sellada y nunca editar el bundle v5 ni
+esta sonda.

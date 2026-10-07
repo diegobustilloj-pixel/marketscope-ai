@@ -1,8 +1,10 @@
 # Auditoría de candidatos de precio — PolyLedger P0 / `car` / 2026-10-06
 
-**Estado:** identidad oficial actual y temporalidad auditadas para los cuatro candidatos;
-los cuatro son elegibles para revisar una política de marcas, pero **ninguno**
-es todavía una marca aprobada o integrada. P0 permanece `BLOCKED`.
+**Estado de esta salida al 6 de octubre:** identidad oficial actual y temporalidad
+auditadas para los cuatro candidatos; los cuatro quedaron elegibles para revisar
+una política de marcas, pero ninguno quedó aprobado o integrado por esta auditoría.
+El seguimiento del 7 de octubre aceptó dos sólo para un bundle futuro, aplazó dos
+e integró cero. P0 permanece `BLOCKED`.
 
 ## Alcance
 
@@ -101,7 +103,7 @@ Hashes principales:
 | `candidate_reviews.json` | `34e13cccb76cfdc2fbf5739d7eff85ef52dfc005a3e7c9282c061452543a1373` |
 | `summary.json` | `4b8d55537ae86fa0aed8cd47e60ff31fc05d5c4065cdc4fc3c6d6ac4e07d6579` |
 
-## Decisión y siguiente paso
+## Decisión de la auditoría al 2026-10-06 — superada por el seguimiento
 
 `PENDING_MARK_POLICY_REVIEW` significa solamente que el punto histórico y el
 mapeo oficial actual de token, outcome y mercado no presentan contradicciones
@@ -110,14 +112,24 @@ del corte. Esto no demuestra liquidez ejecutable, no convierte un tick de cinco
 minutos en precio exacto del bloque y no acredita PnL.
 
 La auditoría escribió cero `closing_marks`, no cambió el bundle v5 y no reduce
-las 3.498 marcas pendientes. Antes de una captura mayor se debe fijar y probar
-una política explícita de aceptación —edad máxima, granularidad, mercados
-abiertos/cerrados, fuente y rechazo—. Después, cualquier evidencia aceptada se
-compilará en un bundle nuevo. También siguen pendientes 856 flujos externos,
-basis de 772 recepciones y el cálculo contable independiente.
+las 3.498 marcas pendientes. En ese momento, antes de una captura mayor, faltaba
+fijar y probar una política explícita de aceptación —edad máxima, granularidad,
+mercados abiertos/cerrados, fuente y rechazo—. Después, cualquier evidencia
+aceptada se compilaría en un bundle nuevo. También siguen pendientes 856 flujos
+externos, basis de 772 recepciones y el cálculo contable independiente.
 
 Antes de escalar también conviene endurecer dos bordes que no invalidan esta
 ejecución: validar explícitamente el campo compacto `c` de la respuesta CLOB y
 sellar cualquier sidecar SQLite WAL si existiera. En esta salida el endpoint
 solicitado, el par completo y Gamma corroboraron las cuatro condiciones, y la
 base local no tenía WAL con contenido.
+
+## Seguimiento — política ejecutada el 2026-10-07
+
+Ese siguiente paso ya se completó en
+[`POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`](POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md).
+La política revalidó explícitamente `c`, exigió WAL vacío, cerró paginación y
+contrastó CTF mediante dRPC y Tenderly en el hash exacto. Resultado: dos
+candidatos aceptados sólo para una futura compilación y dos aplazados por falta
+de identidad histórica pre-corte. Se integraron cero marcas y P0 sigue
+`BLOCKED`.

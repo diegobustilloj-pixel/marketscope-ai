@@ -60,16 +60,20 @@ cierre y un segundo cálculo independiente. La utilidad
 inventar valores ni duplicar el bundle. La guía actual de continuidad es
 [`PROJECT_STATE.md`](PROJECT_STATE.md); el resultado, sus brechas y el plan de
 fuentes se documentan en `docs/operations/POLYLEDGER_P0_RUN_20261006.md`,
-`POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md` y
-`POLYLEDGER_P0_OFFICIAL_SOURCE_PLAN_20261006.md`. La sonda local de 20
+`docs/operations/POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md` y
+`docs/operations/POLYLEDGER_P0_OFFICIAL_SOURCE_PLAN_20261006.md`. La sonda local de 20
 outcomes CTF confirmó transporte y ancla temporal, pero dejó el gate bloqueado:
 hay cuatro candidatos frescos sin integrar, dieciséis antiguos y ninguna marca
 ni PnL nuevos. Su auditoría posterior guardó 16/16 respuestas de identidad,
 confirmó los cuatro mapeos oficiales actuales token–mercado–outcome y encontró tres discrepancias
 entre el orden `primary/secondary` documentado y el observado. Los cuatro sólo
-quedaron pendientes de una política de marcas: se integraron cero. Véanse
-`POLYLEDGER_P0_PRICE_PROBE_20261006.md` y
-`POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md`.
+quedaron pendientes de una política de marcas. La política v1 ya fue ejecutada:
+dRPC y Tenderly coincidieron en el estado exacto del bloque; aceptó dos precios
+sólo para un bundle futuro y aplazó dos por falta de identidad histórica
+pre-corte. Se integraron cero marcas y v5 no cambió. Véanse
+`docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md`,
+`docs/operations/POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md` y
+`docs/operations/POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`.
 
 El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes
 automáticas ni dinero real habilitados.

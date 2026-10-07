@@ -84,3 +84,15 @@ Tres respuestas vivas discreparon del orden Yes/No documentado para
 `primary/secondary`, pero CLOB y Gamma coincidieron en el par etiquetado. Se
 integraron cero marcas y P0 sigue bloqueado. Véase
 [`POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md`](POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md).
+
+## Política de aceptación realizada
+
+El 7 de octubre se ejecutó la política sellada
+`car-lifetime-closing-mark-policy-v1`. Revalidó manifests, paginación, campo
+CLOB `c`, par binario Gamma, metadata local anterior al corte y estado CTF
+post-bloque con los RPC archive fijados `polygon.drpc.org` y
+`tenderly.rpc.polygon.community`. Ambos coincidieron en 4/4 condiciones no
+resueltas. Dos candidatos pasaron para una futura compilación y dos quedaron
+aplazados por falta de identidad histórica anterior al corte. Se escribieron
+cero marcas; detalle y hashes en
+[`POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`](POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md).

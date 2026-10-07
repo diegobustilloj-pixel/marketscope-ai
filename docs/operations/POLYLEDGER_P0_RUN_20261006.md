@@ -66,3 +66,19 @@ como etiqueta: exige coincidencia del par completo en las otras fuentes. Los
 cuatro candidatos quedaron pendientes de una política de marcas. Se escribieron
 cero marcas, el bundle v5 siguió intacto y el gate continuó `BLOCKED`. Consulte
 `POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md` para decisiones y hashes.
+
+## Política posterior de marcas
+
+El 7 de octubre de 2026 se ejecutó la política sellada v1 contra la auditoría
+completa. Dos RPC de archivo independientes, dRPC y Tenderly, coincidieron en el
+estado exacto del bloque de cierre mediante EIP-1898. Los cuatro mercados seguían
+sin resolver en ese estado y las cuatro observaciones de precio cumplieron la
+ventana temporal; sin embargo, solo dos tenían identidad histórica local anterior
+al corte.
+
+El resultado fue 2 candidatos `ACCEPTED_FOR_NEW_BUNDLE_COMPILATION`, 2
+`DEFERRED_MISSING_HISTORICAL_IDENTITY`, 0 rechazados y 0 integrados. La aceptación
+solo autoriza considerar esos dos candidatos al compilar un bundle nuevo; no
+modifica el bundle v5, no cierra todavía las 3.498 solicitudes de marca y no
+desbloquea P0. El detalle, los hashes y las anclas temporales están en
+`POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`.

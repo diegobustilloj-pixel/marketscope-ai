@@ -36,11 +36,11 @@ traza de desarrollo. Toca:
 
 El cambio introduce un índice FIFO por wallet/activo y conserva una cadena de `lineage_lot_ids` en lugar de expandir toda la procedencia ancestral en cada lote descendiente. También evita copiar el bundle al validarlo/hashearlo, usa un diario contable compacto enlazado por hash al input sellado, no duplica el bundle de 200+ MB en `configuration.json` y serializa resultados por streaming. Busca reducir coste temporal y memoria sin cambiar el resultado contable.
 
-Las 130 pruebas `test_ledger*` pasaron el 6 de octubre de 2026. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. La corrida completa de basis v2 se selló sin error de reconstrucción y con conciliación `MATCH`. El próximo trabajo ya no es validar escala ni volver a auditar la identidad de la muestra:
+Las 144 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la política de marcas. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. La corrida completa de basis v2 se selló sin error de reconstrucción y con conciliación `MATCH`. El próximo trabajo ya no es validar escala, identidad de la muestra ni la política de aceptación:
 
 1. conservar la salida de basis v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
-2. conservar la sonda `car_lifetime_price_probe_20261006_v2` y la auditoría autoritativa `car_lifetime_price_candidate_audit_20261006_v2`: la segunda guardó 16/16 respuestas oficiales, confirmó 4/4 identidades oficiales actuales —dos con corroboración local anterior al corte— y dejó los cuatro precios pendientes de política, con cero marcas integradas; leer `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md` y `POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md` antes de cualquier ampliación;
-3. definir con una prueba explícita la política de edad, resolución y rechazo para marcas; después ampliar la captura por tipo de activo, completar 856 flujos externos y generar un cálculo independiente antes de reevaluar el gate. Nunca sobrescribir ni borrar los `.partial` existentes.
+2. conservar la sonda `car_lifetime_price_probe_20261006_v2`, la auditoría `car_lifetime_price_candidate_audit_20261006_v2` y la evaluación autoritativa `car_lifetime_closing_mark_policy_20261007_v1`: dRPC y Tenderly coincidieron en 4/4 condiciones no resueltas; dos precios fueron aceptados sólo para una futura compilación y dos aplazados por falta de identidad histórica pre-corte; cero marcas fueron integradas;
+3. leer `docs/operations/POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`, ampliar la captura por fuente compatible bajo esa política y completar 856 flujos externos; cuando la entrada esté completa, compilar un bundle nuevo, ejecutar el cálculo independiente contra él y reevaluar el gate. Nunca sobrescribir v5 ni borrar los `.partial` existentes.
 
 No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batch` y los snapshots pueden copiar estructuras amplias. Si el problema persiste, perfilar primero y cambiar una sola fuente de duplicación por vez, manteniendo un replay determinista y la trazabilidad de cada lote.
 
@@ -48,7 +48,7 @@ No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batc
 
 ```text
 resultado de basis v2 sellado y conciliado
-    → fijar política de marcas y ampliar captura por fuente compatible
+    → política de marcas v1 sellada: ampliar captura por fuente compatible
     → completar flujos externos y marcas de cierre con evidencia
     → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente

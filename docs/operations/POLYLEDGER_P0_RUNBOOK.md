@@ -258,6 +258,31 @@ un cálculo independiente. El detalle vigente está en
 
 La sonda `car_lifetime_price_probe_20261006_v2/` y la auditoría
 `car_lifetime_price_candidate_audit_20261006_v2/` confirmaron cuatro
-candidatos temporales con mapeo oficial actual consistente, pero integraron
-cero marcas. La continuidad correcta es fijar la política de aceptación y
-crear evidencia nueva; no volver al estado `BUNDLE_REVIEW_REQUIRED` histórico.
+candidatos temporales con mapeo oficial actual consistente. La política sellada
+v1 se ejecutó después y aceptó dos únicamente para una futura compilación;
+difirió otros dos por falta de identidad histórica anterior al corte. Integró
+cero marcas y dejó el bundle v5 intacto. La continuidad correcta es ampliar la
+captura bajo esa política y compilar un bundle nuevo solo cuando la evidencia
+sea suficiente; no volver al estado `BUNDLE_REVIEW_REQUIRED` histórico.
+
+### Registro del comando autoritativo de la política de marcas
+
+El bloque siguiente registra la ejecución del 7 de octubre. Su directorio de
+salida v1 ya existe, está sellado y no se debe reutilizar ni sobrescribir. Una
+evaluación futura debe partir de una auditoría nueva y usar otro directorio de
+salida.
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger evaluate-price-policy `
+  --audit data/polyledger-sentinel/p0/car_lifetime_price_candidate_audit_20261006_v2 `
+  --policy configs/polyledger/closing_mark_policy_v1.json `
+  --output data/polyledger-sentinel/p0/car_lifetime_closing_mark_policy_20261007_v1
+```
+
+El comando vuelve a verificar todos los manifiestos y bytes oficiales raw,
+exige paginación de precios cerrada, identidad CLOB/Gamma consistente, mapeo
+local anterior al corte y estado histórico exacto coincidente en dRPC y
+Tenderly. Su salida es nueva, sellada y separada: nunca modifica el bundle ni
+escribe `closing_marks.json`. Un candidato aceptado queda habilitado solo para
+una compilación posterior; un resultado todavía `BLOCKED` es el comportamiento
+correcto mientras falte cualquier evidencia del gate P0.
