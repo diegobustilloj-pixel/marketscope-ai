@@ -75,6 +75,14 @@ pre-corte. Se integraron cero marcas y v5 no cambió. Véanse
 `docs/operations/POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md` y
 `docs/operations/POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`.
 
+La captura siguiente ya admite lotes reanudables de 20 outcomes; el primer lote
+21–40 quedó bloqueado antes de consultar precios por transporte RPC y conserva
+su `.partial`. La compuerta `verify-independent-report` también está preparada:
+su ejecución sobre basis v2 confirmó que falta el informe externo y dejó P0
+`BLOCKED`, sin cambiar el bundle. Véanse
+`docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md` y
+`docs/operations/POLYLEDGER_P0_INDEPENDENT_REPORT_GATE_20261007.md`.
+
 El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes
 automáticas ni dinero real habilitados.
 
