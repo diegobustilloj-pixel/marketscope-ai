@@ -13,6 +13,7 @@ from .evidence_gaps import build_basis_evidence_gap_file
 from .fixtures import sample_bundle
 from .history_backfill import backfill_wallet_history
 from .inventory_basis import build_inventory_basis_file
+from .independent_report_gate import verify_independent_report_file
 from .lifetime_basis_bundle import build_lifetime_basis_bundle
 from .lifetime_inventory import build_lifetime_inventory_file
 from .lifetime_receipt_closure import close_lifetime_receipt_gap
@@ -75,6 +76,16 @@ def _terminal_result(args, result: dict) -> dict:
             "decisions": result["decisions"],
             "integration": result["integration"],
             "review_gate": result["review_gate"],
+            "safety": result["safety"],
+        }
+    if args.command == "verify-independent-report":
+        return {
+            "status": result["status"],
+            "output": str(args.output.resolve()),
+            "primary": result["primary"],
+            "contract": result["contract"],
+            "gate": result["gate"],
+            "integration": result["integration"],
             "safety": result["safety"],
         }
     if args.command != "inventory-basis":
@@ -227,6 +238,13 @@ def main(argv=None):
         "--secondary-rpc-url", default="https://tenderly.rpc.polygon.community",
         help="Independent approved archive HTTPS Polygon RPC for exact-block settlement agreement",
     )
+    independent = commands.add_parser(
+        "verify-independent-report",
+        help="Compare a separately produced accounting report to the sealed contract",
+    )
+    independent.add_argument("--basis-result", type=Path, required=True)
+    independent.add_argument("--report", type=Path, required=True)
+    independent.add_argument("--output", type=Path, required=True)
     history = commands.add_parser(
         "backfill-wallet-history",
         help="Resume a lifetime public Polygon wallet capture; no basis or execution",
@@ -404,6 +422,10 @@ def main(argv=None):
                 args.audit, args.policy, args.output,
                 primary_rpc=primary_rpc, secondary_rpc=secondary_rpc,
             )
+        elif args.command == "verify-independent-report":
+            result = verify_independent_report_file(
+                args.basis_result, args.report, args.output,
+            )
         elif args.command == "backfill-wallet-history":
             rpc = ReadOnlyRPC(**({"url": args.rpc_url} if args.rpc_url else {}))
             result = backfill_wallet_history(
@@ -484,7 +506,8 @@ def main(argv=None):
                             "backfill-wallet-blockscout", "crosscheck-lifetime-wallet",
                             "recalculate-lifetime-inventory", "close-lifetime-receipt-gap",
                             "build-lifetime-basis-bundle", "probe-price-history",
-                            "audit-price-candidates", "evaluate-price-policy"}:
+                            "audit-price-candidates", "evaluate-price-policy",
+                            "verify-independent-report"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
