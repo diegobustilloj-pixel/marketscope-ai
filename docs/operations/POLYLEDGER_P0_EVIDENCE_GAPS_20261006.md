@@ -72,6 +72,7 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
 - Sonda de precios sellada: `data/polyledger-sentinel/p0/car_lifetime_price_probe_20261006_v2/`
 - Auditoría de candidatos sellada: `data/polyledger-sentinel/p0/car_lifetime_price_candidate_audit_20261006_v2/`
 - Evaluación de política sellada: `data/polyledger-sentinel/p0/car_lifetime_closing_mark_policy_20261007_v1/`
+- Compuerta de informe independiente: `data/polyledger-sentinel/p0/car_lifetime_independent_report_gate_20261007_v1/`
 - Registro de corrida: `docs/operations/POLYLEDGER_P0_RUN_20261006.md`
 - Registro de sonda: `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md`
 - Registro de auditoría: `docs/operations/POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md`
@@ -81,6 +82,12 @@ La política posterior aceptó dos de los cuatro candidatos únicamente para una
 futura compilación y aplazó dos por falta de identidad histórica pre-corte.
 Como no escribió `closing_marks` ni recompiló el bundle, las 3.498 solicitudes
 siguen abiertas y sus conteos no se deben reducir todavía.
+
+La compuerta offline del segundo informe también quedó ejecutada: el informe
+externo aún no existe, por lo que el resultado es `INDEPENDENT_REPORT_GATE_BLOCKED`
+y no modifica el basis ni el estado P0. El contrato esperado está sellado por
+hash en esa salida y deberá producirlo una implementación con método, commit y
+evidencia propios.
 
 Los artefactos de datos y resultados se conservan solo
 localmente. Este diagnóstico puede

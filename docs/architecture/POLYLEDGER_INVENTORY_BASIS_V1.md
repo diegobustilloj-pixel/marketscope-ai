@@ -109,6 +109,24 @@ fuente externa pero no suficiente por sí solo para demostrar toda la historia:
 Este gate no aprueba globalmente el P0; Combo, captura CLOB/WS y los restantes
 criterios conservan sus propios bloqueos.
 
+## Ingreso del informe independiente
+
+El contrato se recibe mediante una compuerta offline separada del motor
+principal:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger verify-independent-report `
+  --basis-result data/polyledger-sentinel/p0/car_lifetime_basis_result_20261006_v2 `
+  --report data/polyledger-sentinel/p0/independent_report.json `
+  --output data/polyledger-sentinel/p0/independent_report_gate_v1
+```
+
+La compuerta exige un método y commit distintos del motor primario, evidencia
+no vacía y coincidencia exacta del contrato atómico. Conserva sólo referencias
+y hashes, no copia el informe ni cambia el bundle. Un informe coincidente no
+puede aprobar P0 si el resultado primario sigue `BLOCKED` o si faltan marcas,
+basis de recepciones o flujos externos.
+
 ## Ejecución
 
 ```powershell

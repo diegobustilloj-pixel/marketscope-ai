@@ -50,6 +50,9 @@ No se habilitaron órdenes automáticas ni dinero real.
 - La sonda histórica admite cursor reanudable por lotes de hasta 20 outcomes;
   la primera tentativa del lote 21–40 quedó bloqueada por transporte RPC y
   conservó su `.partial`, sin crear salida final ni consultar precios.
+- Compuerta offline `verify-independent-report` para recibir el segundo cálculo:
+  exige procedencia distinta y coincidencia exacta del contrato atómico. La
+  ejecución real quedó bloqueada por informe ausente y no cambió P0.
 
 ### Backlog de investigación
 
