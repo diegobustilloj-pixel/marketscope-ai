@@ -192,6 +192,10 @@ def main(argv=None):
     )
     price_probe.add_argument("--sample-size", type=int, default=20)
     price_probe.add_argument(
+        "--start-index", type=int, default=0,
+        help="Zero-based position in the sorted eligible CTF queue; use a new output per batch",
+    )
+    price_probe.add_argument(
         "--max-age-seconds", type=int, required=True,
         help="Explicit freshness bound used only to classify candidate observations",
     )
@@ -385,6 +389,7 @@ def main(argv=None):
                 args.bundle, args.evidence_gaps, args.output,
                 rpc=primary_rpc, secondary_rpc=secondary_rpc,
                 client=OfficialPriceHistoryClient(), sample_size=args.sample_size,
+                start_index=args.start_index,
                 max_age_seconds=args.max_age_seconds,
             )
         elif args.command == "audit-price-candidates":

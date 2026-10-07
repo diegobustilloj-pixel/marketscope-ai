@@ -231,11 +231,13 @@ def _load_validated_mark_queue(gap_path: Path, *, bundle_path: Path, bundle: dic
 
 
 def select_ctf_probe_assets(bundle: dict, *, closing_mark_requests: dict[str, int],
-                            sample_size: int) -> tuple[list[dict], dict]:
+                            sample_size: int, start_index: int = 0) -> tuple[list[dict], dict]:
     """Select the first canonical CTF queue rows and account for exclusions."""
     validate_exact(bundle)
     if type(sample_size) is not int or not 1 <= sample_size <= MAX_SAMPLE_SIZE:
         raise EvidenceError(f"Price probe sample size must be 1..{MAX_SAMPLE_SIZE}")
+    if type(start_index) is not int or start_index < 0:
+        raise EvidenceError("Price probe start index must be a non-negative whole number")
     if uint(bundle.get("schema")) != 1 or uint(bundle.get("chain")) != 137:
         raise EvidenceError("Price probe only supports schema 1 Polygon basis bundles")
     closing = bundle.get("closing")
@@ -271,10 +273,12 @@ def select_ctf_probe_assets(bundle: dict, *, closing_mark_requests: dict[str, in
 
     if not eligible:
         raise EvidenceError("Closing inventory has no positive CTF outcome eligible for price-history probe")
-    chosen = eligible[:sample_size]
+    if start_index >= len(eligible):
+        raise EvidenceError("Price probe start index is past the eligible CTF queue")
+    chosen = eligible[start_index:start_index + sample_size]
     rows = [
         {
-            "sequence": index,
+            "sequence": start_index + index,
             "asset": row["asset"],
             "token_id": row["token_id"],
             "quantity_atomic": row["quantity_atomic"],
@@ -286,6 +290,10 @@ def select_ctf_probe_assets(bundle: dict, *, closing_mark_requests: dict[str, in
         "positive_non_quote_assets": positive_non_quote,
         "eligible_ctf_outcomes": len(eligible),
         "selected_ctf_outcomes": len(rows),
+        "selection_start_index": start_index,
+        "selection_end_index_exclusive": start_index + len(rows),
+        "next_start_index": (start_index + len(rows)
+                             if start_index + len(rows) < len(eligible) else None),
         "excluded_assets_by_reason": dict(sorted(exclusions.items())),
         "selection_policy": SELECTION_POLICY,
     }
@@ -458,6 +466,7 @@ def build_price_history_probe_file(
     secondary_rpc,
     client: OfficialPriceHistoryClient,
     sample_size: int = MAX_SAMPLE_SIZE,
+    start_index: int = 0,
     max_age_seconds: int,
 ) -> dict:
     """Run one bounded price-source probe into a new sealed local directory."""
@@ -483,7 +492,8 @@ def build_price_history_probe_file(
         evidence_gaps, bundle_path=bundle_path, bundle=bundle
     )
     selected, coverage = select_ctf_probe_assets(
-        bundle, closing_mark_requests=closing_mark_requests, sample_size=sample_size
+        bundle, closing_mark_requests=closing_mark_requests, sample_size=sample_size,
+        start_index=start_index,
     )
     closing = bundle["closing"]
     expected_block = {
@@ -500,6 +510,7 @@ def build_price_history_probe_file(
         "evidence_gap_queue": gap_evidence,
         "closing_block": expected_block,
         "sample_size_requested": sample_size,
+        "selection_start_index": start_index,
         "maximum_observation_age_seconds": max_age_seconds,
         "selection_policy": SELECTION_POLICY,
         "block_anchor": {

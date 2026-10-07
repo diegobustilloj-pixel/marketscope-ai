@@ -13,6 +13,7 @@ from polymarket_bot.ledger.price_history_probe import (
     PUSD_CONTRACT,
     build_price_history_probe_file,
     parse_history_observation,
+    select_ctf_probe_assets,
 )
 from test_ledger_inventory_basis import QUOTE, bundle
 
@@ -136,6 +137,27 @@ def test_price_probe_header_mismatch_preserves_partial_without_requests(tmp_path
     assert (partial / "configuration.json").is_file()
     assert (partial / "failure.json").is_file()
     assert not client.urls
+
+
+def test_price_probe_selection_cursor_advances_sorted_queue(tmp_path: Path):
+    source, gaps, value, yes, no = _source_and_gaps(tmp_path)
+    selected, coverage = select_ctf_probe_assets(
+        value,
+        closing_mark_requests={yes: 25, no: 35},
+        sample_size=1,
+        start_index=1,
+    )
+
+    assert selected == [{
+        "sequence": 2,
+        "asset": no,
+        "token_id": "2",
+        "quantity_atomic": 35,
+        "source_eligibility": "CTF_OUTCOME_TOKEN",
+    }]
+    assert coverage["selection_start_index"] == 1
+    assert coverage["selection_end_index_exclusive"] == 2
+    assert coverage["next_start_index"] is None
 
 
 def test_price_history_parser_rejects_future_point_even_if_other_point_exists():
