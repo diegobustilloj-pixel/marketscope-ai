@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "policy_id": "car-lifetime-closing-mark-policy-batch-00041-00060-v1",
+  "status": "APPROVED_FOR_EVIDENCE_EVALUATION_ONLY",
+  "chain": 137,
+  "conditional_tokens_contract": "0x4d97dcd97ec945f40cf65f87097ace5ea0476045",
+  "root_of_trust": {
+    "audit_engine": "polyledger-price-candidate-audit/2",
+    "audit_code_commit": "1e1a3f3ae253744504b1e879772da26b8968c7f4",
+    "audit_manifest_sha256": "db8b4d65d0825f1a1409624e249d3a70d2c180999ca1b2bd64d081f026b5c2e8",
+    "audit_summary_sha256": "ff9cea272548e968135540150a188c2fe5eb58d847264cc6794f1e4917064718",
+    "probe_manifest_sha256": "7e857f16bf47b1145f1c952795d210bc0c3f6115b2745ed2661b3a1f802e0594",
+    "evidence_gap_manifest_sha256": "87addaf89aeac7bf8508f86ae7a868b6ae6bd0ffa24ce36b6d79d54241045a11",
+    "bundle_manifest_sha256": "877bae404f83ec6f52d1bc24c93c269ea886704dd0a394a9f68a914d69c23172",
+    "bundle_sha256": "6244785cc1cdbebc212b5a3cb07875bb031965934d8f213d02df63de108a2edc",
+    "bundle_digest": "7dc9c3feb44df00cf64dc88b3a10ec0512026f88aef110a52db1e8911811372b",
+    "closing_block_number": 93762690,
+    "closing_block_hash": "0xcb952565d49457d93bcd4ae549bbfe7a7b31a26fe8855dd6b993d46638f30b72",
+    "cutoff_timestamp": 1789349067
+  },
+  "thresholds": {
+    "maximum_age_seconds": 900,
+    "minimum_resolution_seconds": 1,
+    "maximum_resolution_seconds": 300,
+    "require_closed_bucket": true,
+    "price_interval": "STRICT_INTERIOR_0_1"
+  },
+  "identity": {
+    "require_current_official_identity": true,
+    "require_clob_compact_condition": true,
+    "require_gamma_binary_pair": true,
+    "require_local_mapping_before_cutoff": true,
+    "allow_negrisk": false,
+    "require_cutoff_within_declared_window": true,
+    "current_closed_allowed_only_if_closed_after_cutoff": true
+  },
+  "settlement": {
+    "require_two_independent_rpcs": true,
+    "require_exact_block_hash": true,
+    "unresolved_denominator": 0,
+    "settled_precedence": "CTF_PAYOUT_STATE_OVERRIDES_HISTORY",
+    "state_anchor": "CLOSING_BLOCK_POST_STATE_MATCHING_INVENTORY",
+    "approved_rpc_hosts": [
+      "polygon.drpc.org",
+      "tenderly.rpc.polygon.community"
+    ]
+  },
+  "integration": {
+    "write_closing_marks": false,
+    "modify_basis_bundle": false,
+    "automatic_approval": false
+  },
+  "safety": {
+    "automatic_orders": false,
+    "read_only": true,
+    "real_money": false,
+    "signing": false,
+    "wallet_connection": false,
+    "withdrawals": false
+  }
+}
