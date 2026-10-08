@@ -56,7 +56,9 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
    de 20 CTF y su auditoría de identidad ya existen: los cuatro candidatos
    frescos tienen mapeos oficiales actuales consistentes; sólo dos poseen
    corroboración local anterior al corte. La política v1 aceptó esos dos sólo
-   para un bundle futuro y aplazó los otros dos; integró cero marcas. Por tanto,
+   para un bundle futuro y aplazó los otros dos. El lote 21–40 añadió cinco
+   candidatos auditados con identidad histórica; su política aceptó uno y
+   rechazó cuatro por NegRisk. Ambos lotes integraron cero marcas. Por tanto,
    las 3.498 solicitudes siguen abiertas y no se reduce este conteo.
 3. Recompilar un bundle nuevo con esa evidencia, sin cambiar ni sobrescribir el
    v5, y repetir `inventory-basis` en otro directorio nuevo.
@@ -72,16 +74,20 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
 - Sonda de precios sellada: `data/polyledger-sentinel/p0/car_lifetime_price_probe_20261006_v2/`
 - Auditoría de candidatos sellada: `data/polyledger-sentinel/p0/car_lifetime_price_candidate_audit_20261006_v2/`
 - Evaluación de política sellada: `data/polyledger-sentinel/p0/car_lifetime_closing_mark_policy_20261007_v1/`
+- Sonda sellada 21–40: `data/polyledger-sentinel/p0/car_lifetime_price_probe_20261007_batch_00021_00040_retry1/`
+- Auditoría sellada 21–40: `data/polyledger-sentinel/p0/car_lifetime_price_candidate_audit_20261007_batch_00021_00040_v1/`
+- Política sellada 21–40: `data/polyledger-sentinel/p0/car_lifetime_closing_mark_policy_20261007_batch_00021_00040_v1/`
 - Compuerta de informe independiente: `data/polyledger-sentinel/p0/car_lifetime_independent_report_gate_20261007_v1/`
 - Registro de corrida: `docs/operations/POLYLEDGER_P0_RUN_20261006.md`
 - Registro de sonda: `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md`
 - Registro de auditoría: `docs/operations/POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md`
 - Registro de política: `docs/operations/POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`
 
-La política posterior aceptó dos de los cuatro candidatos únicamente para una
-futura compilación y aplazó dos por falta de identidad histórica pre-corte.
-Como no escribió `closing_marks` ni recompiló el bundle, las 3.498 solicitudes
-siguen abiertas y sus conteos no se deben reducir todavía.
+Las dos políticas aceptaron tres de nueve candidatos únicamente para una futura
+compilación: dos quedaron aplazados por falta de identidad histórica y cuatro
+fueron rechazados por NegRisk. Como no escribieron `closing_marks` ni
+recompilaron el bundle, las 3.498 solicitudes siguen abiertas y sus conteos no
+se deben reducir todavía.
 
 La compuerta offline del segundo informe también quedó ejecutada: el informe
 externo aún no existe, por lo que el resultado es `INDEPENDENT_REPORT_GATE_BLOCKED`

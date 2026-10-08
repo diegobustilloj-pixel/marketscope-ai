@@ -96,3 +96,14 @@ resueltas. Dos candidatos pasaron para una futura compilación y dos quedaron
 aplazados por falta de identidad histórica anterior al corte. Se escribieron
 cero marcas; detalle y hashes en
 [`POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`](POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md).
+
+## Continuación por lotes
+
+El lote reanudado 21–40 quedó sellado con 20 respuestas de precios: cinco
+frescas, catorce antiguas y una sin observación. Su auditoría guardó 20/20
+respuestas oficiales de identidad y confirmó 5/5 mapeos. La política separada
+del lote obtuvo acuerdo exacto entre dRPC y Tenderly, aceptó un candidato sólo
+para un bundle futuro y rechazó cuatro por NegRisk. No escribió marcas ni
+modificó v5. El cursor siguiente sobre los 2.870 outcomes CTF elegibles es 40;
+los 3.498 activos positivos totales incluyen además 627 Combo y un pUSD. Véase
+[`POLYLEDGER_P0_PRICE_BATCH_20261007.md`](POLYLEDGER_P0_PRICE_BATCH_20261007.md).

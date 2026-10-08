@@ -75,11 +75,14 @@ pre-corte. Se integraron cero marcas y v5 no cambió. Véanse
 `docs/operations/POLYLEDGER_P0_PRICE_CANDIDATE_AUDIT_20261006.md` y
 `docs/operations/POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`.
 
-La captura siguiente ya admite lotes reanudables de 20 outcomes; el primer lote
-21–40 quedó bloqueado antes de consultar precios por transporte RPC y conserva
-su `.partial`. La compuerta `verify-independent-report` también está preparada:
-su ejecución sobre basis v2 confirmó que falta el informe externo y dejó P0
-`BLOCKED`, sin cambiar el bundle. Véanse
+La captura siguiente ya admite lotes reanudables de 20 outcomes. El intento
+fallido del lote 21–40 conserva su `.partial`, y el reintento quedó sellado con
+5 candidatos frescos, 14 antiguos y 1 sin observación. Su auditoría confirmó
+5/5 identidades; la política específica aceptó uno sólo para un bundle futuro
+y rechazó cuatro por NegRisk. Se integraron cero marcas, el siguiente cursor es
+40 y el bundle v5 no cambió. La compuerta `verify-independent-report` también
+está preparada: su ejecución sobre basis v2 confirmó que falta el informe
+externo y dejó P0 `BLOCKED`. Véanse
 `docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md` y
 `docs/operations/POLYLEDGER_P0_INDEPENDENT_REPORT_GATE_20261007.md`.
 

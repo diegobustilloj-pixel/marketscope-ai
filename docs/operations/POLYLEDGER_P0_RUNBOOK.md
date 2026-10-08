@@ -289,24 +289,30 @@ correcto mientras falte cualquier evidencia del gate P0.
 
 ### Captura reanudable de precios por lotes
 
-La sonda admite lotes de hasta 20 outcomes y un cursor estable sobre la cola
-ordenada. El lote siguiente al sondeo original se solicita así, siempre en un
-directorio nuevo:
+La sonda admite lotes de hasta 20 outcomes y un cursor estable sobre los 2.870
+outcomes CTF elegibles. El total de 3.498 activos positivos incluye además 627
+Combo y un pUSD que no son outcomes del endpoint. El lote 21–40 ya terminó en
+`car_lifetime_price_probe_20261007_batch_00021_00040_retry1/`: 5 candidatos
+frescos, 14 antiguos y 1 sin observación. La auditoría confirmó las cinco
+identidades y la política específica aceptó uno sólo para un bundle futuro;
+rechazó cuatro por NegRisk e integró cero marcas. El intento fallido anterior
+se conserva en `.partial`.
+
+El siguiente lote comienza en el cursor 40 y siempre debe usar un directorio
+nuevo:
 
 ```powershell
 .\.venv\Scripts\python.exe -m polymarket_bot.ledger probe-price-history `
   --bundle data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/bundle.json `
   --evidence-gaps data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1 `
-  --output data/polyledger-sentinel/p0/car_lifetime_price_probe_20261007_batch_00021_00040_retry1 `
+  --output data/polyledger-sentinel/p0/car_lifetime_price_probe_20261007_batch_00041_00060_v1 `
   --rpc-url https://polygon.drpc.org `
   --secondary-rpc-url https://tenderly.rpc.polygon.community `
-  --sample-size 20 --start-index 20 --max-age-seconds 900
+  --sample-size 20 --start-index 40 --max-age-seconds 900
 ```
 
-La tentativa del 7 de octubre no pudo abrir `eth_chainId` por bloqueo del
-transporte de red del entorno. Conservó únicamente una configuración y
-`failure.json` en
-`car_lifetime_price_probe_20261007_batch_00021_00040.partial/`; no creó un
-resultado final ni consultó precios. No se debe borrar ese `.partial`: cuando
-la red esté disponible, usar otro sufijo de salida (`retry1`, `retry2`, etc.).
-Cada lote debe auditarse antes de considerarlo para una compilación posterior.
+Cada lote debe pasar por `audit-price-candidates` y por una política con raíz
+de confianza nueva. Nunca reutilizar `closing_mark_policy_v1.json` ni la
+política 21–40 con otra auditoría, porque ambas fijan hashes exactos. El registro
+completo del lote cerrado está en
+`POLYLEDGER_P0_PRICE_BATCH_20261007.md`.
