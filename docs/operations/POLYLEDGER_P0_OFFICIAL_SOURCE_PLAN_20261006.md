@@ -104,6 +104,11 @@ frescas, catorce antiguas y una sin observación. Su auditoría guardó 20/20
 respuestas oficiales de identidad y confirmó 5/5 mapeos. La política separada
 del lote obtuvo acuerdo exacto entre dRPC y Tenderly, aceptó un candidato sólo
 para un bundle futuro y rechazó cuatro por NegRisk. No escribió marcas ni
-modificó v5. El cursor siguiente sobre los 2.870 outcomes CTF elegibles es 40;
+modificó v5. El lote 41–60 guardó 20/20 raw, con un candidato fresco y
+diecinueve antiguos; su auditoría guardó 4/4 respuestas, confirmó identidad y
+metadata pre-corte, y su política dual-RPC aceptó el precio `0.875` sólo para
+un bundle futuro. El acumulado es 4 aceptados, 2 aplazados y 4 rechazados;
+tampoco escribió marcas ni modificó v5. El cursor siguiente sobre los 2.870
+outcomes CTF elegibles es 60;
 los 3.498 activos positivos totales incluyen además 627 Combo y un pUSD. Véase
 [`POLYLEDGER_P0_PRICE_BATCH_20261007.md`](POLYLEDGER_P0_PRICE_BATCH_20261007.md).

@@ -12,7 +12,7 @@ La plataforma concentra investigaciones de Polymarket bajo un núcleo compartido
 
 | Línea | Estado verificable | Decisión actual |
 |---|---|---|
-| PolyLedger P0 | Replay reconciliado; dos lotes dejaron 3/9 candidatos aceptados sólo para un bundle futuro, pero cero marcas están integradas | Continuar desde el cursor 40, completar flujos y segundo cálculo; sin trading |
+| PolyLedger P0 | Replay reconciliado; tres capturas dejaron 4/10 candidatos aceptados sólo para un bundle futuro, pero cero marcas están integradas | Continuar desde el cursor 60, completar flujos y segundo cálculo; sin trading |
 | Deportes / wallets | Investigación y prueba cerradas; no surgió un ganador copiable | No construir ejecutor ni usar capital |
 | Clima | Investigación, backtest realista y ticket manual existen | Mantener manual/shadow hasta nueva evidencia |
 | Elon / conteo de tuits | Investigación y monitor forward separado existen | No olvidar esta línea; revisar su evidencia local antes de informar resultados |
@@ -57,7 +57,7 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 
 **Mejora integrada:** la optimización de memoria ya está integrada en `main`; la rama `wip/ledger-basis-memory` se conserva como traza de desarrollo. Indexa las colas FIFO por `(wallet, asset)`, sustituye la copia creciente de ancestros por vínculos de lotes, usa un diario compacto ligado por hash al bundle sellado, serializa y calcula hashes por streaming y permite `snapshot(copy_safe=False)` para una corrida única. El 7 de octubre pasaron 149 pruebas `test_ledger*`, incluidas 26 de la política de marcas, una del cursor reanudable y cuatro de la compuerta del informe independiente; una muestra real de 10.000 acciones produjo el mismo estado económico entre diario completo y compacto. En perfiles reales, cargar el bundle ocupó ~526 MB privados; el replay de 50.000 acciones llegó a ~588 MB y el de 100.000 a ~648 MB, sin duplicación material al generar la instantánea. La corrida completa de basis v2 confirmó que el arreglo elimina el bloqueo de memoria; no convierte el basis incompleto en resultado aprobado.
 
-**Siguiente decisión técnica:** ampliar la captura CTF desde el cursor 40 con
+**Siguiente decisión técnica:** ampliar la captura CTF desde el cursor 60 con
 un directorio nuevo, auditar cada resultado y crear una raíz de política propia
 sin relajar identidad histórica ni la exclusión NegRisk. En paralelo deben
 completarse con evidencia los flujos externos. Cuando la entrada sea suficiente
@@ -79,8 +79,20 @@ respuestas: cinco frescas, catorce antiguas y una sin observación. La auditorí
 posterior confirmó 5/5 identidades y la política específica, anclada por hashes
 a ese lote, obtuvo acuerdo dual-RPC exacto. Aceptó la secuencia 27 sólo para un
 bundle futuro y rechazó las otras cuatro por NegRisk; no se relajó la regla,
-no se integró ninguna marca y v5 mantuvo su hash. El cursor siguiente es 40.
+no se integró ninguna marca y v5 mantuvo su hash. Ese lote dejó el cursor en 40.
 Detalle: `docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md`.
+
+**Lote 41–60 cerrado:**
+`car_lifetime_price_probe_20261007_batch_00041_00060_v1/` guardó 20/20
+respuestas: una fresca y diecinueve antiguas. La auditoría confirmó la identidad
+y el mapeo local pre-corte del candidato de la secuencia 59. dRPC y Tenderly
+coincidieron en que la condición no estaba resuelta en el bloque; la política
+específica aceptó su precio `0.875` sólo para un bundle futuro. Se integraron
+cero marcas, v5 no cambió y el cursor siguiente es 60. Detalle:
+`docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md`.
+
+**Acumulado de políticas:** 4/10 candidatos aceptados sólo para una futura
+compilación, 2/10 aplazados y 4/10 rechazados; cero marcas integradas.
 
 **Compuerta del segundo informe preparada:** `src/polymarket_bot/ledger/independent_report_gate.py` valida en modo offline el método, commit, evidencia y contrato exacto de un cálculo externo. La ejecución sobre `car_lifetime_basis_result_20261006_v2/` quedó sellada en `car_lifetime_independent_report_gate_20261007_v1/`: informe externo ausente, compuerta `BLOCKED`, estado P0 sin cambios. El informe independiente todavía no existe.
 

@@ -296,23 +296,26 @@ Combo y un pUSD que no son outcomes del endpoint. El lote 21–40 ya terminó en
 frescos, 14 antiguos y 1 sin observación. La auditoría confirmó las cinco
 identidades y la política específica aceptó uno sólo para un bundle futuro;
 rechazó cuatro por NegRisk e integró cero marcas. El intento fallido anterior
-se conserva en `.partial`.
+se conserva en `.partial`. El lote 41–60 también terminó con 20/20 raw: un
+candidato fresco y diecinueve antiguos, identidad confirmada y precio `0.875`
+aceptado sólo para un bundle futuro. El acumulado es 4 aceptados, 2 aplazados y
+4 rechazados; se integraron cero marcas.
 
-El siguiente lote comienza en el cursor 40 y siempre debe usar un directorio
+El siguiente lote comienza en el cursor 60 y siempre debe usar un directorio
 nuevo:
 
 ```powershell
 .\.venv\Scripts\python.exe -m polymarket_bot.ledger probe-price-history `
   --bundle data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/bundle.json `
   --evidence-gaps data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1 `
-  --output data/polyledger-sentinel/p0/car_lifetime_price_probe_20261007_batch_00041_00060_v1 `
+  --output data/polyledger-sentinel/p0/car_lifetime_price_probe_20261007_batch_00061_00080_v1 `
   --rpc-url https://polygon.drpc.org `
   --secondary-rpc-url https://tenderly.rpc.polygon.community `
-  --sample-size 20 --start-index 40 --max-age-seconds 900
+  --sample-size 20 --start-index 60 --max-age-seconds 900
 ```
 
 Cada lote debe pasar por `audit-price-candidates` y por una política con raíz
-de confianza nueva. Nunca reutilizar `closing_mark_policy_v1.json` ni la
-política 21–40 con otra auditoría, porque ambas fijan hashes exactos. El registro
-completo del lote cerrado está en
+de confianza nueva. Nunca reutilizar `closing_mark_policy_v1.json` ni las
+políticas 21–40/41–60 con otra auditoría, porque fijan hashes exactos. El
+registro completo de los lotes cerrados está en
 `POLYLEDGER_P0_PRICE_BATCH_20261007.md`.

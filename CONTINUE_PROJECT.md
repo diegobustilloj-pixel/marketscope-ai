@@ -39,8 +39,20 @@ El cambio introduce un índice FIFO por wallet/activo y conserva una cadena de `
 Las 149 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la política de marcas, una el cursor reanudable de lotes y cuatro la compuerta del informe independiente. Una muestra real de 10.000 acciones comparó diario completo frente a compacto y conservó exactamente el mismo estado económico. En el mismo bundle, los perfiles de 50.000 y 100.000 acciones usaron aproximadamente 588 MB y 648 MB privados, respectivamente, incluida la carga de ~526 MB del bundle; la instantánea no duplicó materialmente la memoria. La corrida completa de basis v2 se selló sin error de reconstrucción y con conciliación `MATCH`. El próximo trabajo ya no es validar escala, identidad de la muestra ni la política de aceptación:
 
 1. conservar la salida de basis v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
-2. conservar la sonda `car_lifetime_price_probe_20261006_v2`, la auditoría `car_lifetime_price_candidate_audit_20261006_v2` y la evaluación autoritativa `car_lifetime_closing_mark_policy_20261007_v1`: dRPC y Tenderly coincidieron en 4/4 condiciones no resueltas; dos precios fueron aceptados sólo para una futura compilación y dos aplazados por falta de identidad histórica pre-corte; cero marcas fueron integradas;
-3. leer `docs/operations/POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`, reanudar la captura CTF por lotes de hasta 20 con el cursor de `probe-price-history`, ampliar la evidencia por fuente compatible bajo esa política y completar 856 flujos externos; cuando la entrada esté completa, compilar un bundle nuevo, ejecutar el cálculo independiente, pasarlo por `verify-independent-report` y reevaluar el gate. Nunca sobrescribir v5 ni borrar los `.partial` existentes.
+2. conservar la sonda, auditoría y política iniciales, además de las salidas
+   selladas 21–40 y 41–60 enlazadas desde
+   `docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md`: entre diez
+   candidatos, cuatro precios fueron aceptados sólo para una futura
+   compilación, dos quedaron aplazados y cuatro rechazados (sonda inicial:
+   2/2/0; lote 21–40: 1/0/4; lote 41–60: 1/0/0, en orden
+   aceptados/aplazados/rechazados); cero marcas fueron integradas y v5 no
+   cambió;
+3. reanudar las secuencias 61–80 por lotes de hasta 20 desde el cursor 60 de
+   `probe-price-history`, crear auditoría y raíz de política nuevas para cada
+   lote, y completar 856 flujos externos; cuando la entrada esté completa,
+   compilar un bundle nuevo, ejecutar el cálculo independiente, pasarlo por
+   `verify-independent-report` y reevaluar el gate. Nunca sobrescribir v5 ni
+   borrar los `.partial` existentes.
 
 No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batch` y los snapshots pueden copiar estructuras amplias. Si el problema persiste, perfilar primero y cambiar una sola fuente de duplicación por vez, manteniendo un replay determinista y la trazabilidad de cada lote.
 
@@ -48,7 +60,7 @@ No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batc
 
 ```text
 resultado de basis v2 sellado y conciliado
-    → política de marcas v1 sellada: ampliar captura por fuente compatible
+    → políticas de marcas selladas hasta cursor 60: ampliar captura desde 60
     → completar flujos externos y marcas de cierre con evidencia
     → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente

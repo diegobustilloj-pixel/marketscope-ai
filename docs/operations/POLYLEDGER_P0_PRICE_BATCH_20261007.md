@@ -1,8 +1,8 @@
-# Lote de precios 21–40 — PolyLedger P0 / `car` / 2026-10-07
+# Lotes de precios 21–60 — PolyLedger P0 / `car` / 2026-10-07
 
-Estado: **captura, auditoría y política completas; 1 candidato aceptado sólo
-para un bundle futuro, 4 rechazados por NegRisk, 0 integrados; P0 continúa
-`BLOCKED`.**
+Estado: **captura, auditoría y política completas hasta el cursor 60; en los
+dos lotes reanudables, 2 candidatos aceptados sólo para un bundle futuro, 4
+rechazados por NegRisk y 0 integrados; P0 continúa `BLOCKED`.**
 
 ## Alcance
 
@@ -19,7 +19,7 @@ porque el transporte no completó `eth_chainId`. Se conserva
 `car_lifetime_price_probe_20261007_batch_00021_00040.partial/` con su
 `configuration.json` y `failure.json`. No se borró ni reutilizó.
 
-## Reintento sellado
+## Lote 21–40 sellado
 
 Salida local:
 `data/polyledger-sentinel/p0/car_lifetime_price_probe_20261007_batch_00021_00040_retry1/`.
@@ -89,11 +89,61 @@ marcas, no calculó PnL y no modificó el bundle.
 La política se ejecutó en el commit `c738956` con árbol limpio. Todos los
 manifests fueron revalidados y el hash del bundle v5 permaneció idéntico.
 
+## Lote 41–60 sellado
+
+Salidas locales:
+
+- sonda: `car_lifetime_price_probe_20261007_batch_00041_00060_v1/`;
+- auditoría: `car_lifetime_price_candidate_audit_20261007_batch_00041_00060_v1/`;
+- política: `car_lifetime_closing_mark_policy_20261007_batch_00041_00060_v1/`.
+
+| Campo | Resultado |
+|---|---:|
+| Cursor de entrada | 40 |
+| Rango seleccionado | índices 40–59 / secuencias 41–60 |
+| Cursor siguiente | 60 |
+| Consultas intentadas / raw guardados | 20 / 20 |
+| Candidatos frescos | 1 |
+| Candidatos antiguos | 19 |
+| Sin observación | 0 |
+| Marcas escritas | 0 |
+
+El único candidato fresco fue la secuencia 59: outcome NO del mercado “Mike
+Johnson out as Speaker by December 31?”, precio `0.875`, timestamp
+`1789348500`, edad 567 segundos y resolución 300 segundos. La auditoría guardó
+4/4 respuestas oficiales, sin errores, confirmó identidad actual y mapeo local
+anterior al corte, y detectó una discrepancia de orden `primary/secondary` que
+resolvió mediante el par etiquetado CLOB/Gamma.
+
+La política nueva mantuvo `allow_negrisk=false`. El mercado no era NegRisk y
+dRPC/Tenderly coincidieron en que su condición tenía `payoutDenominator=0` en
+el estado posterior del bloque de cierre. La secuencia 59 quedó
+`ACCEPTED_FOR_NEW_BUNDLE_COMPILATION`; no se escribió la marca ni se modificó
+el bundle.
+
+| Artefacto 41–60 | SHA-256 |
+|---|---|
+| Sonda `run_manifest.json` | `7e857f16bf47b1145f1c952795d210bc0c3f6115b2745ed2661b3a1f802e0594` |
+| Sonda `summary.json` | `eab6f4905799d0e40040264adf3edb7788172ff5e9580efe1a6365378388ffec` |
+| Auditoría `run_manifest.json` | `db8b4d65d0825f1a1409624e249d3a70d2c180999ca1b2bd64d081f026b5c2e8` |
+| Auditoría `summary.json` | `ff9cea272548e968135540150a188c2fe5eb58d847264cc6794f1e4917064718` |
+| Configuración de política | `ca6c28571c58b037309854d54e0018305a1b6bd048f9290281bbe44be033c292` |
+| Política `run_manifest.json` | `f7718a9f23e2141bb1c430618c10ee76eaa8d0b59e1191742d8e2c02f419e9aa` |
+| Política `summary.json` | `b8652202f30c8008705dfc60628eababec682413c48161cb9227117e73133cac` |
+
+La política 41–60 se ejecutó en el commit `1648bc5` con árbol limpio. El
+`bundle.json` v5 conservó SHA-256
+`6244785cc1cdbebc212b5a3cb07875bb031965934d8f213d02df63de108a2edc`.
+La validación posterior ejecutó 161 pruebas PolyLedger sin fallos y verificó 11
+configuraciones de bots sin errores ni advertencias.
+
 ## Continuidad
 
-El siguiente cursor es 40, por lo que la próxima captura corresponde a las
-secuencias 41–60 y debe usar otro directorio. Aunque existen ahora tres precios
-aceptados entre los dos lotes, las 3.498 solicitudes permanecen abiertas hasta
-que una compilación nueva incorpore evidencia sellada. También siguen abiertos
-los 856 flujos externos, el basis de 772 recepciones y el informe contable
-independiente. No hay autorización para wallet, firma, órdenes ni dinero real.
+El siguiente cursor es 60, por lo que la próxima captura corresponde a las
+secuencias 61–80 y debe usar otro directorio. Incluyendo la sonda inicial y los
+dos lotes reanudables, existen cuatro precios aceptados entre diez candidatos:
+dos quedaron aplazados y cuatro rechazados. Las 3.498 solicitudes permanecen
+abiertas hasta que una compilación nueva incorpore evidencia sellada. También
+siguen abiertos los 856 flujos externos, el basis de 772 recepciones y el
+informe contable independiente. No hay autorización para wallet, firma,
+órdenes ni dinero real.
