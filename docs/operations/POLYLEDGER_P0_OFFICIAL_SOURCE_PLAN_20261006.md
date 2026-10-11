@@ -108,7 +108,15 @@ modificó v5. El lote 41–60 guardó 20/20 raw, con un candidato fresco y
 diecinueve antiguos; su auditoría guardó 4/4 respuestas, confirmó identidad y
 metadata pre-corte, y su política dual-RPC aceptó el precio `0.875` sólo para
 un bundle futuro. El acumulado es 4 aceptados, 2 aplazados y 4 rechazados;
-tampoco escribió marcas ni modificó v5. El cursor siguiente sobre los 2.870
-outcomes CTF elegibles es 60;
+tampoco escribió marcas ni modificó v5. Ese lote dejó el cursor en 60 sobre
+los 2.870 outcomes CTF elegibles;
 los 3.498 activos positivos totales incluyen además 627 Combo y un pUSD. Véase
 [`POLYLEDGER_P0_PRICE_BATCH_20261007.md`](POLYLEDGER_P0_PRICE_BATCH_20261007.md).
+
+El lote 61–80 guardó 20/20 raw, con cuatro candidatos frescos y dieciséis
+antiguos. La auditoría conservó 16/16 respuestas oficiales y confirmó 4/4
+identidades y mapeos pre-corte. La política obtuvo acuerdo exacto dual-RPC,
+aceptó dos precios sólo para un bundle futuro y rechazó dos por NegRisk. El
+acumulado es 6 aceptados, 2 aplazados y 6 rechazados; cero integrados. El cursor
+siguiente es 80. Véase
+[`POLYLEDGER_P0_PRICE_BATCH_20261009.md`](POLYLEDGER_P0_PRICE_BATCH_20261009.md).

@@ -1,6 +1,6 @@
 # Estado canónico — Plataforma cuantitativa Polymarket
 
-**Corte de contexto:** 7 de octubre de 2026 (America/La_Paz)
+**Corte de contexto:** 11 de octubre de 2026 (America/La_Paz)
 **Raíz canónica:** `C:\ProyectoBotV4\polymarket_quant_bot`
 **Regla de seguridad vigente:** no hay firma, conexión de wallet, retiros, dinero real ni órdenes automáticas habilitados.
 
@@ -12,7 +12,7 @@ La plataforma concentra investigaciones de Polymarket bajo un núcleo compartido
 
 | Línea | Estado verificable | Decisión actual |
 |---|---|---|
-| PolyLedger P0 | Replay reconciliado; tres capturas dejaron 4/10 candidatos aceptados sólo para un bundle futuro, pero cero marcas están integradas | Continuar desde el cursor 60, completar flujos y segundo cálculo; sin trading |
+| PolyLedger P0 | Replay reconciliado; cuatro capturas dejaron 6/14 candidatos aceptados sólo para un bundle futuro, pero cero marcas están integradas | Continuar desde el cursor 80, completar flujos y segundo cálculo; sin trading |
 | Deportes / wallets | Investigación y prueba cerradas; no surgió un ganador copiable | No construir ejecutor ni usar capital |
 | Clima | Investigación, backtest realista y ticket manual existen | Mantener manual/shadow hasta nueva evidencia |
 | Elon / conteo de tuits | Investigación y monitor forward separado existen | No olvidar esta línea; revisar su evidencia local antes de informar resultados |
@@ -57,7 +57,7 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 
 **Mejora integrada:** la optimización de memoria ya está integrada en `main`; la rama `wip/ledger-basis-memory` se conserva como traza de desarrollo. Indexa las colas FIFO por `(wallet, asset)`, sustituye la copia creciente de ancestros por vínculos de lotes, usa un diario compacto ligado por hash al bundle sellado, serializa y calcula hashes por streaming y permite `snapshot(copy_safe=False)` para una corrida única. El 7 de octubre pasaron 149 pruebas `test_ledger*`, incluidas 26 de la política de marcas, una del cursor reanudable y cuatro de la compuerta del informe independiente; una muestra real de 10.000 acciones produjo el mismo estado económico entre diario completo y compacto. En perfiles reales, cargar el bundle ocupó ~526 MB privados; el replay de 50.000 acciones llegó a ~588 MB y el de 100.000 a ~648 MB, sin duplicación material al generar la instantánea. La corrida completa de basis v2 confirmó que el arreglo elimina el bloqueo de memoria; no convierte el basis incompleto en resultado aprobado.
 
-**Siguiente decisión técnica:** ampliar la captura CTF desde el cursor 60 con
+**Siguiente decisión técnica:** ampliar la captura CTF desde el cursor 80 con
 un directorio nuevo, auditar cada resultado y crear una raíz de política propia
 sin relajar identidad histórica ni la exclusión NegRisk. En paralelo deben
 completarse con evidencia los flujos externos. Cuando la entrada sea suficiente
@@ -91,8 +91,17 @@ específica aceptó su precio `0.875` sólo para un bundle futuro. Se integraron
 cero marcas, v5 no cambió y el cursor siguiente es 60. Detalle:
 `docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md`.
 
-**Acumulado de políticas:** 4/10 candidatos aceptados sólo para una futura
-compilación, 2/10 aplazados y 4/10 rechazados; cero marcas integradas.
+**Lote 61–80 cerrado:**
+`car_lifetime_price_probe_20261009_batch_00061_00080_v1/` guardó 20/20
+respuestas: cuatro frescas y dieciséis antiguas. La auditoría confirmó 4/4
+identidades y mapeos locales pre-corte. dRPC y Tenderly coincidieron en las
+cuatro condiciones sin resolver; la política aceptó las secuencias 67 y 71 sólo
+para un bundle futuro y rechazó 63 y 69 por NegRisk. Se integraron cero marcas,
+v5 no cambió y el cursor siguiente es 80. Detalle:
+`docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261009.md`.
+
+**Acumulado de políticas:** 6/14 candidatos aceptados sólo para una futura
+compilación, 2/14 aplazados y 6/14 rechazados; cero marcas integradas.
 
 **Compuerta del segundo informe preparada:** `src/polymarket_bot/ledger/independent_report_gate.py` valida en modo offline el método, commit, evidencia y contrato exacto de un cálculo externo. La ejecución sobre `car_lifetime_basis_result_20261006_v2/` quedó sellada en `car_lifetime_independent_report_gate_20261007_v1/`: informe externo ausente, compuerta `BLOCKED`, estado P0 sin cambios. El informe independiente todavía no existe.
 

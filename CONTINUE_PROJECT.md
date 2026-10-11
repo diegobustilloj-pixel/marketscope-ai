@@ -40,14 +40,15 @@ Las 149 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la pol
 
 1. conservar la salida de basis v2 y sus hashes; no volver a correr el bundle salvo que cambie el motor o la evidencia de entrada;
 2. conservar la sonda, auditoría y política iniciales, además de las salidas
-   selladas 21–40 y 41–60 enlazadas desde
-   `docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md`: entre diez
-   candidatos, cuatro precios fueron aceptados sólo para una futura
-   compilación, dos quedaron aplazados y cuatro rechazados (sonda inicial:
-   2/2/0; lote 21–40: 1/0/4; lote 41–60: 1/0/0, en orden
+   selladas 21–40, 41–60 y 61–80 enlazadas desde
+   `docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md` y
+   `docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261009.md`: entre
+   catorce candidatos, seis precios fueron aceptados sólo para una futura
+   compilación, dos quedaron aplazados y seis rechazados (sonda inicial:
+   2/2/0; lote 21–40: 1/0/4; lote 41–60: 1/0/0; lote 61–80: 2/0/2, en orden
    aceptados/aplazados/rechazados); cero marcas fueron integradas y v5 no
    cambió;
-3. reanudar las secuencias 61–80 por lotes de hasta 20 desde el cursor 60 de
+3. reanudar las secuencias 81–100 por lotes de hasta 20 desde el cursor 80 de
    `probe-price-history`, crear auditoría y raíz de política nuevas para cada
    lote, y completar 856 flujos externos; cuando la entrada esté completa,
    compilar un bundle nuevo, ejecutar el cálculo independiente, pasarlo por
@@ -60,7 +61,7 @@ No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batc
 
 ```text
 resultado de basis v2 sellado y conciliado
-    → políticas de marcas selladas hasta cursor 60: ampliar captura desde 60
+    → políticas de marcas selladas hasta cursor 80: ampliar captura desde 80
     → completar flujos externos y marcas de cierre con evidencia
     → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente

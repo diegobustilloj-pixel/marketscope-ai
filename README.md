@@ -76,14 +76,14 @@ pre-corte. Se integraron cero marcas y v5 no cambió. Véanse
 `docs/operations/POLYLEDGER_P0_CLOSING_MARK_POLICY_20261007.md`.
 
 La captura admite lotes reanudables de 20 outcomes. El intento fallido 21–40
-conserva su `.partial`; su reintento y el lote 41–60 quedaron sellados. Entre
-ambos hubo 6 candidatos frescos: las políticas específicas aceptaron dos sólo
-para un bundle futuro y rechazaron cuatro por NegRisk. Incluida la sonda
-inicial, el acumulado es 4/10 aceptados, 2/10 aplazados y 4/10 rechazados; se
-integraron cero marcas, el siguiente cursor es 60 y el bundle v5 no cambió. La compuerta
+conserva su `.partial`; su reintento y los lotes 41–60/61–80 quedaron sellados.
+Incluida la sonda inicial, el acumulado es 6/14 aceptados sólo para un bundle
+futuro, 2/14 aplazados y 6/14 rechazados; se integraron cero marcas, el
+siguiente cursor es 80 y el bundle v5 no cambió. La compuerta
 `verify-independent-report` también está preparada: su ejecución sobre basis
 v2 confirmó que falta el informe externo y dejó P0 `BLOCKED`. Véanse
-`docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md` y
+`docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261007.md`,
+`docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261009.md` y
 `docs/operations/POLYLEDGER_P0_INDEPENDENT_REPORT_GATE_20261007.md`.
 
 El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes

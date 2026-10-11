@@ -134,16 +134,17 @@ el bundle.
 La política 41–60 se ejecutó en el commit `1648bc5` con árbol limpio. El
 `bundle.json` v5 conservó SHA-256
 `6244785cc1cdbebc212b5a3cb07875bb031965934d8f213d02df63de108a2edc`.
-La validación posterior ejecutó 161 pruebas PolyLedger sin fallos y verificó 11
+La validación posterior ejecutó 149 pruebas de `test_ledger*` sin fallos y verificó 11
 configuraciones de bots sin errores ni advertencias.
 
 ## Continuidad
 
-El siguiente cursor es 60, por lo que la próxima captura corresponde a las
-secuencias 61–80 y debe usar otro directorio. Incluyendo la sonda inicial y los
-dos lotes reanudables, existen cuatro precios aceptados entre diez candidatos:
-dos quedaron aplazados y cuatro rechazados. Las 3.498 solicitudes permanecen
-abiertas hasta que una compilación nueva incorpore evidencia sellada. También
-siguen abiertos los 856 flujos externos, el basis de 772 recepciones y el
-informe contable independiente. No hay autorización para wallet, firma,
-órdenes ni dinero real.
+Al cierre de los lotes documentados aquí, el cursor quedó en 60 y el acumulado
+era 4 aceptados, 2 aplazados y 4 rechazados de 10 candidatos. El lote posterior
+61–80 ya fue cerrado: el cursor vigente es 80 y el acumulado actual es 6/2/6
+de 14. Véase `POLYLEDGER_P0_PRICE_BATCH_20261009.md`.
+
+Las 3.498 solicitudes permanecen abiertas hasta que una compilación nueva
+incorpore evidencia sellada. También siguen abiertos los 856 flujos externos,
+el basis de 772 recepciones y el informe contable independiente. No hay
+autorización para wallet, firma, órdenes ni dinero real.
