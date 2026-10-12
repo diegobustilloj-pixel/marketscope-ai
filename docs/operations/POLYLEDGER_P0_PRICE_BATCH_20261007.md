@@ -140,9 +140,11 @@ configuraciones de bots sin errores ni advertencias.
 ## Continuidad
 
 Al cierre de los lotes documentados aquí, el cursor quedó en 60 y el acumulado
-era 4 aceptados, 2 aplazados y 4 rechazados de 10 candidatos. El lote posterior
-61–80 ya fue cerrado: el cursor vigente es 80 y el acumulado actual es 6/2/6
-de 14. Véase `POLYLEDGER_P0_PRICE_BATCH_20261009.md`.
+era 4 aceptados, 2 aplazados y 4 rechazados de 10 candidatos. Los lotes
+posteriores 61–80 y 81–100 ya fueron cerrados: el cursor vigente es 100 y el
+acumulado actual es 9/2/6 de 17. Véanse
+`POLYLEDGER_P0_PRICE_BATCH_20261009.md` y
+`POLYLEDGER_P0_PRICE_BATCH_20261011.md`.
 
 Las 3.498 solicitudes permanecen abiertas hasta que una compilación nueva
 incorpore evidencia sellada. También siguen abiertos los 856 flujos externos,

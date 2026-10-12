@@ -117,6 +117,14 @@ El lote 61–80 guardó 20/20 raw, con cuatro candidatos frescos y dieciséis
 antiguos. La auditoría conservó 16/16 respuestas oficiales y confirmó 4/4
 identidades y mapeos pre-corte. La política obtuvo acuerdo exacto dual-RPC,
 aceptó dos precios sólo para un bundle futuro y rechazó dos por NegRisk. El
-acumulado es 6 aceptados, 2 aplazados y 6 rechazados; cero integrados. El cursor
-siguiente es 80. Véase
+acumulado era 6 aceptados, 2 aplazados y 6 rechazados; cero integrados. Ese lote
+dejó el cursor en 80. Véase
 [`POLYLEDGER_P0_PRICE_BATCH_20261009.md`](POLYLEDGER_P0_PRICE_BATCH_20261009.md).
+
+El lote 81–100 guardó 20/20 raw, con tres candidatos frescos y diecisiete
+antiguos. La auditoría conservó 12/12 respuestas oficiales y confirmó 3/3
+identidades y mapeos pre-corte. La política obtuvo acuerdo exacto dual-RPC y
+aceptó los tres precios sólo para un bundle futuro. El acumulado es 9
+aceptados, 2 aplazados y 6 rechazados; cero integrados. El cursor siguiente es
+100. Véase
+[`POLYLEDGER_P0_PRICE_BATCH_20261011.md`](POLYLEDGER_P0_PRICE_BATCH_20261011.md).

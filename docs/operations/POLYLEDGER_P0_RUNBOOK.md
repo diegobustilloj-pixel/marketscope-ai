@@ -300,23 +300,28 @@ se conserva en `.partial`. El lote 41–60 también terminó con 20/20 raw: un
 candidato fresco y diecinueve antiguos, identidad confirmada y precio `0.875`
 aceptado sólo para un bundle futuro. El lote 61–80 terminó con cuatro frescos y
 dieciséis antiguos; la política aceptó dos y rechazó dos por NegRisk. El
-acumulado es 6 aceptados, 2 aplazados y 6 rechazados; se integraron cero marcas.
+acumulado era 6 aceptados, 2 aplazados y 6 rechazados. El lote 81–100 terminó
+con tres frescos y diecisiete antiguos; la política aceptó los tres. El
+acumulado vigente es 9 aceptados, 2 aplazados y 6 rechazados; se integraron cero
+marcas.
 
-El siguiente lote comienza en el cursor 80 y siempre debe usar un directorio
+El siguiente lote comienza en el cursor 100 y siempre debe usar un directorio
 nuevo:
 
 ```powershell
 .\.venv\Scripts\python.exe -m polymarket_bot.ledger probe-price-history `
   --bundle data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/bundle.json `
   --evidence-gaps data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1 `
-  --output data/polyledger-sentinel/p0/car_lifetime_price_probe_20261011_batch_00081_00100_v1 `
+  --output data/polyledger-sentinel/p0/car_lifetime_price_probe_20261011_batch_00101_00120_v1 `
   --rpc-url https://polygon.drpc.org `
   --secondary-rpc-url https://tenderly.rpc.polygon.community `
-  --sample-size 20 --start-index 80 --max-age-seconds 900
+  --sample-size 20 --start-index 100 --max-age-seconds 900
 ```
 
 Cada lote debe pasar por `audit-price-candidates` y por una política con raíz
 de confianza nueva. Nunca reutilizar `closing_mark_policy_v1.json` ni las
-políticas 21–40/41–60/61–80 con otra auditoría, porque fijan hashes exactos.
-Los registros completos están en `POLYLEDGER_P0_PRICE_BATCH_20261007.md` y
-`POLYLEDGER_P0_PRICE_BATCH_20261009.md`.
+políticas 21–40/41–60/61–80/81–100 con otra auditoría, porque fijan hashes
+exactos. Los registros completos están en
+`POLYLEDGER_P0_PRICE_BATCH_20261007.md`,
+`POLYLEDGER_P0_PRICE_BATCH_20261009.md` y
+`POLYLEDGER_P0_PRICE_BATCH_20261011.md`.

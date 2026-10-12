@@ -80,12 +80,15 @@ configuraciones de bots sin errores ni advertencias.
 
 ## Continuidad
 
-Incluyendo la sonda inicial y los tres lotes reanudables, se revisaron 14
-candidatos: 6 aceptados sólo para un bundle futuro, 2 aplazados y 6 rechazados.
-Se integraron cero. El siguiente cursor es 80 y corresponde a las secuencias
-81–100.
+Incluyendo la sonda inicial y los tres lotes documentados hasta ese momento, se
+habían revisado 14 candidatos: 6 aceptados sólo para un bundle futuro, 2
+aplazados y 6 rechazados. Se integraron cero y el cursor quedó en 80.
 
 Las 3.498 solicitudes de marca siguen abiertas hasta que una compilación nueva
 incorpore evidencia sellada. También continúan pendientes 856 flujos externos,
 el basis de 772 recepciones y el informe contable independiente. No hay
 autorización para wallet, firma, órdenes, retiros ni dinero real.
+
+El lote posterior 81–100 ya fue cerrado. El cursor vigente es 100 y el
+acumulado actual es 9 aceptados, 2 aplazados y 6 rechazados de 17. Véase
+`POLYLEDGER_P0_PRICE_BATCH_20261011.md`.
