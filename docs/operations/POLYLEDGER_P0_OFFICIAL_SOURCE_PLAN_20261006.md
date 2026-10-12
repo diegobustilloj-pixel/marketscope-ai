@@ -128,3 +128,12 @@ aceptó los tres precios sólo para un bundle futuro. El acumulado es 9
 aceptados, 2 aplazados y 6 rechazados; cero integrados. El cursor siguiente es
 100. Véase
 [`POLYLEDGER_P0_PRICE_BATCH_20261011.md`](POLYLEDGER_P0_PRICE_BATCH_20261011.md).
+
+El lote 101–120 guardó 20/20 raw, con tres candidatos frescos y diecisiete
+antiguos. Un primer intento de auditoría se conservó sin usar porque sus tres
+consultas fallaron por transporte; el reintento v2 guardó 12/12 respuestas y
+confirmó 3/3 identidades y mapeos pre-corte. La política obtuvo acuerdo exacto
+dual-RPC, aceptó dos precios sólo para un bundle futuro y rechazó uno por
+NegRisk. El acumulado es 11 aceptados, 2 aplazados y 7 rechazados; cero
+integrados. El cursor siguiente es 120. Véase
+[`POLYLEDGER_P0_PRICE_BATCH_20261011.md`](POLYLEDGER_P0_PRICE_BATCH_20261011.md).

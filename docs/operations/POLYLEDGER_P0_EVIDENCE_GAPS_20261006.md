@@ -62,7 +62,9 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
    aceptado sólo para un bundle futuro. El lote 61–80 añadió cuatro candidatos:
    dos aceptados para un bundle futuro y dos rechazados por NegRisk. Las cuatro
    primeras capturas integraron cero marcas. El lote 81–100 añadió tres
-   candidatos aceptados sólo para un bundle futuro y tampoco integró marcas.
+   candidatos aceptados sólo para un bundle futuro. El lote 101–120 añadió tres
+   candidatos: dos aceptados para un bundle futuro y uno rechazado por NegRisk.
+   Ninguno de esos lotes integró marcas.
    Por tanto, las 3.498 solicitudes siguen abiertas y no se reduce este conteo.
 3. Recompilar un bundle nuevo con esa evidencia, sin cambiar ni sobrescribir el
    v5, y repetir `inventory-basis` en otro directorio nuevo.
@@ -90,6 +92,10 @@ solamente en el bundle v5. La cola se conserva localmente e ignorada por Git.
 - Sonda sellada 81–100: `data/polyledger-sentinel/p0/car_lifetime_price_probe_20261011_batch_00081_00100_v1/`
 - Auditoría sellada 81–100: `data/polyledger-sentinel/p0/car_lifetime_price_candidate_audit_20261011_batch_00081_00100_v1/`
 - Política sellada 81–100: `data/polyledger-sentinel/p0/car_lifetime_closing_mark_policy_20261011_batch_00081_00100_v1/`
+- Sonda sellada 101–120: `data/polyledger-sentinel/p0/car_lifetime_price_probe_20261011_batch_00101_00120_v1/`
+- Auditoría 101–120 no autoritativa por error de transporte: `data/polyledger-sentinel/p0/car_lifetime_price_candidate_audit_20261011_batch_00101_00120_v1/`
+- Auditoría sellada 101–120: `data/polyledger-sentinel/p0/car_lifetime_price_candidate_audit_20261011_batch_00101_00120_v2/`
+- Política sellada 101–120: `data/polyledger-sentinel/p0/car_lifetime_closing_mark_policy_20261011_batch_00101_00120_v1/`
 - Compuerta de informe independiente: `data/polyledger-sentinel/p0/car_lifetime_independent_report_gate_20261007_v1/`
 - Registro de corrida: `docs/operations/POLYLEDGER_P0_RUN_20261006.md`
 - Registro de sonda: `docs/operations/POLYLEDGER_P0_PRICE_PROBE_20261006.md`
