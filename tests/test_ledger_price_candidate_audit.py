@@ -130,6 +130,9 @@ def test_candidate_audit_seals_official_identity_without_integrating(tmp_path: P
     manifest = json.loads((output / "run_manifest.json").read_text(encoding="utf-8"))
     assert sum(name.startswith("responses/") for name in manifest["files"]) == 4
     assert all((output / name).is_file() for name in manifest["files"])
+    requests = json.loads((output / "request_results.json").read_text(encoding="utf-8"))
+    raw_names = [Path(row["raw_response_file"]).name for row in requests]
+    assert all(len(name) <= 48 for name in raw_names)
 
     with pytest.raises(EvidenceError, match="already exists"):
         audit_price_candidates_file(probe, output, client=client)

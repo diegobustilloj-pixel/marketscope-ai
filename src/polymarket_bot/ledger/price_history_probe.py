@@ -579,7 +579,11 @@ def build_price_history_probe_file(
         else:
             result["received_at"] = now_utc()
             raw = response["body"]
-            raw_name = f"{row['sequence']:02d}_{row['token_id']}.raw.json"
+            # The token is already bound into request_sha256 and the sealed
+            # result.  Keeping a uint256 token in the filename can exceed the
+            # legacy Windows MAX_PATH limit once the probe is nested in a
+            # paginator attempt.
+            raw_name = f"{row['sequence']:05d}.raw.json"
             raw_path = responses / raw_name
             _write_raw_new(raw_path, raw)
             result.update({

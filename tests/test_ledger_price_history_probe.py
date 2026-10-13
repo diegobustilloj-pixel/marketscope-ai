@@ -114,6 +114,7 @@ def test_price_probe_seals_raw_ctf_only_and_never_integrates_marks(tmp_path: Pat
         "timestamp": 999, "price": "0.6", "age_seconds": 0, "resolution_seconds": 60,
     }
     assert (output / rows[0]["raw_response_file"]).read_bytes() == client.payloads["1"]
+    assert Path(rows[0]["raw_response_file"]).name == "00001.raw.json"
     manifest = json.loads((output / "run_manifest.json").read_text(encoding="utf-8"))
     assert rows[0]["raw_response_file"] in manifest["files"]
     assert not (output / "closing_marks.json").exists()

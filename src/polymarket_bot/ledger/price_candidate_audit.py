@@ -527,7 +527,10 @@ def _capture_request(partial: Path, client, *, request_id: str, kind: str, value
                        "attempts": exc.attempts})
         return record, None
     raw = response["body"]
-    filename = request_id + ".raw.json"
+    # request_id and query_url remain in the sealed record; use a bounded file
+    # key so a 78-digit token cannot make a nested Windows path unopenable.
+    file_key = hashlib.sha256(request_id.encode("utf-8")).hexdigest()[:20]
+    filename = f"{file_key}_{kind}.raw.json"
     raw_path = partial / "responses" / filename
     _write_raw_new(raw_path, raw)
     record.update({

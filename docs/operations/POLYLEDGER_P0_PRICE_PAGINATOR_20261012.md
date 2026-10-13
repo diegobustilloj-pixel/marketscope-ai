@@ -39,12 +39,24 @@ evaluar.
   deben conservar exactamente los hashes iniciales.
 - La plantilla mantiene `allow_negrisk=false`, dos RPC independientes y cero
   permisos de integración o ejecución.
+- Los archivos raw usan claves acotadas; el token y la consulta continúan
+  ligados criptográficamente al registro, sin introducir el uint256 completo
+  en nombres que puedan superar el límite de rutas de Windows.
+
+## Primer smoke y corrección de ruta
+
+El smoke inicial del 13 de octubre en la salida descriptiva larga `v1` quedó
+`BLOCKED` tras tres intentos, todavía en el cursor `120`: Windows rechazó una
+ruta de 272 caracteres al guardar el primer raw. No hubo ningún lote completo,
+marca integrada ni modificación del bundle. Esa salida se conserva localmente
+como evidencia fallida. El motor corrigió los nombres raw sin cambiar su
+contenido ni trazabilidad y la corrida canónica continúa en la ruta corta `v2`.
 
 ## Salida canónica de esta corrida
 
 ```text
 data/polyledger-sentinel/p0/
-└── car_lifetime_price_pagination_20261012_from_00120_v1/
+└── car_px120_v2/
     ├── configuration.json
     ├── state.json
     ├── inputs/
@@ -72,7 +84,7 @@ plantilla, las pruebas y esta guía.
   --evidence-gaps data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1 `
   --metadata-db data/car_forensics/car_metadata.db `
   --policy-template configs/polyledger/closing_mark_paginator_template_v1.json `
-  --output data/polyledger-sentinel/p0/car_lifetime_price_pagination_20261012_from_00120_v1 `
+  --output data/polyledger-sentinel/p0/car_px120_v2 `
   --rpc-url https://polygon.drpc.org `
   --secondary-rpc-url https://tenderly.rpc.polygon.community `
   --start-index 120 --batch-size 20 --max-age-seconds 900
@@ -82,7 +94,7 @@ plantilla, las pruebas y esta guía.
 
 ```powershell
 .\.venv\Scripts\python.exe -m polymarket_bot.ledger price-pagination-status `
-  --output data/polyledger-sentinel/p0/car_lifetime_price_pagination_20261012_from_00120_v1
+  --output data/polyledger-sentinel/p0/car_px120_v2
 ```
 
 ## Reanudación
@@ -95,7 +107,7 @@ Después de una pausa o interrupción:
   --evidence-gaps data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1 `
   --metadata-db data/car_forensics/car_metadata.db `
   --policy-template configs/polyledger/closing_mark_paginator_template_v1.json `
-  --output data/polyledger-sentinel/p0/car_lifetime_price_pagination_20261012_from_00120_v1 `
+  --output data/polyledger-sentinel/p0/car_px120_v2 `
   --rpc-url https://polygon.drpc.org `
   --secondary-rpc-url https://tenderly.rpc.polygon.community `
   --start-index 120 --batch-size 20 --max-age-seconds 900 --resume

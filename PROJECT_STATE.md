@@ -61,7 +61,7 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 desde el cursor 120. `paginate-price-history` procesa lotes contiguos de hasta
 20, conserva cada intento, falla cerrado y crea una raíz de política nueva sin
 relajar identidad histórica ni la exclusión NegRisk. Su salida canónica es
-`car_lifetime_price_pagination_20261012_from_00120_v1/`; el estado se consulta
+`car_px120_v2/`; el estado se consulta
 sin red mediante `price-pagination-status`. En paralelo deben completarse con
 evidencia los flujos externos. Cuando la entrada sea suficiente se podrá
 compilar un bundle nuevo; después se ejecutará el segundo cálculo independiente

@@ -51,7 +51,7 @@ Las 149 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la pol
    2/0/1); cero marcas fueron
    integradas y v5 no cambió;
 3. ejecutar o reanudar `paginate-price-history` desde el cursor 120 sobre la
-   salida `car_lifetime_price_pagination_20261012_from_00120_v1`. El paginador
+   salida `car_px120_v2`. El paginador
    crea sonda y, cuando corresponde, auditoría y política nuevas para cada lote
    de hasta 20; nunca salta un lote bloqueado. Consultar progreso con
    `price-pagination-status` y seguir
