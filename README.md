@@ -87,6 +87,13 @@ v2 confirmó que falta el informe externo y dejó P0 `BLOCKED`. Véanse
 `docs/operations/POLYLEDGER_P0_PRICE_BATCH_20261011.md` y
 `docs/operations/POLYLEDGER_P0_INDEPENDENT_REPORT_GATE_20261007.md`.
 
+La continuación desde el cursor 120 ya dispone de un paginador reanudable y
+fail-closed. `paginate-price-history` encadena sonda, auditoría y política en
+directorios nuevos, conserva cada intento y nunca avanza tras un lote fallido;
+`price-pagination-status` lee su checkpoint sin red ni mutación. La operación
+está definida en
+`docs/operations/POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`.
+
 El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes
 automáticas ni dinero real habilitados.
 

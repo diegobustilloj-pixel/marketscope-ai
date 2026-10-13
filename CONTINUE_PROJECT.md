@@ -50,10 +50,14 @@ Las 149 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la pol
    lote 41–60 1/0/0; lote 61–80 2/0/2; lote 81–100 3/0/0; lote 101–120
    2/0/1); cero marcas fueron
    integradas y v5 no cambió;
-3. reanudar las secuencias 121–140 por lotes de hasta 20 desde el cursor 120 de
-   `probe-price-history`, crear auditoría y raíz de política nuevas para cada
-   lote, y completar 856 flujos externos; cuando la entrada esté completa,
-   compilar un bundle nuevo, ejecutar el cálculo independiente, pasarlo por
+3. ejecutar o reanudar `paginate-price-history` desde el cursor 120 sobre la
+   salida `car_lifetime_price_pagination_20261012_from_00120_v1`. El paginador
+   crea sonda y, cuando corresponde, auditoría y política nuevas para cada lote
+   de hasta 20; nunca salta un lote bloqueado. Consultar progreso con
+   `price-pagination-status` y seguir
+   `docs/operations/POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`;
+4. completar 856 flujos externos; cuando la entrada esté completa, compilar un
+   bundle nuevo, ejecutar el cálculo independiente, pasarlo por
    `verify-independent-report` y reevaluar el gate. Nunca sobrescribir v5 ni
    borrar los `.partial` existentes.
 
@@ -63,7 +67,7 @@ No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batc
 
 ```text
 resultado de basis v2 sellado y conciliado
-    → políticas de marcas selladas hasta cursor 120: ampliar captura desde 120
+    → políticas de marcas selladas hasta cursor 120: paginar automáticamente desde 120
     → completar flujos externos y marcas de cierre con evidencia
     → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente

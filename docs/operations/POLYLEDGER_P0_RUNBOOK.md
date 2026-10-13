@@ -326,3 +326,11 @@ exactos. Los registros completos están en
 `POLYLEDGER_P0_PRICE_BATCH_20261007.md`,
 `POLYLEDGER_P0_PRICE_BATCH_20261009.md` y
 `POLYLEDGER_P0_PRICE_BATCH_20261011.md`.
+
+Para continuar desde el cursor 120 se prefiere el orquestador reanudable
+`paginate-price-history` en lugar de repetir manualmente el bloque anterior.
+Usa la salida
+`car_lifetime_price_pagination_20261012_from_00120_v1/`, conserva intentos
+fallidos y no avanza ante errores. El comando completo, la consulta de estado y
+la reanudación están en `POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`. Un lote sin
+candidatos frescos cierra con su sonda; auditoría y política no aplican.

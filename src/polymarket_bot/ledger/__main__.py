@@ -21,6 +21,11 @@ from .lifetime_crosscheck import crosscheck_lifetime_capture
 from .price_history_probe import OfficialPriceHistoryClient, build_price_history_probe_file
 from .price_candidate_audit import OfficialCandidateMetadataClient, audit_price_candidates_file
 from .price_mark_policy import evaluate_price_policy_file
+from .price_batch_paginator import (
+    DEFAULT_POLICY_TEMPLATE,
+    price_pagination_status,
+    run_price_batch_paginator,
+)
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
@@ -78,6 +83,8 @@ def _terminal_result(args, result: dict) -> dict:
             "review_gate": result["review_gate"],
             "safety": result["safety"],
         }
+    if args.command in {"paginate-price-history", "price-pagination-status"}:
+        return result
     if args.command == "verify-independent-report":
         return {
             "status": result["status"],
@@ -238,6 +245,38 @@ def main(argv=None):
         "--secondary-rpc-url", default="https://tenderly.rpc.polygon.community",
         help="Independent approved archive HTTPS Polygon RPC for exact-block settlement agreement",
     )
+    price_pages = commands.add_parser(
+        "paginate-price-history",
+        help="Run/resume fail-closed probe, audit, and policy batches without integrating marks",
+    )
+    price_pages.add_argument("--bundle", type=Path, required=True)
+    price_pages.add_argument("--evidence-gaps", type=Path, required=True)
+    price_pages.add_argument(
+        "--metadata-db", type=Path, default=Path("data/car_forensics/car_metadata.db"),
+    )
+    price_pages.add_argument(
+        "--policy-template", type=Path, default=DEFAULT_POLICY_TEMPLATE,
+    )
+    price_pages.add_argument("--output", type=Path, required=True)
+    price_pages.add_argument("--rpc-url", default="https://polygon.drpc.org")
+    price_pages.add_argument(
+        "--secondary-rpc-url", default="https://tenderly.rpc.polygon.community",
+    )
+    price_pages.add_argument("--start-index", type=int, required=True)
+    price_pages.add_argument("--stop-index", type=int)
+    price_pages.add_argument("--batch-size", type=int, default=20)
+    price_pages.add_argument("--max-age-seconds", type=int, default=900)
+    price_pages.add_argument("--max-attempts", type=int, default=3)
+    price_pages.add_argument("--retry-delay-seconds", type=int, default=2)
+    price_pages.add_argument("--batch-delay-seconds", type=int, default=1)
+    price_pages.add_argument("--max-batches", type=int)
+    price_pages.add_argument("--resume", action="store_true")
+    price_pages.add_argument("--retry-blocked", action="store_true")
+    price_pages_status = commands.add_parser(
+        "price-pagination-status",
+        help="Read a price paginator checkpoint without network access or mutation",
+    )
+    price_pages_status.add_argument("--output", type=Path, required=True)
     independent = commands.add_parser(
         "verify-independent-report",
         help="Compare a separately produced accounting report to the sealed contract",
@@ -422,6 +461,26 @@ def main(argv=None):
                 args.audit, args.policy, args.output,
                 primary_rpc=primary_rpc, secondary_rpc=secondary_rpc,
             )
+        elif args.command == "paginate-price-history":
+            primary_rpc = ReadOnlyRPC(url=args.rpc_url)
+            secondary_rpc = ReadOnlyRPC(url=args.secondary_rpc_url)
+            result = run_price_batch_paginator(
+                bundle=args.bundle, evidence_gaps=args.evidence_gaps,
+                metadata_db=args.metadata_db, policy_template=args.policy_template,
+                output=args.output, primary_rpc=primary_rpc,
+                secondary_rpc=secondary_rpc,
+                price_client=OfficialPriceHistoryClient(retries=3),
+                metadata_client=OfficialCandidateMetadataClient(retries=3),
+                start_index=args.start_index, stop_index=args.stop_index,
+                batch_size=args.batch_size, max_age_seconds=args.max_age_seconds,
+                max_attempts=args.max_attempts,
+                retry_delay_seconds=args.retry_delay_seconds,
+                batch_delay_seconds=args.batch_delay_seconds,
+                resume=args.resume, retry_blocked=args.retry_blocked,
+                max_batches=args.max_batches,
+            )
+        elif args.command == "price-pagination-status":
+            result = price_pagination_status(args.output)
         elif args.command == "verify-independent-report":
             result = verify_independent_report_file(
                 args.basis_result, args.report, args.output,
@@ -509,6 +568,10 @@ def main(argv=None):
                             "audit-price-candidates", "evaluate-price-policy",
                             "verify-independent-report"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
+        if args.command == "paginate-price-history":
+            return 0 if result["status"] in {"COMPLETE", "PAUSED_BATCH_LIMIT"} else 2
+        if args.command == "price-pagination-status":
+            return 2 if result["status"] == "BLOCKED" else 0
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
         return 0 if args.command != "replay" or result["p0_exit"]["status"] == "PASS" else 2

@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "template_id": "car-lifetime-closing-mark-paginator-template-v1",
+  "status": "APPROVED_FOR_EVIDENCE_EVALUATION_ONLY",
+  "chain": 137,
+  "conditional_tokens_contract": "0x4d97dcd97ec945f40cf65f87097ace5ea0476045",
+  "thresholds": {
+    "maximum_age_seconds": 900,
+    "minimum_resolution_seconds": 1,
+    "maximum_resolution_seconds": 300,
+    "require_closed_bucket": true,
+    "price_interval": "STRICT_INTERIOR_0_1"
+  },
+  "identity": {
+    "require_current_official_identity": true,
+    "require_clob_compact_condition": true,
+    "require_gamma_binary_pair": true,
+    "require_local_mapping_before_cutoff": true,
+    "allow_negrisk": false,
+    "require_cutoff_within_declared_window": true,
+    "current_closed_allowed_only_if_closed_after_cutoff": true
+  },
+  "settlement": {
+    "require_two_independent_rpcs": true,
+    "require_exact_block_hash": true,
+    "unresolved_denominator": 0,
+    "settled_precedence": "CTF_PAYOUT_STATE_OVERRIDES_HISTORY",
+    "state_anchor": "CLOSING_BLOCK_POST_STATE_MATCHING_INVENTORY"
+  },
+  "integration": {
+    "write_closing_marks": false,
+    "modify_basis_bundle": false,
+    "automatic_approval": false
+  },
+  "safety": {
+    "automatic_orders": false,
+    "read_only": true,
+    "real_money": false,
+    "signing": false,
+    "wallet_connection": false,
+    "withdrawals": false
+  }
+}

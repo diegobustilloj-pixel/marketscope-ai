@@ -57,13 +57,21 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 
 **Mejora integrada:** la optimización de memoria ya está integrada en `main`; la rama `wip/ledger-basis-memory` se conserva como traza de desarrollo. Indexa las colas FIFO por `(wallet, asset)`, sustituye la copia creciente de ancestros por vínculos de lotes, usa un diario compacto ligado por hash al bundle sellado, serializa y calcula hashes por streaming y permite `snapshot(copy_safe=False)` para una corrida única. El 7 de octubre pasaron 149 pruebas `test_ledger*`, incluidas 26 de la política de marcas, una del cursor reanudable y cuatro de la compuerta del informe independiente; una muestra real de 10.000 acciones produjo el mismo estado económico entre diario completo y compacto. En perfiles reales, cargar el bundle ocupó ~526 MB privados; el replay de 50.000 acciones llegó a ~588 MB y el de 100.000 a ~648 MB, sin duplicación material al generar la instantánea. La corrida completa de basis v2 confirmó que el arreglo elimina el bloqueo de memoria; no convierte el basis incompleto en resultado aprobado.
 
-**Siguiente decisión técnica:** ampliar la captura CTF desde el cursor 120 con
-un directorio nuevo, auditar cada resultado y crear una raíz de política propia
-sin relajar identidad histórica ni la exclusión NegRisk. En paralelo deben
-completarse con evidencia los flujos externos. Cuando la entrada sea suficiente
-se podrá compilar un bundle nuevo; después se ejecutará el segundo cálculo
-independiente y se reevaluará el gate. Eso no autoriza capital ni copia
-automática.
+**Siguiente decisión técnica:** ejecutar o reanudar el paginador automático
+desde el cursor 120. `paginate-price-history` procesa lotes contiguos de hasta
+20, conserva cada intento, falla cerrado y crea una raíz de política nueva sin
+relajar identidad histórica ni la exclusión NegRisk. Su salida canónica es
+`car_lifetime_price_pagination_20261012_from_00120_v1/`; el estado se consulta
+sin red mediante `price-pagination-status`. En paralelo deben completarse con
+evidencia los flujos externos. Cuando la entrada sea suficiente se podrá
+compilar un bundle nuevo; después se ejecutará el segundo cálculo independiente
+y se reevaluará el gate. Eso no autoriza capital ni copia automática. Diseño y
+operación: `docs/operations/POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`.
+
+**Validación del paginador:** el 12 de octubre aprobaron 154 pruebas
+`test_ledger*` y las 11 configuraciones de bots. La cobertura nueva comprueba
+pausa/reanudación, reconstrucción del checkpoint, bloqueo sin salto después de
+reintentos agotados, confinamiento de evidencia y cierre del último lote parcial.
 
 **Inventario de brechas:** `docs/operations/POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md` fija los conteos y el orden de resolución. La cola sellada local `car_lifetime_basis_evidence_gaps_20261006_v1` referencia por hash las 856 acciones de flujo y 3.498 marcas pendientes, sin duplicar el bundle ni publicar datos. No se debe volver a descargar ni repetir el bundle v5 antes de cambiar la evidencia de entrada.
 
