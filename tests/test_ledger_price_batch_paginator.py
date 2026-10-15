@@ -126,6 +126,7 @@ def test_paginator_pauses_resumes_and_seals_contiguous_batches(tmp_path: Path):
         "candidates_audited": 1,
         "accepted_for_new_bundle_compilation": 1,
         "deferred_missing_historical_identity": 0,
+        "deferred_missing_current_official_identity": 0,
         "rejected_by_policy": 0,
         "batches_without_fresh_candidates": 1,
     }
@@ -198,6 +199,37 @@ def test_paginator_never_skips_a_batch_after_bounded_retries(tmp_path: Path):
     assert recovered["status"] == "COMPLETE"
     assert recovered["next_start_index"] == 1
     assert (output / "batches/batch_00001_00001/attempt_003/batch_result.json").is_file()
+
+
+def test_paginator_advances_when_gamma_identity_is_explicitly_unavailable(tmp_path: Path):
+    bundle, gaps, metadata, value = _sealed_inputs(tmp_path)
+    primary, secondary = _rpcs(value)
+    output = tmp_path / "pagination"
+    before = hashlib.sha256(bundle.read_bytes()).hexdigest()
+
+    result = run_price_batch_paginator(
+        bundle=bundle, evidence_gaps=gaps, metadata_db=metadata,
+        policy_template=POLICY_TEMPLATE, output=output,
+        primary_rpc=primary, secondary_rpc=secondary,
+        price_client=_price_client(),
+        metadata_client=PolicyCandidateClient(gamma_missing=True),
+        start_index=0, stop_index=1, batch_size=1, max_age_seconds=900,
+        max_attempts=1, retry_delay_seconds=0, batch_delay_seconds=0,
+        require_clean_git=False,
+    )
+
+    assert result["status"] == "COMPLETE"
+    assert result["next_start_index"] == 1
+    assert result["aggregate"]["deferred_missing_current_official_identity"] == 1
+    assert result["aggregate"]["accepted_for_new_bundle_compilation"] == 0
+    assert result["aggregate"]["rejected_by_policy"] == 0
+    decision_path = next(output.rglob("decisions.json"))
+    decision = json.loads(decision_path.read_text(encoding="utf-8"))[0]
+    assert decision["status"] == "DEFERRED_MISSING_CURRENT_OFFICIAL_IDENTITY"
+    assert not any(call[0] == "eth_call" for call in primary.calls)
+    assert not any(call[0] == "eth_call" for call in secondary.calls)
+    assert hashlib.sha256(bundle.read_bytes()).hexdigest() == before
+    assert not list(output.rglob("closing_marks.json"))
 
 
 def test_paginator_requires_explicit_resume_for_existing_output(tmp_path: Path):

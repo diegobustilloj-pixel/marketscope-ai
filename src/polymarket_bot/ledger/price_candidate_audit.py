@@ -418,6 +418,16 @@ def _parse_gamma_market(raw_responses: list[bytes], *, token_id: str,
             "market": {field: row.get(field) for field in fields}}
 
 
+def _gamma_identity_unavailable(raw_responses: list[bytes]) -> bool:
+    """Return true only when both official Gamma partitions are valid empty lists."""
+    try:
+        return len(raw_responses) == 2 and all(
+            _json_payload(raw, label="Gamma markets") == [] for raw in raw_responses
+        )
+    except EvidenceError:
+        return False
+
+
 def _iso_timestamp(value) -> int | None:
     if not isinstance(value, str) or not value:
         return None
@@ -543,15 +553,22 @@ def _capture_request(partial: Path, client, *, request_id: str, kind: str, value
 
 
 def _candidate_review(candidate: dict, *, parent: dict | None, clob: dict | None,
-                      gamma: dict | None, local: dict | None, cutoff_timestamp: int) -> dict:
+                      gamma: dict | None, local: dict | None, cutoff_timestamp: int,
+                      gamma_identity_unavailable: bool = False) -> dict:
+    if gamma_identity_unavailable and (parent is None or clob is None or gamma is not None):
+        raise EvidenceError("Gamma-unavailable review prerequisites are invalid")
     blockers = []
     if parent is None:
         blockers.append("CLOB_PARENT_MARKET_UNVERIFIED")
     if clob is None:
         blockers.append("CLOB_OUTCOME_LABEL_UNVERIFIED")
-    if gamma is None:
+    if gamma_identity_unavailable:
+        blockers.append("CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE")
+    elif gamma is None:
         blockers.append("CURRENT_GAMMA_MARKET_UNVERIFIED")
-    if parent is not None and clob is not None and gamma is not None:
+    if gamma_identity_unavailable:
+        identity_status = "CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"
+    elif parent is not None and clob is not None and gamma is not None:
         identity_status = "CURRENT_OFFICIAL_IDENTITY_CONSISTENT"
     else:
         identity_status = "CURRENT_OFFICIAL_IDENTITY_INCOMPLETE"
@@ -579,6 +596,17 @@ def _candidate_review(candidate: dict, *, parent: dict | None, clob: dict | None
             )
         else:
             parent_label_order = "NOT_APPLICABLE_CUSTOM_BINARY_OUTCOMES"
+    deferred_current_identity = (
+        gamma_identity_unavailable
+        and local_status == "AUXILIARY_MAPPING_BEFORE_CUTOFF"
+        and blockers == ["CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"]
+    )
+    integration_status = (
+        "PENDING_MARK_POLICY_REVIEW" if not blockers
+        else "DEFERRED_CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"
+        if deferred_current_identity
+        else "NOT_ELIGIBLE_FOR_POLICY_REVIEW"
+    )
     return {
         "sequence": candidate["sequence"], "asset": candidate["asset"], "token_id": candidate["token_id"],
         "price_candidate": candidate["observation"],
@@ -594,7 +622,7 @@ def _candidate_review(candidate: dict, *, parent: dict | None, clob: dict | None
         },
         "auxiliary_local_metadata": {"status": local_status, "row": local},
         "integration": {
-            "status": "PENDING_MARK_POLICY_REVIEW" if not blockers else "NOT_ELIGIBLE_FOR_POLICY_REVIEW",
+            "status": integration_status,
             "closing_mark_written": False,
             "basis_bundle_modified": False,
             "reasons": sorted(set(blockers + ["AUDIT_DOES_NOT_AUTOMATICALLY_INTEGRATE_MARK"])),
@@ -660,6 +688,7 @@ def audit_price_candidates_file(probe: Path, output: Path, *, client: OfficialCa
         except EvidenceError as exc:
             parent, parent_request["parse_error"] = None, _error_text(exc)
         clob = gamma = None
+        gamma_identity_unavailable = False
         if parent is not None:
             clob_request, clob_raw = _capture_request(
                 partial, client, request_id=prefix + "_clob", kind="clob", value=parent["condition_id"]
@@ -688,15 +717,27 @@ def audit_price_candidates_file(probe: Path, output: Path, *, client: OfficialCa
                         parent=parent, clob=clob,
                     )
                 except EvidenceError as exc:
-                    gamma, gamma_closed_request["parse_error"] = None, _error_text(exc)
+                    gamma = None
+                    if _gamma_identity_unavailable([gamma_open_raw, gamma_closed_raw]):
+                        gamma_identity_unavailable = True
+                        gamma_closed_request["evidence_status"] = (
+                            "CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"
+                        )
+                    else:
+                        gamma_closed_request["parse_error"] = _error_text(exc)
         reviews.append(_candidate_review(
             candidate, parent=parent, clob=clob, gamma=gamma,
             local=local_metadata["rows"].get(candidate["token_id"]),
             cutoff_timestamp=source["cutoff_timestamp"],
+            gamma_identity_unavailable=gamma_identity_unavailable,
         ))
     _write_new(partial / "request_results.json", requests)
     _write_new(partial / "candidate_reviews.json", reviews)
     eligible = sum(row["integration"]["status"] == "PENDING_MARK_POLICY_REVIEW" for row in reviews)
+    deferred_current_identity = sum(
+        row["integration"]["status"] == "DEFERRED_CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"
+        for row in reviews
+    )
     summary = {
         "schema": AUDIT_SCHEMA,
         "engine": AUDIT_VERSION,
@@ -713,6 +754,7 @@ def audit_price_candidates_file(probe: Path, output: Path, *, client: OfficialCa
             "current_official_identity_consistent": sum(
                 row["current_identity"]["status"] == "CURRENT_OFFICIAL_IDENTITY_CONSISTENT" for row in reviews
             ),
+            "deferred_current_official_identity_unavailable": deferred_current_identity,
             "eligible_for_mark_policy_review": eligible,
             "not_eligible": len(reviews) - eligible,
             "auxiliary_local_mapping_before_cutoff": sum(

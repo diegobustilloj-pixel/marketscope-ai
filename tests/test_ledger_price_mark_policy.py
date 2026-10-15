@@ -98,7 +98,8 @@ def _metadata_db(path: Path, *, include: bool = True, fetched_at: int = 999,
 
 
 def _fresh_audit(tmp_path: Path, *, include_local: bool = True,
-                 outcomes: tuple[str, str] = ("Yes", "No")) -> tuple[Path, Path]:
+                 outcomes: tuple[str, str] = ("Yes", "No"),
+                 gamma_missing: bool = False) -> tuple[Path, Path]:
     source, _, value, _, _ = _source_and_gaps(tmp_path)
     bundle_root = tmp_path / "sealed-bundle"
     bundle_root.mkdir()
@@ -141,7 +142,9 @@ def _fresh_audit(tmp_path: Path, *, include_local: bool = True,
     )
     audit = tmp_path / "audit"
     audit_price_candidates_file(
-        probe, audit, client=PolicyCandidateClient(outcomes=outcomes), metadata_db=metadata
+        probe, audit,
+        client=PolicyCandidateClient(outcomes=outcomes, gamma_missing=gamma_missing),
+        metadata_db=metadata,
     )
     return audit, source
 
@@ -240,6 +243,7 @@ def test_policy_accepts_only_for_future_bundle_and_seals_dual_rpc_evidence(tmp_p
     assert summary["decisions"] == {
         "accepted_for_new_bundle_compilation": 1,
         "deferred_missing_historical_identity": 0,
+        "deferred_missing_current_official_identity": 0,
         "rejected_by_policy": 0,
     }
     assert summary["integration"] == {
@@ -293,6 +297,46 @@ def test_policy_defers_candidate_without_pre_cut_identity(tmp_path: Path):
     decision = json.loads((output / "decisions.json").read_text(encoding="utf-8"))[0]
     assert decision["status"] == "DEFERRED_MISSING_HISTORICAL_IDENTITY"
     assert decision["reasons"] == ["HISTORICAL_IDENTITY_BEFORE_CUTOFF_MISSING"]
+
+
+def test_policy_defers_candidate_when_current_gamma_identity_is_unavailable(tmp_path: Path):
+    audit, bundle = _fresh_audit(tmp_path, gamma_missing=True)
+    audit_summary = json.loads((audit / "summary.json").read_text(encoding="utf-8"))
+    assert audit_summary["requests"]["parse_errors"] == 0
+    assert audit_summary["reviews"] == {
+        "current_official_identity_consistent": 0,
+        "deferred_current_official_identity_unavailable": 1,
+        "eligible_for_mark_policy_review": 0,
+        "not_eligible": 1,
+        "auxiliary_local_mapping_before_cutoff": 1,
+        "parent_primary_secondary_label_order_disagreements": 0,
+    }
+    policy_path = tmp_path / "policy.json"
+    policy = _write_policy(audit, policy_path)
+    primary, secondary = _rpcs(policy)
+    output = tmp_path / "policy-output"
+    before = _sha(bundle)
+
+    summary = evaluate_price_policy_file(
+        audit, policy_path, output, primary_rpc=primary, secondary_rpc=secondary
+    )
+
+    assert summary["decisions"] == {
+        "accepted_for_new_bundle_compilation": 0,
+        "deferred_missing_historical_identity": 0,
+        "deferred_missing_current_official_identity": 1,
+        "rejected_by_policy": 0,
+    }
+    decision = json.loads((output / "decisions.json").read_text(encoding="utf-8"))[0]
+    assert decision["status"] == "DEFERRED_MISSING_CURRENT_OFFICIAL_IDENTITY"
+    assert decision["reasons"] == ["CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"]
+    assert decision["outcome_index"] is None
+    assert (decision["settlement_at_closing_block"]["status"]
+            == "NOT_EVALUATED_CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE")
+    assert not any(call[0] == "eth_call" for call in primary.calls)
+    assert not any(call[0] == "eth_call" for call in secondary.calls)
+    assert _sha(bundle) == before
+    assert not (output / "closing_marks.json").exists()
 
 
 def test_policy_ctf_settlement_supersedes_history(tmp_path: Path):

@@ -268,6 +268,7 @@ def _new_state(start_index: int) -> dict:
             "candidates_audited": 0,
             "accepted_for_new_bundle_compilation": 0,
             "deferred_missing_historical_identity": 0,
+            "deferred_missing_current_official_identity": 0,
             "rejected_by_policy": 0,
             "batches_without_fresh_candidates": 0,
         },
@@ -317,15 +318,18 @@ def _strict_probe(summary: dict, *, start_index: int, requested: int) -> None:
 def _strict_audit(summary: dict, *, fresh: int) -> None:
     requests = summary.get("requests", {})
     reviews = summary.get("reviews", {})
+    deferred_current = uint(
+        reviews.get("deferred_current_official_identity_unavailable")
+    )
     if (summary.get("status") != "AUDIT_COMPLETE_EVIDENCE_PENDING_REVIEW"
             or uint(summary.get("probe", {}).get("fresh_candidates")) != fresh
             or uint(requests.get("attempted")) != 4 * fresh
             or uint(requests.get("raw_saved")) != 4 * fresh
             or uint(requests.get("transport_errors")) != 0
             or uint(requests.get("parse_errors")) != 0
-            or uint(reviews.get("current_official_identity_consistent")) != fresh
-            or uint(reviews.get("eligible_for_mark_policy_review")) != fresh
-            or uint(reviews.get("not_eligible")) != 0
+            or uint(reviews.get("current_official_identity_consistent")) + deferred_current != fresh
+            or uint(reviews.get("eligible_for_mark_policy_review")) + deferred_current != fresh
+            or uint(reviews.get("not_eligible")) != deferred_current
             or summary.get("integration") != {
                 "closing_marks_written": 0,
                 "basis_bundle_modified": False,
@@ -339,6 +343,7 @@ def _strict_policy(summary: dict, *, fresh: int) -> None:
     total = sum(uint(decisions.get(key)) for key in (
         "accepted_for_new_bundle_compilation",
         "deferred_missing_historical_identity",
+        "deferred_missing_current_official_identity",
         "rejected_by_policy",
     ))
     if (summary.get("status") != "POLICY_EVALUATION_COMPLETE_NOT_INTEGRATED"
@@ -442,6 +447,7 @@ def _run_attempt(*, root: Path, start_index: int, sample_size: int, target_end: 
     decisions = {
         "accepted_for_new_bundle_compilation": 0,
         "deferred_missing_historical_identity": 0,
+        "deferred_missing_current_official_identity": 0,
         "rejected_by_policy": 0,
     }
     settlement = {"status": "NOT_REQUIRED_NO_FRESH_CANDIDATES", "condition_count": 0}
@@ -645,6 +651,7 @@ def _verified_results(root: Path, *, start_index: int) -> list[dict]:
                   or policy.get("decisions") != {
                       "accepted_for_new_bundle_compilation": 0,
                       "deferred_missing_historical_identity": 0,
+                      "deferred_missing_current_official_identity": 0,
                       "rejected_by_policy": 0,
                   }
                   or policy.get("settlement") != {
@@ -682,6 +689,9 @@ def _reconcile_state(root: Path, state: dict) -> list[dict]:
         )
         aggregate["deferred_missing_historical_identity"] += uint(
             policy["decisions"]["deferred_missing_historical_identity"]
+        )
+        aggregate["deferred_missing_current_official_identity"] += uint(
+            policy["decisions"]["deferred_missing_current_official_identity"]
         )
         aggregate["rejected_by_policy"] += uint(
             policy["decisions"]["rejected_by_policy"]

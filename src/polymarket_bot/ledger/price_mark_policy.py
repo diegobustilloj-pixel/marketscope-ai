@@ -24,6 +24,7 @@ from .price_candidate_audit import (
     AUDIT_VERSION,
     _candidate_review,
     _files_sha256,
+    _gamma_identity_unavailable,
     _json_payload,
     _load_json,
     _load_verified_probe,
@@ -342,14 +343,21 @@ def _reparse_audit(audit: Path, candidates: list[dict], candidates_doc: dict,
             raise EvidenceError("CLOB compact condition field conflicts with parent market")
         clob = _parse_clob_market(raws["clob"], token_id=token_id, parent=parent)
         gamma_raws = [raws["gamma_open"], raws["gamma_closed"]]
-        gamma = _parse_gamma_market(gamma_raws, token_id=token_id, parent=parent, clob=clob)
-        outcome_index = _gamma_outcome_index(
-            gamma_raws, condition=parent["condition_id"], token_id=token_id
-        )
+        gamma_unavailable = _gamma_identity_unavailable(gamma_raws)
+        gamma = None
+        outcome_index = None
+        if not gamma_unavailable:
+            gamma = _parse_gamma_market(
+                gamma_raws, token_id=token_id, parent=parent, clob=clob
+            )
+            outcome_index = _gamma_outcome_index(
+                gamma_raws, condition=parent["condition_id"], token_id=token_id
+            )
         local_row = local["rows"].get(token_id)
         expected_review = _candidate_review(
             candidate, parent=parent, clob=clob, gamma=gamma, local=local_row,
             cutoff_timestamp=cutoff,
+            gamma_identity_unavailable=gamma_unavailable,
         )
         review = by_sequence[sequence]
         if review != expected_review:
@@ -360,8 +368,9 @@ def _reparse_audit(audit: Path, candidates: list[dict], candidates_doc: dict,
             "condition_id": parent["condition_id"],
             "outcome": clob["outcome"],
             "outcome_index": outcome_index,
-            "market": gamma["market"],
+            "market": gamma["market"] if gamma else None,
             "compact_condition": hex_bytes(compact_condition, 32),
+            "current_official_identity_available": not gamma_unavailable,
         })
     if set(by_id) != expected_request_ids:
         raise EvidenceError("Candidate-audit request set contains unexpected entries")
@@ -627,6 +636,38 @@ def _decision(entry: dict, *, cutoff: int, policy: dict, settlement: dict) -> di
     }
 
 
+def _deferred_current_identity_decision(entry: dict) -> dict:
+    candidate, review = entry["candidate"], entry["review"]
+    if (entry.get("current_official_identity_available") is not False
+            or review.get("current_identity", {}).get("status")
+            != "CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"
+            or review.get("auxiliary_local_metadata", {}).get("status")
+            != "AUXILIARY_MAPPING_BEFORE_CUTOFF"
+            or review.get("integration", {}).get("status")
+            != "DEFERRED_CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"):
+        raise EvidenceError("Current-identity deferral does not reproduce from sealed evidence")
+    return {
+        "sequence": candidate["sequence"], "asset": candidate["asset"],
+        "token_id": candidate["token_id"], "condition_id": entry["condition_id"],
+        "outcome": entry["outcome"], "outcome_index": None,
+        "question": None, "price_candidate": candidate.get("observation"),
+        "status": "DEFERRED_MISSING_CURRENT_OFFICIAL_IDENTITY",
+        "checks": {
+            "current_official_identity_available": False,
+            "clob_parent_and_outcome_consistent": True,
+            "local_identity_before_cutoff": True,
+            "closing_mark_written": False,
+            "basis_bundle_modified": False,
+        },
+        "reasons": ["CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"],
+        "settlement_at_closing_block": {
+            "status": "NOT_EVALUATED_CURRENT_OFFICIAL_IDENTITY_UNAVAILABLE"
+        },
+        "integration": {"closing_mark_written": False, "basis_bundle_modified": False,
+                        "automatic_approval": False},
+    }
+
+
 def evaluate_price_policy_file(audit: Path, policy_path: Path, output: Path, *,
                                primary_rpc, secondary_rpc) -> dict:
     """Evaluate an approved audit without writing any mark or changing its bundle."""
@@ -715,12 +756,19 @@ def evaluate_price_policy_file(audit: Path, policy_path: Path, output: Path, *,
     block_timestamp = uint(source["summary"]["closing_block"]["timestamp"])
     if block_timestamp != cutoff + 1:
         raise EvidenceError("Closing block timestamp no longer matches the sealed cutoff rule")
+    settlement_entries = [
+        entry for entry in entries if entry["current_official_identity_available"]
+    ]
     settlement = _dual_settlement(
-        primary_rpc, secondary_rpc, policy=policy, entries=entries,
+        primary_rpc, secondary_rpc, policy=policy, entries=settlement_entries,
         block_timestamp=block_timestamp,
     )
-    decisions = [_decision(entry, cutoff=cutoff, policy=policy, settlement=settlement)
-                 for entry in entries]
+    decisions = [
+        _decision(entry, cutoff=cutoff, policy=policy, settlement=settlement)
+        if entry["current_official_identity_available"]
+        else _deferred_current_identity_decision(entry)
+        for entry in entries
+    ]
 
     source_after = {
         "audit_manifest_sha256": _sha256(audit / "run_manifest.json"),
@@ -746,7 +794,10 @@ def evaluate_price_policy_file(audit: Path, policy_path: Path, output: Path, *,
 
     accepted = sum(row["status"] == "ACCEPTED_FOR_NEW_BUNDLE_COMPILATION" for row in decisions)
     deferred = sum(row["status"] == "DEFERRED_MISSING_HISTORICAL_IDENTITY" for row in decisions)
-    rejected = len(decisions) - accepted - deferred
+    deferred_current = sum(
+        row["status"] == "DEFERRED_MISSING_CURRENT_OFFICIAL_IDENTITY" for row in decisions
+    )
+    rejected = len(decisions) - accepted - deferred - deferred_current
     summary = {
         "schema": POLICY_SCHEMA, "engine": POLICY_VERSION,
         "status": "POLICY_EVALUATION_COMPLETE_NOT_INTEGRATED",
@@ -764,8 +815,9 @@ def evaluate_price_policy_file(audit: Path, policy_path: Path, output: Path, *,
                            for row in settlement["primary"]["conditions"].values()
                        )},
         "decisions": {"accepted_for_new_bundle_compilation": accepted,
-                      "deferred_missing_historical_identity": deferred,
-                      "rejected_by_policy": rejected},
+                       "deferred_missing_historical_identity": deferred,
+                       "deferred_missing_current_official_identity": deferred_current,
+                       "rejected_by_policy": rejected},
         "integration": {"closing_marks_written": 0, "basis_bundle_modified": False,
                         "status": "NOT_INTEGRATED"},
         "review_gate": {"status": "BLOCKED", "reasons": [

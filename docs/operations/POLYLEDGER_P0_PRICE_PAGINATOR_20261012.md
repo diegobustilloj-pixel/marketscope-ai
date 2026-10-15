@@ -3,10 +3,11 @@
 Estado de código: **implementado y cubierto por pruebas; sólo lectura, sin
 integración de marcas, PnL, wallet, firma, órdenes ni dinero real.**
 
-Validación local: **156 pruebas `test_ledger*` aprobadas y 11 configuraciones de
-bots válidas, sin errores ni advertencias.** Las cinco pruebas propias cubren
+Validación local: **170 pruebas `test_ledger*` aprobadas y 11 configuraciones de
+bots válidas, sin errores ni advertencias.** Las pruebas propias cubren
 pausa/reanudación, reintento explícito, cierre contiguo, confinamiento de rutas,
-último lote parcial y bloqueo sin salto después de reintentos.
+último lote parcial, bloqueo sin salto después de reintentos e identidad actual
+no disponible sin aceptar ni integrar una marca.
 
 ## Objetivo
 
@@ -93,6 +94,37 @@ Reanudación después del smoke:
   --rpc-url https://polygon.drpc.org `
   --secondary-rpc-url https://tenderly.rpc.polygon.community `
   --start-index 1540 --batch-size 20 --max-age-seconds 900 --resume
+```
+
+## Corte seguro en 1960 y tercer segmento
+
+`car_px1540_v3` cerró 21 lotes contiguos, procesó 420 outcomes y llegó al cursor
+`1960`. Sus decisiones son 35 aceptadas sólo para una futura compilación, 3
+diferidas por identidad histórica y 16 rechazadas. Sumado a v2, existen 92
+lotes cerrados y 1.840 de los 2.750 outcomes posteriores al cursor 120.
+
+El lote 1961–1980 se detuvo después de tres intentos idénticos. En la secuencia
+1961, CLOB y la metadata local pre-corte conservan condición y outcome, pero
+Gamma devuelve `[]` tanto para mercados abiertos como cerrados. El motor sólo
+trata como ausencia de identidad actual la combinación exacta de dos listas
+JSON vacías: emite `DEFERRED_MISSING_CURRENT_OFFICIAL_IDENTITY`, no calcula
+settlement para ese candidato y no puede aceptar ni escribir su precio. JSON
+inválido, filas ambiguas, conflictos o fallos de transporte siguen bloqueando
+todo el lote.
+
+El nuevo commit cambia la semántica sellada; por eso v3 se conserva intacto y
+la continuación comienza en un directorio nuevo:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger paginate-price-history `
+  --bundle data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/bundle.json `
+  --evidence-gaps data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1 `
+  --metadata-db data/car_forensics/car_metadata.db `
+  --policy-template configs/polyledger/closing_mark_paginator_template_v1.json `
+  --output data/polyledger-sentinel/p0/car_px1960_v4 `
+  --rpc-url https://polygon.drpc.org `
+  --secondary-rpc-url https://tenderly.rpc.polygon.community `
+  --start-index 1960 --batch-size 20 --max-age-seconds 900 --max-batches 1
 ```
 
 ## Salida canónica de esta corrida

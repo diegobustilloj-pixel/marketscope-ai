@@ -20,10 +20,11 @@ CONDITION = h(123)
 
 class FakeCandidateClient:
     def __init__(self, *, clob_peer_token: str = "2", reverse_labels: bool = False,
-                 outcomes: tuple[str, str] = ("Yes", "No")):
+                 outcomes: tuple[str, str] = ("Yes", "No"), gamma_missing: bool = False):
         self.clob_peer_token = clob_peer_token
         self.reverse_labels = reverse_labels
         self.outcomes = outcomes
+        self.gamma_missing = gamma_missing
         self.urls = []
 
     def fetch(self, url: str) -> dict:
@@ -64,7 +65,7 @@ class FakeCandidateClient:
                 "clobTokenIds": gamma_tokens,
                 "outcomes": canonical(list(self.outcomes)),
             }
-            payload = [] if query["closed"] == ["true"] else [market]
+            payload = [] if self.gamma_missing or query["closed"] == ["true"] else [market]
         else:  # pragma: no cover - a changed allowlisted route must fail loudly
             raise AssertionError(url)
         body = canonical(payload).encode("utf-8")
@@ -110,6 +111,7 @@ def test_candidate_audit_seals_official_identity_without_integrating(tmp_path: P
     }
     assert summary["reviews"] == {
         "current_official_identity_consistent": 1,
+        "deferred_current_official_identity_unavailable": 0,
         "eligible_for_mark_policy_review": 1,
         "not_eligible": 0,
         "auxiliary_local_mapping_before_cutoff": 0,

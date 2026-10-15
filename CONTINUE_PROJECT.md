@@ -51,8 +51,11 @@ Las 149 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la pol
    2/0/1); cero marcas fueron
    integradas y v5 no cambió;
 3. conservar `car_px120_v2` como primer segmento: cerró 71 lotes hasta el cursor
-   1540 y quedó bloqueado sin saltar el mercado Anthropic/OpenAI; ejecutar o
-   reanudar `paginate-price-history` desde 1540 sobre `car_px1540_v3`. El paginador
+   1540. Conservar también `car_px1540_v3`: cerró otros 21 lotes y quedó en el
+   cursor 1960, sin saltar un candidato cuya identidad actual ya no aparece en
+   Gamma. Continuar `paginate-price-history` desde 1960 sobre `car_px1960_v4`.
+   El caso exacto de dos listas Gamma vacías queda diferido, nunca aceptado; una
+   respuesta ambigua o contradictoria sigue bloqueando. El paginador
    crea sonda y, cuando corresponde, auditoría y política nuevas para cada lote
    de hasta 20; nunca salta un lote bloqueado. Consultar progreso con
    `price-pagination-status` y seguir
@@ -68,7 +71,7 @@ No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batc
 
 ```text
 resultado de basis v2 sellado y conciliado
-    → primer segmento automático sellado hasta cursor 1540: continuar en v3 desde 1540
+    → segmentos automáticos sellados hasta cursor 1960: continuar en v4 desde 1960
     → completar flujos externos y marcas de cierre con evidencia
     → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente
