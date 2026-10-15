@@ -93,6 +93,9 @@ directorios nuevos, conserva cada intento y nunca avanza tras un lote fallido;
 `price-pagination-status` lee su checkpoint sin red ni mutación. La operación
 está definida en
 `docs/operations/POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`.
+El primer segmento cerró 71 lotes hasta el cursor 1540. La continuación usa un
+segmento nuevo y admite pares binarios con etiquetas personalizadas sólo si
+CLOB, Gamma y los tokens coinciden exactamente.
 
 El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes
 automáticas ni dinero real habilitados.

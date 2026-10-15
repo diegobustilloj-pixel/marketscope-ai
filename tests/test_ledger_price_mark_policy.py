@@ -78,7 +78,8 @@ class FakeSettlementRPC:
                 "timestamp": hex(self.timestamp)}
 
 
-def _metadata_db(path: Path, *, include: bool = True, fetched_at: int = 999) -> Path:
+def _metadata_db(path: Path, *, include: bool = True, fetched_at: int = 999,
+                 outcomes: tuple[str, str] = ("Yes", "No")) -> Path:
     with sqlite3.connect(path) as connection:
         connection.executescript(
             "CREATE TABLE event_metadata (event_slug TEXT, fetched_at INTEGER, error TEXT);"
@@ -91,12 +92,13 @@ def _metadata_db(path: Path, *, include: bool = True, fetched_at: int = 999) -> 
             )
             connection.execute(
                 "INSERT INTO market_metadata VALUES (?,?,?,?)",
-                (CONDITION, "test-condition", '["Yes","No"]', '["1","2"]'),
+                (CONDITION, "test-condition", canonical(list(outcomes)), '["1","2"]'),
             )
     return path
 
 
-def _fresh_audit(tmp_path: Path, *, include_local: bool = True) -> tuple[Path, Path]:
+def _fresh_audit(tmp_path: Path, *, include_local: bool = True,
+                 outcomes: tuple[str, str] = ("Yes", "No")) -> tuple[Path, Path]:
     source, _, value, _, _ = _source_and_gaps(tmp_path)
     bundle_root = tmp_path / "sealed-bundle"
     bundle_root.mkdir()
@@ -134,10 +136,12 @@ def _fresh_audit(tmp_path: Path, *, include_local: bool = True) -> tuple[Path, P
         }),
         sample_size=20, max_age_seconds=900,
     )
-    metadata = _metadata_db(tmp_path / "metadata.db", include=include_local)
+    metadata = _metadata_db(
+        tmp_path / "metadata.db", include=include_local, outcomes=outcomes,
+    )
     audit = tmp_path / "audit"
     audit_price_candidates_file(
-        probe, audit, client=PolicyCandidateClient(), metadata_db=metadata
+        probe, audit, client=PolicyCandidateClient(outcomes=outcomes), metadata_db=metadata
     )
     return audit, source
 
@@ -255,6 +259,23 @@ def test_policy_accepts_only_for_future_bundle_and_seals_dual_rpc_evidence(tmp_p
     assert manifest["files"] == _files_sha256(output)
     assert any(call[0] == "eth_call" for call in primary.calls)
     assert any(call[0] == "eth_call" for call in secondary.calls)
+
+
+def test_policy_accepts_verified_custom_binary_outcomes(tmp_path: Path):
+    audit, _ = _fresh_audit(tmp_path, outcomes=("Anthropic", "OpenAI"))
+    policy_path = tmp_path / "policy.json"
+    policy = _write_policy(audit, policy_path)
+    primary, secondary = _rpcs(policy)
+    output = tmp_path / "policy-output"
+
+    summary = evaluate_price_policy_file(
+        audit, policy_path, output, primary_rpc=primary, secondary_rpc=secondary,
+    )
+
+    assert summary["decisions"]["accepted_for_new_bundle_compilation"] == 1
+    decision = json.loads((output / "decisions.json").read_text(encoding="utf-8"))[0]
+    assert decision["outcome"] == "ANTHROPIC"
+    assert decision["outcome_index"] == 0
 
 
 def test_policy_defers_candidate_without_pre_cut_identity(tmp_path: Path):

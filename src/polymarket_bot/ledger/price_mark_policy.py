@@ -290,8 +290,10 @@ def _gamma_outcome_index(raws: list[bytes], *, condition: str, token_id: str) ->
     tokens = _string_json_list(matches[0].get("clobTokenIds"), label="clobTokenIds")
     outcomes = _string_json_list(matches[0].get("outcomes"), label="outcomes")
     indexes = [index for index, value in enumerate(tokens) if value == token_id]
+    normalized_outcomes = [value.strip().upper() for value in outcomes]
     if (len(indexes) != 1 or len(tokens) != len(outcomes) or len(tokens) != 2
-            or {value.strip().upper() for value in outcomes} != {"YES", "NO"}):
+            or any(not value for value in normalized_outcomes)
+            or len(set(normalized_outcomes)) != 2):
         raise EvidenceError("Gamma binary outcome index is ambiguous")
     return indexes[0]
 

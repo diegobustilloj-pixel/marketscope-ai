@@ -50,8 +50,9 @@ Las 149 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la pol
    lote 41–60 1/0/0; lote 61–80 2/0/2; lote 81–100 3/0/0; lote 101–120
    2/0/1); cero marcas fueron
    integradas y v5 no cambió;
-3. ejecutar o reanudar `paginate-price-history` desde el cursor 120 sobre la
-   salida `car_px120_v2`. El paginador
+3. conservar `car_px120_v2` como primer segmento: cerró 71 lotes hasta el cursor
+   1540 y quedó bloqueado sin saltar el mercado Anthropic/OpenAI; ejecutar o
+   reanudar `paginate-price-history` desde 1540 sobre `car_px1540_v3`. El paginador
    crea sonda y, cuando corresponde, auditoría y política nuevas para cada lote
    de hasta 20; nunca salta un lote bloqueado. Consultar progreso con
    `price-pagination-status` y seguir
@@ -67,7 +68,7 @@ No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batc
 
 ```text
 resultado de basis v2 sellado y conciliado
-    → políticas de marcas selladas hasta cursor 120: paginar automáticamente desde 120
+    → primer segmento automático sellado hasta cursor 1540: continuar en v3 desde 1540
     → completar flujos externos y marcas de cierre con evidencia
     → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente

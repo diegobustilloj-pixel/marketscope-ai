@@ -327,10 +327,9 @@ exactos. Los registros completos están en
 `POLYLEDGER_P0_PRICE_BATCH_20261009.md` y
 `POLYLEDGER_P0_PRICE_BATCH_20261011.md`.
 
-Para continuar desde el cursor 120 se prefiere el orquestador reanudable
-`paginate-price-history` en lugar de repetir manualmente el bloque anterior.
-Usa la salida
-`car_px120_v2/`, conserva intentos
-fallidos y no avanza ante errores. El comando completo, la consulta de estado y
-la reanudación están en `POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`. Un lote sin
-candidatos frescos cierra con su sonda; auditoría y política no aplican.
+El orquestador `paginate-price-history` cerró 71 lotes del primer segmento
+`car_px120_v2/` y se detuvo correctamente en el cursor 1540. La continuación
+usa `car_px1540_v3/` para mantener separados los commits anterior y corregido;
+no se debe reabrir ni reescribir v2. El comando completo, la consulta de estado
+y la reanudación están en `POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`. Un lote
+sin candidatos frescos cierra con su sonda; auditoría y política no aplican.

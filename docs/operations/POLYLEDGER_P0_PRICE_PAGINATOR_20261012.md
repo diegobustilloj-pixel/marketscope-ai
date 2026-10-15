@@ -3,7 +3,7 @@
 Estado de código: **implementado y cubierto por pruebas; sólo lectura, sin
 integración de marcas, PnL, wallet, firma, órdenes ni dinero real.**
 
-Validación local: **154 pruebas `test_ledger*` aprobadas y 11 configuraciones de
+Validación local: **156 pruebas `test_ledger*` aprobadas y 11 configuraciones de
 bots válidas, sin errores ni advertencias.** Las cinco pruebas propias cubren
 pausa/reanudación, reintento explícito, cierre contiguo, confinamiento de rutas,
 último lote parcial y bloqueo sin salto después de reintentos.
@@ -51,6 +51,49 @@ ruta de 272 caracteres al guardar el primer raw. No hubo ningún lote completo,
 marca integrada ni modificación del bundle. Esa salida se conserva localmente
 como evidencia fallida. El motor corrigió los nombres raw sin cambiar su
 contenido ni trazabilidad y la corrida canónica continúa en la ruta corta `v2`.
+
+## Corte seguro en 1540 y segundo segmento
+
+`car_px120_v2` cerró 71 lotes contiguos, procesó 1.420 outcomes y llegó al
+cursor `1540`. Sus decisiones acumuladas son 145 aceptadas sólo para una futura
+compilación, 5 diferidas y 76 rechazadas. El lote 1541–1560 se bloqueó en sus
+tres intentos porque el auditor exigía etiquetas literales Yes/No a un mercado
+binario Anthropic/OpenAI. Los raw oficiales muestran que CLOB y Gamma sí
+coinciden exactamente en etiquetas, condición y par de tokens.
+
+El auditor corregido exige exactamente dos etiquetas no vacías y conserva todas
+las demás comprobaciones. Los raw reales bloqueados se reprodujeron localmente
+como `ANTHROPIC/OPENAI`. Como el commit forma parte de la raíz de confianza, v2
+no se reescribe ni reanuda con código nuevo: la continuación comienza en
+`car_px1540_v3`.
+
+Inicio acotado del segundo segmento:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger paginate-price-history `
+  --bundle data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/bundle.json `
+  --evidence-gaps data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1 `
+  --metadata-db data/car_forensics/car_metadata.db `
+  --policy-template configs/polyledger/closing_mark_paginator_template_v1.json `
+  --output data/polyledger-sentinel/p0/car_px1540_v3 `
+  --rpc-url https://polygon.drpc.org `
+  --secondary-rpc-url https://tenderly.rpc.polygon.community `
+  --start-index 1540 --batch-size 20 --max-age-seconds 900 --max-batches 1
+```
+
+Reanudación después del smoke:
+
+```powershell
+.\.venv\Scripts\python.exe -m polymarket_bot.ledger paginate-price-history `
+  --bundle data/polyledger-sentinel/p0/car_lifetime_basis_bundle_20260915_v5/bundle.json `
+  --evidence-gaps data/polyledger-sentinel/p0/car_lifetime_basis_evidence_gaps_20261006_v1 `
+  --metadata-db data/car_forensics/car_metadata.db `
+  --policy-template configs/polyledger/closing_mark_paginator_template_v1.json `
+  --output data/polyledger-sentinel/p0/car_px1540_v3 `
+  --rpc-url https://polygon.drpc.org `
+  --secondary-rpc-url https://tenderly.rpc.polygon.community `
+  --start-index 1540 --batch-size 20 --max-age-seconds 900 --resume
+```
 
 ## Salida canónica de esta corrida
 

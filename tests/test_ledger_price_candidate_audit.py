@@ -19,9 +19,11 @@ CONDITION = h(123)
 
 
 class FakeCandidateClient:
-    def __init__(self, *, clob_peer_token: str = "2", reverse_labels: bool = False):
+    def __init__(self, *, clob_peer_token: str = "2", reverse_labels: bool = False,
+                 outcomes: tuple[str, str] = ("Yes", "No")):
         self.clob_peer_token = clob_peer_token
         self.reverse_labels = reverse_labels
+        self.outcomes = outcomes
         self.urls = []
 
     def fetch(self, url: str) -> dict:
@@ -34,11 +36,11 @@ class FakeCandidateClient:
                 "secondary_token_id": "2",
             }
         elif parsed.path == "/clob-markets/" + CONDITION:
-            yes_token, no_token = (("2", "1") if self.reverse_labels
-                                   else ("1", self.clob_peer_token))
+            first_token, second_token = (("2", "1") if self.reverse_labels
+                                         else ("1", self.clob_peer_token))
             payload = {"t": [
-                {"t": yes_token, "o": "Yes"},
-                {"t": no_token, "o": "No"},
+                {"t": first_token, "o": self.outcomes[0]},
+                {"t": second_token, "o": self.outcomes[1]},
             ]}
         elif parsed.path == "/markets":
             query = parse_qs(parsed.query)
@@ -60,7 +62,7 @@ class FakeCandidateClient:
                 "negRisk": False,
                 "resolutionSource": "https://example.invalid/rules",
                 "clobTokenIds": gamma_tokens,
-                "outcomes": '["Yes","No"]',
+                "outcomes": canonical(list(self.outcomes)),
             }
             payload = [] if query["closed"] == ["true"] else [market]
         else:  # pragma: no cover - a changed allowlisted route must fail loudly
@@ -175,6 +177,24 @@ def test_candidate_audit_uses_labeled_sources_when_parent_order_disagrees(tmp_pa
     assert review["current_identity"]["parent_requested_token_position"] == "PRIMARY"
     assert (review["current_identity"]["parent_primary_secondary_label_order"]
             == "LIVE_ORDER_DISAGREES_WITH_DOCUMENTED_YES_NO_ORDER")
+
+
+def test_candidate_audit_accepts_custom_binary_outcome_labels(tmp_path: Path):
+    probe = _fresh_probe(tmp_path)
+    output = tmp_path / "audit"
+
+    summary = audit_price_candidates_file(
+        probe, output,
+        client=FakeCandidateClient(outcomes=("Anthropic", "OpenAI")),
+    )
+
+    assert summary["requests"]["parse_errors"] == 0
+    assert summary["reviews"]["current_official_identity_consistent"] == 1
+    assert summary["reviews"]["eligible_for_mark_policy_review"] == 1
+    review = json.loads((output / "candidate_reviews.json").read_text(encoding="utf-8"))[0]
+    assert review["current_identity"]["outcome"] == "ANTHROPIC"
+    assert (review["current_identity"]["parent_primary_secondary_label_order"]
+            == "NOT_APPLICABLE_CUSTOM_BINARY_OUTCOMES")
 
 
 def test_candidate_audit_rejects_tampered_probe_before_network(tmp_path: Path):

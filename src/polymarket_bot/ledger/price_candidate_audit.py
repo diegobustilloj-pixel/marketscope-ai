@@ -357,12 +357,12 @@ def _parse_clob_market(raw: bytes, *, token_id: str, parent: dict) -> dict:
         if not isinstance(row, dict) or not _decimal_uint_string(row.get("t")) or not isinstance(row.get("o"), str):
             raise EvidenceError("clob-markets token row is invalid")
         outcome = row["o"].strip().upper()
-        if outcome in mapping:
+        if not outcome or outcome in mapping:
             raise EvidenceError("clob-markets outcome mapping is ambiguous")
         mapping[outcome] = row["t"]
-    if set(mapping) != {"YES", "NO"} or set(mapping.values()) != {
+    if len(mapping) != 2 or set(mapping.values()) != {
             parent["primary_token_id"], parent["secondary_token_id"]}:
-        raise EvidenceError("clob-markets token pair conflicts with markets-by-token")
+        raise EvidenceError("clob-markets binary token pair conflicts with markets-by-token")
     outcomes = [outcome for outcome, mapped_token in mapping.items() if mapped_token == token_id]
     if len(outcomes) != 1:
         raise EvidenceError("clob-markets does not label requested token exactly once")
@@ -403,10 +403,10 @@ def _parse_gamma_market(raw_responses: list[bytes], *, token_id: str,
         if not _decimal_uint_string(token):
             raise EvidenceError("Gamma token ID is invalid")
         outcome = outcome_raw.strip().upper()
-        if outcome in mapping:
+        if not outcome or outcome in mapping:
             raise EvidenceError("Gamma outcome mapping is ambiguous")
         mapping[outcome] = token
-    if set(mapping) != {"YES", "NO"} or set(mapping.values()) != {
+    if len(mapping) != 2 or set(mapping.values()) != {
             parent["primary_token_id"], parent["secondary_token_id"]}:
         raise EvidenceError("Gamma token pair conflicts with CLOB parent market")
     outcomes_for_token = [outcome for outcome, mapped_token in mapping.items() if mapped_token == token_id]
@@ -570,12 +570,15 @@ def _candidate_review(candidate: dict, *, parent: dict | None, clob: dict | None
     market = gamma.get("market") if gamma else {}
     parent_label_order = None
     if parent is not None and clob is not None:
-        parent_label_order = (
-            "MATCHES_DOCUMENTED_YES_NO_ORDER"
-            if (parent["primary_token_id"] == clob["token_pair"]["YES"]
-                and parent["secondary_token_id"] == clob["token_pair"]["NO"])
-            else "LIVE_ORDER_DISAGREES_WITH_DOCUMENTED_YES_NO_ORDER"
-        )
+        if set(clob["token_pair"]) == {"YES", "NO"}:
+            parent_label_order = (
+                "MATCHES_DOCUMENTED_YES_NO_ORDER"
+                if (parent["primary_token_id"] == clob["token_pair"]["YES"]
+                    and parent["secondary_token_id"] == clob["token_pair"]["NO"])
+                else "LIVE_ORDER_DISAGREES_WITH_DOCUMENTED_YES_NO_ORDER"
+            )
+        else:
+            parent_label_order = "NOT_APPLICABLE_CUSTOM_BINARY_OUTCOMES"
     return {
         "sequence": candidate["sequence"], "asset": candidate["asset"], "token_id": candidate["token_id"],
         "price_candidate": candidate["observation"],
@@ -632,7 +635,8 @@ def audit_price_candidates_file(probe: Path, output: Path, *, client: OfficialCa
         },
         "parent_token_order_policy": (
             "Treat primary/secondary as an unordered pair because live responses can disagree "
-            "with the documented Yes/No order; derive labels from CLOB and Gamma agreement"
+            "with the documented Yes/No order; require exactly two non-empty outcome labels "
+            "and derive them from CLOB and Gamma agreement"
         ),
         "integration": "NONE; audit cannot write closing_marks or modify a basis bundle",
         "safety": SAFETY,
