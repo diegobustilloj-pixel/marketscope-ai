@@ -28,6 +28,10 @@ from .price_batch_paginator import (
 )
 from .closing_mark_compiler import compile_closing_mark_candidates_file
 from .closing_mark_gap_queue import build_closing_mark_gap_queue_file
+from .stale_history_recovery import (
+    recover_stale_clob_history,
+    stale_history_recovery_status,
+)
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
@@ -98,6 +102,8 @@ def _terminal_result(args, result: dict) -> dict:
             "review_gate": result["review_gate"],
             "safety": result["safety"],
         }
+    if args.command in {"recover-stale-clob-history", "stale-history-recovery-status"}:
+        return result
     if args.command == "verify-independent-report":
         return {
             "status": result["status"],
@@ -306,6 +312,25 @@ def main(argv=None):
     gap_queue.add_argument("--compiled-candidates", type=Path, required=True)
     gap_queue.add_argument("--evidence-gaps", type=Path, required=True)
     gap_queue.add_argument("--output", type=Path, required=True)
+    stale_recovery = commands.add_parser(
+        "recover-stale-clob-history",
+        help="Resume public CLOB window capture for sealed stale candidates; never write marks",
+    )
+    stale_recovery.add_argument("--gap-queue", type=Path, required=True)
+    stale_recovery.add_argument("--output", type=Path, required=True)
+    stale_recovery.add_argument("--batch-size", type=int, default=20)
+    stale_recovery.add_argument("--workers", type=int, default=8)
+    stale_recovery.add_argument("--retries", type=int, default=3)
+    stale_recovery.add_argument("--timeout-seconds", type=float, default=20.0)
+    stale_recovery.add_argument("--fidelity-minutes", type=int, default=1)
+    stale_recovery.add_argument("--batch-delay-seconds", type=float, default=0.1)
+    stale_recovery.add_argument("--max-batches", type=int)
+    stale_recovery.add_argument("--resume", action="store_true")
+    stale_status = commands.add_parser(
+        "stale-history-recovery-status",
+        help="Verify a stale-history recovery checkpoint without network access",
+    )
+    stale_status.add_argument("--output", type=Path, required=True)
     independent = commands.add_parser(
         "verify-independent-report",
         help="Compare a separately produced accounting report to the sealed contract",
@@ -519,6 +544,17 @@ def main(argv=None):
             result = build_closing_mark_gap_queue_file(
                 args.compiled_candidates, args.evidence_gaps, args.output,
             )
+        elif args.command == "recover-stale-clob-history":
+            result = recover_stale_clob_history(
+                args.gap_queue, args.output,
+                batch_size=args.batch_size, workers=args.workers,
+                retries=args.retries, timeout_seconds=args.timeout_seconds,
+                fidelity_minutes=args.fidelity_minutes,
+                batch_delay_seconds=args.batch_delay_seconds,
+                max_batches=args.max_batches, resume=args.resume,
+            )
+        elif args.command == "stale-history-recovery-status":
+            result = stale_history_recovery_status(args.output)
         elif args.command == "verify-independent-report":
             result = verify_independent_report_file(
                 args.basis_result, args.report, args.output,
@@ -605,12 +641,14 @@ def main(argv=None):
                             "build-lifetime-basis-bundle", "probe-price-history",
                             "audit-price-candidates", "evaluate-price-policy",
                             "compile-closing-mark-candidates", "build-closing-mark-gap-queue",
-                            "verify-independent-report"}:
+                            "recover-stale-clob-history", "verify-independent-report"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "paginate-price-history":
             return 0 if result["status"] in {"COMPLETE", "PAUSED_BATCH_LIMIT"} else 2
         if args.command == "price-pagination-status":
             return 2 if result["status"] == "BLOCKED" else 0
+        if args.command == "stale-history-recovery-status":
+            return 0 if result["status"] == "COMPLETE" else 2
         if args.command == "inventory-basis":
             return 0 if result["basis_gate"]["status"] == "PASS" else 2
         return 0 if args.command != "replay" or result["p0_exit"]["status"] == "PASS" else 2
