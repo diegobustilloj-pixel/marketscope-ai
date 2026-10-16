@@ -57,7 +57,15 @@ Las 149 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la pol
    `docs/operations/POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md`; la salida
    canónica `car_closing_mark_candidates_20261016_v1` ya existe, contiene 263
    propuestas y no modifica v5. No recompilar salvo que cambie una entrada;
-4. completar 856 flujos externos; cuando la entrada esté completa, compilar un
+4. conservar también `car_closing_mark_gap_queue_20261016_v1`: ya clasificó
+   una sola vez las 3.235 brechas restantes (2.398 antiguas, 53 sin
+   observación, 141 rechazos, 15 identidades diferidas, 627 Combo y un pUSD).
+   No repetir la paginación. Construir una captura nueva y separada para
+   `RECOVER_FRESH_HISTORICAL_PRICE`, empezando por `stale_candidates.json` y
+   conservando el límite original de cada fila. La operación y sus sellos
+   están en
+   `docs/operations/POLYLEDGER_P0_CLOSING_MARK_GAP_QUEUE_20261016.md`;
+5. completar 856 flujos externos; cuando la entrada esté completa, compilar un
    bundle nuevo, ejecutar el cálculo independiente, pasarlo por
    `verify-independent-report` y reevaluar el gate. Nunca sobrescribir v5 ni
    borrar los `.partial` existentes.
@@ -68,8 +76,9 @@ No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batc
 
 ```text
 resultado de basis v2 sellado y conciliado
-    → cola CTF completa hasta cursor 2870: compilar 263 marcas propuestas sin integrar
-    → completar flujos externos y marcas de cierre con evidencia
+    → cola CTF completa hasta cursor 2870 y 263 propuestas compiladas sin integrar
+    → cola exclusiva de 3.235 brechas: recuperar nueva evidencia, primero 2.398 antiguas
+    → completar 856 flujos externos y las marcas de cierre pendientes
     → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente
     → decidir si P0 sigue BLOCKED o avanza

@@ -1,6 +1,6 @@
 # Estado canónico — Plataforma cuantitativa Polymarket
 
-**Corte de contexto:** 15 de octubre de 2026 (America/La_Paz)
+**Corte de contexto:** 16 de octubre de 2026 (America/La_Paz)
 **Raíz canónica:** `C:\ProyectoBotV4\polymarket_quant_bot`
 **Regla de seguridad vigente:** no hay firma, conexión de wallet, retiros, dinero real ni órdenes automáticas habilitados.
 
@@ -12,7 +12,7 @@ La plataforma concentra investigaciones de Polymarket bajo un núcleo compartido
 
 | Línea | Estado verificable | Decisión actual |
 |---|---|---|
-| PolyLedger P0 | La cola de precios cerró los 2.870 outcomes CTF; existen 263 marcas aceptadas para compilación, pero cero están integradas | Compilar artefacto de marcas propuestas, completar brechas y segundo cálculo; sin trading |
+| PolyLedger P0 | Los 2.870 outcomes CTF y las 3.235 brechas restantes están clasificados y sellados; 263 marcas propuestas, cero integradas | Recuperar evidencia nueva empezando por 2.398 observaciones antiguas; sin relajar política ni operar |
 | Deportes / wallets | Investigación y prueba cerradas; no surgió un ganador copiable | No construir ejecutor ni usar capital |
 | Clima | Investigación, backtest realista y ticket manual existen | Mantener manual/shadow hasta nueva evidencia |
 | Elon / conteo de tuits | Investigación y monitor forward separado existen | No olvidar esta línea; revisar su evidencia local antes de informar resultados |
@@ -72,8 +72,20 @@ ejecutar el segundo cálculo independiente y reevaluar el gate. Eso no autoriza
 capital ni copia automática. Operación:
 `docs/operations/POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md`.
 
-**Validación del pipeline de precios:** el 16 de octubre aprobaron 174 pruebas
-`test_ledger*` y las 11 configuraciones de bots. La cobertura nueva comprueba
+**Cola exclusiva de brechas creada:**
+`car_closing_mark_gap_queue_20261016_v1/`, ligada al commit limpio `1752079`,
+particiona los 3.235 activos restantes sin duplicados: 2.398 observaciones
+antiguas, 53 sin observación, 141 rechazados por política, 15 diferidos por
+identidad, 627 posiciones Combo y un pUSD. Sus ocho archivos y el bundle v5
+verificaron por hash. No promovió ningún precio antiguo, no modificó límites,
+no escribió marcas ni alteró el bundle. El siguiente trabajo ya no es paginar:
+es construir una fuente nueva y separada para
+`RECOVER_FRESH_HISTORICAL_PRICE`, comenzando por
+`stale_candidates.json`. Detalle y sellos:
+`docs/operations/POLYLEDGER_P0_CLOSING_MARK_GAP_QUEUE_20261016.md`.
+
+**Validación del pipeline de precios:** el 16 de octubre aprobaron 178 pruebas
+`test_ledger*`; la regresión completa aprobó 873 pruebas y 18 subpruebas. La cobertura nueva comprueba
 pausa/reanudación, reconstrucción del checkpoint, bloqueo sin salto después de
 reintentos agotados, confinamiento de evidencia, cierre del último lote parcial
 y mercados binarios con etiquetas personalizadas. También cubre la nueva

@@ -100,6 +100,13 @@ aceptadas sólo para compilación, 15 diferidas y 141 rechazadas. El comando
 rechaza huecos, solapamientos o sellos alterados. Su salida es una propuesta
 separada: no modifica el bundle v5 ni calcula PnL.
 
+`build-closing-mark-gap-queue` verificó después toda esa cadena y creó una
+partición exclusiva de los 3.235 activos todavía sin marca aceptada: 2.398
+observaciones antiguas, 53 sin observación, 141 rechazos de política, 15 casos
+de identidad, 627 Combo y un pUSD. No amplía el umbral ni convierte precios
+antiguos en marcas. El artefacto y el siguiente punto de continuidad están en
+`docs/operations/POLYLEDGER_P0_CLOSING_MARK_GAP_QUEUE_20261016.md`.
+
 El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes
 automáticas ni dinero real habilitados.
 

@@ -331,7 +331,12 @@ El orquestador `paginate-price-history` cerró la cola completa en tres
 segmentos: `car_px120_v2/`, `car_px1540_v3/` y `car_px1960_v4/`. El cursor final
 es 2870 y no se deben reabrir ni reescribir esos directorios. Un Gamma abierto
 y cerrado válidamente vacíos produce una decisión diferida explícita y nunca
-una marca aceptada; toda ambigüedad continúa fail-closed. El siguiente comando
-es `compile-closing-mark-candidates`, documentado en
-`POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md`. Un lote sin candidatos
+una marca aceptada; toda ambigüedad continúa fail-closed. La compilación ya se
+cerró en `car_closing_mark_candidates_20261016_v1/` y no se repite mientras no
+cambie una entrada. La cola posterior
+`car_closing_mark_gap_queue_20261016_v1/` clasificó una vez los 3.235 activos
+restantes; el siguiente trabajo empieza por recuperar evidencia nueva para
+sus 2.398 filas `STALE_CANDIDATE`, sin ampliar el límite original. Véanse
+`POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md` y
+`POLYLEDGER_P0_CLOSING_MARK_GAP_QUEUE_20261016.md`. Un lote sin candidatos
 frescos cierra con su sonda; auditoría y política no aplican.
