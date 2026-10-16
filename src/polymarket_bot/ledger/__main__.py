@@ -27,6 +27,7 @@ from .price_batch_paginator import (
     run_price_batch_paginator,
 )
 from .closing_mark_compiler import compile_closing_mark_candidates_file
+from .closing_mark_gap_queue import build_closing_mark_gap_queue_file
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
@@ -86,6 +87,17 @@ def _terminal_result(args, result: dict) -> dict:
         }
     if args.command in {"paginate-price-history", "price-pagination-status"}:
         return result
+    if args.command == "build-closing-mark-gap-queue":
+        return {
+            "status": result["status"],
+            "output": str(args.output.resolve()),
+            "coverage": result["coverage"],
+            "category_counts": result["category_counts"],
+            "route_counts": result["route_counts"],
+            "integration": result["integration"],
+            "review_gate": result["review_gate"],
+            "safety": result["safety"],
+        }
     if args.command == "verify-independent-report":
         return {
             "status": result["status"],
@@ -287,6 +299,13 @@ def main(argv=None):
     mark_compiler.add_argument("--policy-output", type=Path, action="append", default=[])
     mark_compiler.add_argument("--pagination", type=Path, action="append", default=[])
     mark_compiler.add_argument("--output", type=Path, required=True)
+    gap_queue = commands.add_parser(
+        "build-closing-mark-gap-queue",
+        help="Classify every unresolved closing-mark request without weakening policy",
+    )
+    gap_queue.add_argument("--compiled-candidates", type=Path, required=True)
+    gap_queue.add_argument("--evidence-gaps", type=Path, required=True)
+    gap_queue.add_argument("--output", type=Path, required=True)
     independent = commands.add_parser(
         "verify-independent-report",
         help="Compare a separately produced accounting report to the sealed contract",
@@ -496,6 +515,10 @@ def main(argv=None):
                 args.bundle, args.evidence_gaps, args.policy_output,
                 args.pagination, args.output,
             )
+        elif args.command == "build-closing-mark-gap-queue":
+            result = build_closing_mark_gap_queue_file(
+                args.compiled_candidates, args.evidence_gaps, args.output,
+            )
         elif args.command == "verify-independent-report":
             result = verify_independent_report_file(
                 args.basis_result, args.report, args.output,
@@ -581,7 +604,8 @@ def main(argv=None):
                             "recalculate-lifetime-inventory", "close-lifetime-receipt-gap",
                             "build-lifetime-basis-bundle", "probe-price-history",
                             "audit-price-candidates", "evaluate-price-policy",
-                            "compile-closing-mark-candidates", "verify-independent-report"}:
+                            "compile-closing-mark-candidates", "build-closing-mark-gap-queue",
+                            "verify-independent-report"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "paginate-price-history":
             return 0 if result["status"] in {"COMPLETE", "PAUSED_BATCH_LIMIT"} else 2
