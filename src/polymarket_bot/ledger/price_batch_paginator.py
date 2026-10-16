@@ -648,12 +648,16 @@ def _verified_results(root: Path, *, start_index: int) -> list[dict]:
             elif (result["probe"].get("fresh_candidates") != 0
                   or policy.get("configuration_path") is not None
                   or policy.get("output_path") is not None
-                  or policy.get("decisions") != {
-                      "accepted_for_new_bundle_compilation": 0,
-                      "deferred_missing_historical_identity": 0,
-                      "deferred_missing_current_official_identity": 0,
-                      "rejected_by_policy": 0,
-                  }
+                  or policy.get("decisions") not in ({
+                          "accepted_for_new_bundle_compilation": 0,
+                          "deferred_missing_historical_identity": 0,
+                          "rejected_by_policy": 0,
+                      }, {
+                          "accepted_for_new_bundle_compilation": 0,
+                          "deferred_missing_historical_identity": 0,
+                          "deferred_missing_current_official_identity": 0,
+                          "rejected_by_policy": 0,
+                      })
                   or policy.get("settlement") != {
                       "status": "NOT_REQUIRED_NO_FRESH_CANDIDATES",
                       "condition_count": 0,
@@ -691,7 +695,7 @@ def _reconcile_state(root: Path, state: dict) -> list[dict]:
             policy["decisions"]["deferred_missing_historical_identity"]
         )
         aggregate["deferred_missing_current_official_identity"] += uint(
-            policy["decisions"]["deferred_missing_current_official_identity"]
+            policy["decisions"].get("deferred_missing_current_official_identity", 0)
         )
         aggregate["rejected_by_policy"] += uint(
             policy["decisions"]["rejected_by_policy"]

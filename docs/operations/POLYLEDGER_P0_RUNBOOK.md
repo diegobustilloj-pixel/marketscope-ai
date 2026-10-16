@@ -327,11 +327,11 @@ exactos. Los registros completos están en
 `POLYLEDGER_P0_PRICE_BATCH_20261009.md` y
 `POLYLEDGER_P0_PRICE_BATCH_20261011.md`.
 
-El orquestador `paginate-price-history` cerró 71 lotes en `car_px120_v2/` y 21
-más en `car_px1540_v3/`, hasta el cursor 1960. La continuación usa
-`car_px1960_v4/` para mantener separados los commits; no se deben reabrir ni
-reescribir v2/v3. Un Gamma abierto y cerrado válidamente vacíos produce una
-decisión diferida explícita y nunca una marca aceptada; toda ambigüedad continúa
-fail-closed. El comando completo, la consulta de estado y la reanudación están
-en `POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`. Un lote sin candidatos frescos
-cierra con su sonda; auditoría y política no aplican.
+El orquestador `paginate-price-history` cerró la cola completa en tres
+segmentos: `car_px120_v2/`, `car_px1540_v3/` y `car_px1960_v4/`. El cursor final
+es 2870 y no se deben reabrir ni reescribir esos directorios. Un Gamma abierto
+y cerrado válidamente vacíos produce una decisión diferida explícita y nunca
+una marca aceptada; toda ambigüedad continúa fail-closed. El siguiente comando
+es `compile-closing-mark-candidates`, documentado en
+`POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md`. Un lote sin candidatos
+frescos cierra con su sonda; auditoría y política no aplican.

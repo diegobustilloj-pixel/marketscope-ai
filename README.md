@@ -93,11 +93,12 @@ directorios nuevos, conserva cada intento y nunca avanza tras un lote fallido;
 `price-pagination-status` lee su checkpoint sin red ni mutación. La operación
 está definida en
 `docs/operations/POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`.
-Los dos segmentos cerrados suman 92 lotes y 1.840 outcomes hasta el cursor
-1960. La continuación usa `car_px1960_v4`. Los pares binarios personalizados se
-admiten sólo cuando CLOB, Gamma y los tokens coinciden exactamente. Si ambas
-particiones oficiales de Gamma son listas vacías, el candidato queda diferido
-sin marca ni settlement; cualquier ambigüedad o contradicción sigue bloqueando.
+Los tres segmentos automáticos terminaron la cola en el cursor 2870. Junto a
+los seis lotes iniciales, la cobertura es completa: 419 decisiones, 263
+aceptadas sólo para compilación, 15 diferidas y 141 rechazadas. El comando
+`compile-closing-mark-candidates` consolida las aceptadas con trazabilidad y
+rechaza huecos, solapamientos o sellos alterados. Su salida es una propuesta
+separada: no modifica el bundle v5 ni calcula PnL.
 
 El Sentinel permanece solo lectura. No hay firma, conexión de wallet, órdenes
 automáticas ni dinero real habilitados.

@@ -26,6 +26,7 @@ from .price_batch_paginator import (
     price_pagination_status,
     run_price_batch_paginator,
 )
+from .closing_mark_compiler import compile_closing_mark_candidates_file
 from .readiness import audit_archived_pilot
 from .replay import replay_file
 from .store import EvidenceStore
@@ -277,6 +278,15 @@ def main(argv=None):
         help="Read a price paginator checkpoint without network access or mutation",
     )
     price_pages_status.add_argument("--output", type=Path, required=True)
+    mark_compiler = commands.add_parser(
+        "compile-closing-mark-candidates",
+        help="Seal accepted policy decisions as proposed marks without modifying the basis bundle",
+    )
+    mark_compiler.add_argument("--bundle", type=Path, required=True)
+    mark_compiler.add_argument("--evidence-gaps", type=Path, required=True)
+    mark_compiler.add_argument("--policy-output", type=Path, action="append", default=[])
+    mark_compiler.add_argument("--pagination", type=Path, action="append", default=[])
+    mark_compiler.add_argument("--output", type=Path, required=True)
     independent = commands.add_parser(
         "verify-independent-report",
         help="Compare a separately produced accounting report to the sealed contract",
@@ -481,6 +491,11 @@ def main(argv=None):
             )
         elif args.command == "price-pagination-status":
             result = price_pagination_status(args.output)
+        elif args.command == "compile-closing-mark-candidates":
+            result = compile_closing_mark_candidates_file(
+                args.bundle, args.evidence_gaps, args.policy_output,
+                args.pagination, args.output,
+            )
         elif args.command == "verify-independent-report":
             result = verify_independent_report_file(
                 args.basis_result, args.report, args.output,
@@ -566,7 +581,7 @@ def main(argv=None):
                             "recalculate-lifetime-inventory", "close-lifetime-receipt-gap",
                             "build-lifetime-basis-bundle", "probe-price-history",
                             "audit-price-candidates", "evaluate-price-policy",
-                            "verify-independent-report"}:
+                            "compile-closing-mark-candidates", "verify-independent-report"}:
             return 2  # Evidence remains blocked until all P0 gates pass.
         if args.command == "paginate-price-history":
             return 0 if result["status"] in {"COMPLETE", "PAUSED_BATCH_LIMIT"} else 2

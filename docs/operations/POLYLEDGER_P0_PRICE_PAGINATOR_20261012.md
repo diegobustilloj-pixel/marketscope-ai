@@ -3,7 +3,7 @@
 Estado de código: **implementado y cubierto por pruebas; sólo lectura, sin
 integración de marcas, PnL, wallet, firma, órdenes ni dinero real.**
 
-Validación local: **170 pruebas `test_ledger*` aprobadas y 11 configuraciones de
+Validación local: **174 pruebas `test_ledger*` aprobadas y 11 configuraciones de
 bots válidas, sin errores ni advertencias.** Las pruebas propias cubren
 pausa/reanudación, reintento explícito, cierre contiguo, confinamiento de rutas,
 último lote parcial, bloqueo sin salto después de reintentos e identidad actual
@@ -126,6 +126,19 @@ la continuación comienza en un directorio nuevo:
   --secondary-rpc-url https://tenderly.rpc.polygon.community `
   --start-index 1960 --batch-size 20 --max-age-seconds 900 --max-batches 1
 ```
+
+## Cierre final
+
+`car_px1960_v4` terminó sin intentos fallidos: 46 lotes, 910 outcomes, 119
+candidatos auditados, 72 aceptados sólo para compilación, 4 diferidos por
+identidad histórica, 1 diferido por identidad actual ausente y 42 rechazados.
+El cursor final es `2870`. Sumando v2 y v3, los tres segmentos automáticos
+cerraron 138 lotes y 2.750 outcomes desde el cursor 120. Cero marcas fueron
+integradas y el bundle v5 conservó el SHA-256
+`6244785cc1cdbebc212b5a3cb07875bb031965934d8f213d02df63de108a2edc`.
+
+La siguiente etapa no es reanudar el paginador: es compilar las decisiones
+aceptadas con `POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md`.
 
 ## Salida canónica de esta corrida
 

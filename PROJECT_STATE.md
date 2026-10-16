@@ -12,7 +12,7 @@ La plataforma concentra investigaciones de Polymarket bajo un núcleo compartido
 
 | Línea | Estado verificable | Decisión actual |
 |---|---|---|
-| PolyLedger P0 | Replay reconciliado; 92 lotes automáticos cerraron 1.840 outcomes hasta el cursor 1960, pero cero marcas están integradas | Continuar en un segmento nuevo desde 1960, completar flujos y segundo cálculo; sin trading |
+| PolyLedger P0 | La cola de precios cerró los 2.870 outcomes CTF; existen 263 marcas aceptadas para compilación, pero cero están integradas | Compilar artefacto de marcas propuestas, completar brechas y segundo cálculo; sin trading |
 | Deportes / wallets | Investigación y prueba cerradas; no surgió un ganador copiable | No construir ejecutor ni usar capital |
 | Clima | Investigación, backtest realista y ticket manual existen | Mantener manual/shadow hasta nueva evidencia |
 | Elon / conteo de tuits | Investigación y monitor forward separado existen | No olvidar esta línea; revisar su evidencia local antes de informar resultados |
@@ -57,30 +57,27 @@ No mover ni borrar V2/V3 para “limpiar” sin inventario y backup. Son evidenc
 
 **Mejora integrada:** la optimización de memoria ya está integrada en `main`; la rama `wip/ledger-basis-memory` se conserva como traza de desarrollo. Indexa las colas FIFO por `(wallet, asset)`, sustituye la copia creciente de ancestros por vínculos de lotes, usa un diario compacto ligado por hash al bundle sellado, serializa y calcula hashes por streaming y permite `snapshot(copy_safe=False)` para una corrida única. El 7 de octubre pasaron 149 pruebas `test_ledger*`, incluidas 26 de la política de marcas, una del cursor reanudable y cuatro de la compuerta del informe independiente; una muestra real de 10.000 acciones produjo el mismo estado económico entre diario completo y compacto. En perfiles reales, cargar el bundle ocupó ~526 MB privados; el replay de 50.000 acciones llegó a ~588 MB y el de 100.000 a ~648 MB, sin duplicación material al generar la instantánea. La corrida completa de basis v2 confirmó que el arreglo elimina el bloqueo de memoria; no convierte el basis incompleto en resultado aprobado.
 
-**Siguiente decisión técnica:** continuar el paginador automático desde el
-cursor 1960 en `car_px1960_v4/`. `car_px120_v2/` conserva 71 lotes completos,
-1.420 outcomes y decisiones 145/5/76 (aceptadas/diferidas/rechazadas). El
-segmento `car_px1540_v3/` añadió 21 lotes, 420 outcomes y decisiones 35/3/16;
-se detuvo sin saltar 1961–1980 porque un token conserva identidad CLOB y
-metadata histórica, pero las particiones abierta y cerrada de Gamma responden
-listas vacías. El motor ahora difiere exclusivamente ese caso exacto como
-`DEFERRED_MISSING_CURRENT_OFFICIAL_IDENTITY`: no acepta su precio ni consulta
-su settlement, mientras procesa los candidatos verificables del mismo lote.
-Una respuesta Gamma ambigua, mal formada o contradictoria todavía bloquea. Se
-usa un segmento nuevo para no mezclar commits dentro de la evidencia sellada.
-En paralelo deben completarse con
-evidencia los flujos externos. Cuando la entrada sea suficiente se podrá
-compilar un bundle nuevo; después se ejecutará el segundo cálculo independiente
-y se reevaluará el gate. Eso no autoriza capital ni copia automática. Diseño y
-operación: `docs/operations/POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`.
+**Siguiente decisión técnica:** la paginación terminó en `car_px1960_v4/` con
+cursor 2870. Sumando los seis lotes iniciales y los tres segmentos automáticos,
+la evidencia cubre los 2.870 outcomes CTF en 144 chunks: 419 candidatos
+auditados, 263 aceptados sólo para compilación, 14 diferidos por identidad
+histórica, uno diferido por identidad Gamma actual ausente y 141 rechazados.
+El compilador `compile-closing-mark-candidates` verifica toda esa cadena y
+produce un artefacto separado; no escribe en v5. Todavía quedan 3.235 de las
+3.498 marcas solicitadas sin candidato aceptado, además de los flujos externos.
+Sólo después de cerrar esas brechas se podrá crear un bundle contable nuevo,
+ejecutar el segundo cálculo independiente y reevaluar el gate. Eso no autoriza
+capital ni copia automática. Operación:
+`docs/operations/POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md`.
 
-**Validación del paginador:** el 15 de octubre aprobaron 170 pruebas
+**Validación del pipeline de precios:** el 16 de octubre aprobaron 174 pruebas
 `test_ledger*` y las 11 configuraciones de bots. La cobertura nueva comprueba
 pausa/reanudación, reconstrucción del checkpoint, bloqueo sin salto después de
 reintentos agotados, confinamiento de evidencia, cierre del último lote parcial
 y mercados binarios con etiquetas personalizadas. También cubre la nueva
 salida diferida por identidad Gamma ausente y demuestra que no produce marca,
-orden ni mutación del bundle.
+orden ni mutación del bundle. El compilador añade pruebas de sellado, cobertura,
+rechazo de solapamientos y detección de evidencia alterada.
 
 **Inventario de brechas:** `docs/operations/POLYLEDGER_P0_EVIDENCE_GAPS_20261006.md` fija los conteos y el orden de resolución. La cola sellada local `car_lifetime_basis_evidence_gaps_20261006_v1` referencia por hash las 856 acciones de flujo y 3.498 marcas pendientes, sin duplicar el bundle ni publicar datos. No se debe volver a descargar ni repetir el bundle v5 antes de cambiar la evidencia de entrada.
 

@@ -50,16 +50,12 @@ Las 149 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la pol
    lote 41–60 1/0/0; lote 61–80 2/0/2; lote 81–100 3/0/0; lote 101–120
    2/0/1); cero marcas fueron
    integradas y v5 no cambió;
-3. conservar `car_px120_v2` como primer segmento: cerró 71 lotes hasta el cursor
-   1540. Conservar también `car_px1540_v3`: cerró otros 21 lotes y quedó en el
-   cursor 1960, sin saltar un candidato cuya identidad actual ya no aparece en
-   Gamma. Continuar `paginate-price-history` desde 1960 sobre `car_px1960_v4`.
-   El caso exacto de dos listas Gamma vacías queda diferido, nunca aceptado; una
-   respuesta ambigua o contradictoria sigue bloqueando. El paginador
-   crea sonda y, cuando corresponde, auditoría y política nuevas para cada lote
-   de hasta 20; nunca salta un lote bloqueado. Consultar progreso con
-   `price-pagination-status` y seguir
-   `docs/operations/POLYLEDGER_P0_PRICE_PAGINATOR_20261012.md`;
+3. conservar `car_px120_v2`, `car_px1540_v3` y `car_px1960_v4`: juntos cerraron
+   los 2.750 outcomes posteriores al cursor 120; con los seis lotes iniciales la
+   cola completa de 2.870 quedó cubierta. No reanudar ni reescribir esos
+   segmentos. Ejecutar `compile-closing-mark-candidates` según
+   `docs/operations/POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md`; su salida
+   contiene 263 propuestas y no modifica v5;
 4. completar 856 flujos externos; cuando la entrada esté completa, compilar un
    bundle nuevo, ejecutar el cálculo independiente, pasarlo por
    `verify-independent-report` y reevaluar el gate. Nunca sobrescribir v5 ni
@@ -71,7 +67,7 @@ No interpretar que el índice por sí solo resuelve toda la memoria: `apply_batc
 
 ```text
 resultado de basis v2 sellado y conciliado
-    → segmentos automáticos sellados hasta cursor 1960: continuar en v4 desde 1960
+    → cola CTF completa hasta cursor 2870: compilar 263 marcas propuestas sin integrar
     → completar flujos externos y marcas de cierre con evidencia
     → recompilar un nuevo bundle sin tocar v5
     → verificar balances, hash y PnL contra un cálculo independiente
