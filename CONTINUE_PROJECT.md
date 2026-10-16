@@ -53,9 +53,10 @@ Las 149 pruebas `test_ledger*` pasaron el 7 de octubre de 2026; 26 cubren la pol
 3. conservar `car_px120_v2`, `car_px1540_v3` y `car_px1960_v4`: juntos cerraron
    los 2.750 outcomes posteriores al cursor 120; con los seis lotes iniciales la
    cola completa de 2.870 quedó cubierta. No reanudar ni reescribir esos
-   segmentos. Ejecutar `compile-closing-mark-candidates` según
-   `docs/operations/POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md`; su salida
-   contiene 263 propuestas y no modifica v5;
+   segmentos. El comando `compile-closing-mark-candidates` está documentado en
+   `docs/operations/POLYLEDGER_P0_CLOSING_MARK_COMPILER_20261015.md`; la salida
+   canónica `car_closing_mark_candidates_20261016_v1` ya existe, contiene 263
+   propuestas y no modifica v5. No recompilar salvo que cambie una entrada;
 4. completar 856 flujos externos; cuando la entrada esté completa, compilar un
    bundle nuevo, ejecutar el cálculo independiente, pasarlo por
    `verify-independent-report` y reevaluar el gate. Nunca sobrescribir v5 ni

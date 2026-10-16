@@ -52,3 +52,24 @@ integradas en v5.
 Por tanto, el estado sigue `BLOCKED`: faltan marcas, evidencia de flujos
 externos y un informe contable independiente. No se debe copiar
 `closing_marks.json` al bundle manualmente.
+
+## Resultado canónico ejecutado
+
+El 16 de octubre de 2026 se creó localmente:
+
+`data/polyledger-sentinel/p0/car_closing_mark_candidates_20261016_v1/`
+
+La salida quedó ligada al commit limpio
+`e3dea084748319965af9011fe8af547fbd83a85c`. Los seis archivos declarados en
+el manifiesto verificaron sin diferencias. Conteos finales: 419 decisiones,
+263 marcas propuestas y 263 registros de evidencia. Hashes principales:
+
+- digest canónico de marcas:
+  `7780064103aab231bda0ba39fde15e19ef9cc70221f743c78ef9b2fbb75e09f3`;
+- SHA-256 de `summary.json`:
+  `6b159d63d4a450438bc112c66a53e6f8042436bf4780b340039530714ea0bcec`;
+- SHA-256 del bundle v5, comprobado después:
+  `6244785cc1cdbebc212b5a3cb07875bb031965934d8f213d02df63de108a2edc`.
+
+La salida no contiene `bundle.json`; `closing_marks_written_to_bundle=0` y
+`basis_bundle_modified=false`.

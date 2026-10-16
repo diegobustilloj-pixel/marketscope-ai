@@ -63,8 +63,10 @@ la evidencia cubre los 2.870 outcomes CTF en 144 chunks: 419 candidatos
 auditados, 263 aceptados sólo para compilación, 14 diferidos por identidad
 histórica, uno diferido por identidad Gamma actual ausente y 141 rechazados.
 El compilador `compile-closing-mark-candidates` verifica toda esa cadena y
-produce un artefacto separado; no escribe en v5. Todavía quedan 3.235 de las
-3.498 marcas solicitadas sin candidato aceptado, además de los flujos externos.
+produjo el artefacto local sellado
+`car_closing_mark_candidates_20261016_v1/`, ligado al commit `e3dea08`: 263
+marcas propuestas con evidencia uno a uno. No escribió en v5. Todavía quedan
+3.235 de las 3.498 marcas solicitadas sin candidato aceptado, además de los flujos externos.
 Sólo después de cerrar esas brechas se podrá crear un bundle contable nuevo,
 ejecutar el segundo cálculo independiente y reevaluar el gate. Eso no autoriza
 capital ni copia automática. Operación:
